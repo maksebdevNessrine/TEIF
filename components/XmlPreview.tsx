@@ -1,12 +1,16 @@
 
 import React, { useState } from 'react';
+import { Language } from '../types';
+import { useTranslation } from '../services/i18n';
 
 interface Props {
   xml: string;
   minifiedXml: string;
+  lang: Language;
 }
 
-const XmlPreview: React.FC<Props> = ({ xml, minifiedXml }) => {
+const XmlPreview: React.FC<Props> = ({ xml, minifiedXml, lang }) => {
+  const t = useTranslation(lang);
   const [copied, setCopied] = useState(false);
   const [showMinified, setShowMinified] = useState(false);
 
@@ -45,7 +49,7 @@ const XmlPreview: React.FC<Props> = ({ xml, minifiedXml }) => {
               onChange={(e) => setShowMinified(e.target.checked)}
               className="accent-blue-500"
             />
-            <span>Minify (Unpretty)</span>
+            <span>{t('minify')}</span>
           </label>
         </div>
         <div className="flex gap-2">
@@ -53,13 +57,13 @@ const XmlPreview: React.FC<Props> = ({ xml, minifiedXml }) => {
             onClick={handleCopy}
             className="text-xs hover:text-white transition-colors bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-2"
           >
-            {copied ? 'Copied!' : 'Copy'}
+            {copied ? t('copied') : t('copy')}
           </button>
           <button 
             onClick={handleDownload}
             className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2"
           >
-            Download XML
+            {t('download')}
           </button>
         </div>
       </div>
@@ -67,7 +71,7 @@ const XmlPreview: React.FC<Props> = ({ xml, minifiedXml }) => {
         {showMinified ? (
           <code className="text-sm font-mono text-emerald-400 break-all">{activeXml}</code>
         ) : (
-          <pre className="text-sm font-mono text-emerald-400 whitespace-pre-wrap break-all leading-relaxed">
+          <pre className="text-sm font-mono text-emerald-400 whitespace-pre-wrap break-all leading-relaxed ltr">
             {activeXml.split('\n').map((line, i) => (
               <div key={i} className="hover:bg-slate-800/50 rounded transition-colors px-1">
                 <span className="text-slate-600 select-none mr-4 inline-block w-4 text-right">{i + 1}</span>

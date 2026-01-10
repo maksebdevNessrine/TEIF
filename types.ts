@@ -1,4 +1,5 @@
 
+export type Language = 'ar' | 'fr' | 'en';
 export type IdType = 'I-01' | 'I-02' | 'I-03' | 'I-04';
 export type DocTypeCode = 'I-11' | 'I-12' | 'I-13' | 'I-14' | 'I-15' | 'I-16';
 export type PaymentMeansCode = 'I-131' | 'I-132' | 'I-133' | 'I-134' | 'I-135' | 'I-136';
@@ -61,7 +62,7 @@ export interface InvoiceData {
   ttnReference: string;
   paymentMeans: PaymentMeansCode;
   bankName?: string;
-  bankCode?: string; // nameCode attribute
+  bankCode?: string;
   bankRib?: string;
   amountDescriptionOverride?: string;
 }

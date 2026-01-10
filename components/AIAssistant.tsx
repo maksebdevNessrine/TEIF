@@ -1,10 +1,17 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
+import { Language } from '../types';
+import { useTranslation } from '../services/i18n';
 
-const AIAssistant: React.FC = () => {
+interface Props {
+  lang: Language;
+}
+
+const AIAssistant: React.FC<Props> = ({ lang }) => {
+  const t = useTranslation(lang);
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([
-    { role: 'assistant', text: "Hello! I'm your TEIF 1.8.8 expert. Need help with Tax IDs, unit codes, or mandatory fields?" }
+    { role: 'assistant', text: t('aiIntro') }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -51,8 +58,8 @@ const AIAssistant: React.FC = () => {
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-800">TEIF AI Expert</h3>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest">Tunisia TradeNet Assistant</p>
+            <h3 className="text-sm font-bold text-slate-800">{t('aiTitle')}</h3>
+            <p className="text-[10px] text-slate-500 uppercase tracking-widest">{t('aiSubtitle')}</p>
           </div>
         </div>
       </div>
@@ -89,7 +96,6 @@ const AIAssistant: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Ask a question..."
             className="flex-1 p-2 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
           <button 
@@ -97,7 +103,7 @@ const AIAssistant: React.FC = () => {
             disabled={loading}
             className="bg-blue-600 text-white p-2 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+            <svg className={`w-5 h-5 ${lang === 'ar' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
           </button>
         </div>
       </div>

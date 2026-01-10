@@ -13,7 +13,11 @@ const numberToFrenchLetters = (num: number): string => {
   return `${integerPart} DINARS ET ${decimalPart.toString().padStart(3, '0')} MILLIMES`.toUpperCase();
 };
 
-const renderPartner = (partner: Partner, role: string) => `
+const renderPartner = (partner: Partner, role: string) => {
+  const hasRC = partner.rc && partner.rc.trim() !== '';
+  const hasCapital = partner.capital && partner.capital.trim() !== '';
+
+  return `
       <PartnerDetails functionCode="${role}">
         <Nad>
           <PartnerIdentifier type="${partner.idType}">${partner.idValue}</PartnerIdentifier>
@@ -26,21 +30,20 @@ const renderPartner = (partner: Partner, role: string) => `
             <Country codeList="ISO_3166-1">${partner.country}</Country>
           </PartnerAdresses>
         </Nad>
-        ${partner.rc ? `<RffSection><Reference refID="I-815">${partner.rc}</Reference></RffSection>` : ''}
-        ${partner.capital ? `<RffSection><Reference refID="I-816">${partner.capital}</Reference></RffSection>` : ''}
+        ${hasRC ? `<RffSection><Reference refID="I-815">${partner.rc}</Reference></RffSection>` : ''}
+        ${hasCapital ? `<RffSection><Reference refID="I-816">${partner.capital}</Reference></RffSection>` : ''}
         
         <CtaSection>
           <Contact functionCode="I-94"><ContactName>${partner.name}</ContactName></Contact>
           ${partner.phone ? `<Communication><ComMeansType>I-101</ComMeansType><ComAdress>${partner.phone}</ComAdress></Communication>` : ''}
-          ${partner.email ? `<Communication><ComMeansType>I-103</ComMeansType><ComAdress>${partner.email}</ComAdress></Communication>` : ''}
         </CtaSection>
       </PartnerDetails>`;
+};
 
 export const generateTeifXml = (data: InvoiceData, minify: boolean = false): string => {
   const totalHt = data.lines.reduce((sum, line) => sum + (line.quantity * line.unitPrice), 0);
-  const totalFodec = data.lines.reduce((sum, line) => line.fodec ? sum + (line.quantity * line.unitPrice * 0.01) : sum, 0);
-  const totalTva = data.lines.reduce((sum, line) => sum + ((line.quantity * line.unitPrice + (line.fodec ? line.quantity * line.unitPrice * 0.01 : 0)) * line.taxRate), 0);
-  const totalTtc = totalHt + totalFodec + totalTva + data.stampDuty;
+  const totalTva = data.lines.reduce((sum, line) => sum + ((line.quantity * line.unitPrice) * line.taxRate), 0);
+  const totalTtc = totalHt + totalTva + data.stampDuty;
   
   const amountLetters = data.amountDescriptionOverride || numberToFrenchLetters(totalTtc);
   const docTypeLabel = DOCUMENT_TYPES[data.documentType];
@@ -88,8 +91,7 @@ export const generateTeifXml = (data: InvoiceData, minify: boolean = false): str
 
     <Dtm>
       <DateText format="ddMMyy" functionCode="I-31">${formatTtnDate(data.invoiceDate)}</DateText>
-      ${data.dueDate ? `<DateText format="ddMMyy" functionCode="I-32">${formatTtnDate(data.dueDate)}</DateText>` : ''}
-      ${data.periodStart && data.periodEnd ? `<DateText format="ddMMyy-ddMMyy" functionCode="I-36">${formatTtnDate(data.periodStart)}-${formatTtnDate(data.periodEnd)}</DateText>` : ''}
+      <DateText format="ddMMyy" functionCode="I-32">${formatTtnDate(data.dueDate || data.invoiceDate)}</DateText>
     </Dtm>
 
     <PartnerSection>
@@ -106,7 +108,7 @@ export const generateTeifXml = (data: InvoiceData, minify: boolean = false): str
         ${data.bankRib ? `
         <PytFii functionCode="I-141">
           <AccountHolder><AccountNumber>${data.bankRib}</AccountNumber></AccountHolder>
-          <InstitutionIdentification nameCode="${data.bankCode || ''}">
+          <InstitutionIdentification>
             <InstitutionName>${data.bankName || 'Banque'}</InstitutionName>
           </InstitutionIdentification>
         </PytFii>` : ''}
@@ -143,30 +145,13 @@ export const generateTeifXml = (data: InvoiceData, minify: boolean = false): str
           </Moa>
         </AmountDetails>
       </InvoiceTaxDetails>
-      ${totalFodec > 0 ? `
-      <InvoiceTaxDetails>
-        <Tax>
-          <TaxTypeName code="I-162">FODEC</TaxTypeName>
-          <TaxDetails><TaxRate>1.0</TaxRate></TaxDetails>
-        </Tax>
-        <AmountDetails>
-          <Moa amountTypeCode="I-177" currencyCodeList="ISO_4217">
-            <Amount currencyIdentifier="TND">${totalHt.toFixed(3)}</Amount>
-          </Moa>
-          <Moa amountTypeCode="I-178" currencyCodeList="ISO_4217">
-            <Amount currencyIdentifier="TND">${totalFodec.toFixed(3)}</Amount>
-          </Moa>
-        </AmountDetails>
-      </InvoiceTaxDetails>` : ''}
+      
       <InvoiceTaxDetails>
         <Tax>
           <TaxTypeName code="I-1602">TVA</TaxTypeName>
           <TaxDetails><TaxRate>Global</TaxRate></TaxDetails>
         </Tax>
         <AmountDetails>
-          <Moa amountTypeCode="I-177" currencyCodeList="ISO_4217">
-            <Amount currencyIdentifier="TND">${(totalHt + totalFodec).toFixed(3)}</Amount>
-          </Moa>
           <Moa amountTypeCode="I-178" currencyCodeList="ISO_4217">
             <Amount currencyIdentifier="TND">${totalTva.toFixed(3)}</Amount>
           </Moa>
