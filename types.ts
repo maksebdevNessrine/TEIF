@@ -3,6 +3,7 @@ export type Language = 'ar' | 'fr' | 'en';
 export type IdType = 'I-01' | 'I-02' | 'I-03' | 'I-04';
 export type DocTypeCode = 'I-11' | 'I-12' | 'I-13' | 'I-14' | 'I-15' | 'I-16';
 export type PaymentMeansCode = 'I-131' | 'I-132' | 'I-133' | 'I-134' | 'I-135' | 'I-136';
+export type OperationNature = 'GOODS' | 'SERVICES' | 'MIXED';
 
 export const DOCUMENT_TYPES: Record<DocTypeCode, string> = {
   'I-11': 'Facture',
@@ -21,6 +22,16 @@ export const PAYMENT_MEANS: Record<PaymentMeansCode, string> = {
   'I-135': 'Virement bancaire',
   'I-136': 'Swift'
 };
+
+export const UNIT_CODES = [
+  { code: 'PCE', label: 'Pièce' },
+  { code: 'KGM', label: 'Kilogramme' },
+  { code: 'HUR', label: 'Heure' },
+  { code: 'TNE', label: 'Tonne' },
+  { code: 'MLT', label: 'Millilitre' },
+  { code: 'MTK', label: 'Mètre Carré' },
+  { code: 'LTR', label: 'Litre' }
+];
 
 export interface Partner {
   idType: IdType;
@@ -44,8 +55,10 @@ export interface InvoiceLine {
   quantity: number;
   unit: string; 
   unitPrice: number;
+  discountRate: number; 
   taxRate: number; 
   fodec: boolean;
+  exemptionReason?: string; 
 }
 
 export interface InvoiceData {
@@ -53,11 +66,18 @@ export interface InvoiceData {
   documentNumber: string;
   invoiceDate: string;
   dueDate?: string;
+  deliveryDate?: string;
   periodStart?: string;
   periodEnd?: string;
+  orderReference?: string;
+  contractReference?: string;
+  deliveryNoteReference?: string;
+  operationNature: OperationNature;
+  currency: string;
   supplier: Partner;
   buyer: Partner;
   lines: InvoiceLine[];
+  globalDiscount: number; 
   stampDuty: number; 
   ttnReference: string;
   paymentMeans: PaymentMeansCode;
