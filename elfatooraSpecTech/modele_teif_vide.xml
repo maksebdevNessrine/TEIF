@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEIF controlingAgency="TTN" version="1.8.8">
+
+  <InvoiceHeader>
+    <MessageSenderIdentifier type="I-01"></MessageSenderIdentifier>
+    <MessageRecieverIdentifier type="I-01"></MessageRecieverIdentifier>
+  </InvoiceHeader>
+
+  <InvoiceBody>
+
+    <Bgm>
+      <DocumentIdentifier></DocumentIdentifier>
+      <DocumentType code="I-11"></DocumentType>
+    </Bgm>
+
+    <Dtm>
+      <DateText format="ddMMyy" functionCode="I-31"></DateText>
+      <DateText format="ddMMyy-ddMMyy" functionCode="I-36"></DateText>
+      <DateText format="ddMMyy" functionCode="I-32"></DateText>
+    </Dtm>
+
+    <PartnerSection>
+
+      <PartnerDetails functionCode="I-62">
+        <Nad>
+          <PartnerIdentifier type="I-01"></PartnerIdentifier>
+          <PartnerName nameType="Qualification"></PartnerName>
+          <PartnerAdresses lang="fr">
+            <AdressDescription></AdressDescription>
+            <Street></Street>
+            <CityName></CityName>
+            <PostalCode></PostalCode>
+            <Country codeList="ISO_3166-1"></Country>
+          </PartnerAdresses>
+        </Nad>
+
+        <RffSection>
+          <Reference refID="I-815"></Reference>
+        </RffSection>
+        <RffSection>
+          <Reference refID="I-816"></Reference>
+        </RffSection>
+
+        <CtaSection>
+          <Contact functionCode="I-94">
+            <ContactIdentifier></ContactIdentifier>
+            <ContactName></ContactName>
+          </Contact>
+          <Communication>
+            <ComMeansType></ComMeansType>
+            <ComAdress></ComAdress>
+          </Communication>
+        </CtaSection>
+
+        <CtaSection>
+          <Contact functionCode="I-94">
+            <ContactIdentifier></ContactIdentifier>
+            <ContactName></ContactName>
+          </Contact>
+          <Communication>
+            <ComMeansType></ComMeansType>
+            <ComAdress></ComAdress>
+          </Communication>
+        </CtaSection>
+
+        <CtaSection>
+          <Contact functionCode="I-94">
+            <ContactIdentifier></ContactIdentifier>
+            <ContactName></ContactName>
+          </Contact>
+          <Communication>
+            <ComMeansType></ComMeansType>
+            <ComAdress></ComAdress>
+          </Communication>
+        </CtaSection>
+      </PartnerDetails>
+
+      <PartnerDetails functionCode="I-64">
+        <Nad>
+          <PartnerIdentifier type="I-01"></PartnerIdentifier>
+          <PartnerName nameType="Qualification"></PartnerName>
+          <PartnerAdresses lang="fr">
+            <AdressDescription></AdressDescription>
+            <Street></Street>
+            <CityName></CityName>
+            <PostalCode></PostalCode>
+            <Country codeList="ISO_3166-1"></Country>
+          </PartnerAdresses>
+        </Nad>
+
+        <RffSection>
+          <Reference refID="I-81"></Reference>
+        </RffSection>
+        <RffSection>
+          <Reference refID="I-811"></Reference>
+        </RffSection>
+        <RffSection>
+          <Reference refID="I-813"></Reference>
+        </RffSection>
+        <RffSection>
+          <Reference refID="I-812"></Reference>
+        </RffSection>
+        <RffSection>
+          <Reference refID="I-814"></Reference>
+        </RffSection>
+      </PartnerDetails>
+
+    </PartnerSection>
+
+    <PytSection>
+
+      <PytSectionDetails>
+        <Pyt>
+          <PaymentTearmsTypeCode></PaymentTearmsTypeCode>
+          <PaymentTearmsDescription></PaymentTearmsDescription>
+        </Pyt>
+      </PytSectionDetails>
+
+      <PytSectionDetails>
+        <Pyt>
+          <PaymentTearmsTypeCode></PaymentTearmsTypeCode>
+          <PaymentTearmsDescription></PaymentTearmsDescription>
+        </Pyt>
+        <PytFii functionCode="I-141">
+          <AccountHolder>
+            <AccountNumber></AccountNumber>
+            <OwnerIdentifier></OwnerIdentifier>
+          </AccountHolder>
+          <InstitutionIdentification nameCode="">
+            <BranchIdentifier></BranchIdentifier>
+            <InstitutionName></InstitutionName>
+          </InstitutionIdentification>
+        </PytFii>
+      </PytSectionDetails>
+
+    </PytSection>
+
+    <LinSection>
+      <Lin>
+        <ItemIdentifier></ItemIdentifier>
+        <LinImd lang="fr">
+          <ItemCode></ItemCode>
+          <ItemDescription></ItemDescription>
+        </LinImd>
+        <LinQty>
+          <Quantity measurementUnit=""></Quantity>
+        </LinQty>
+        <LinTax>
+          <TaxTypeName code=""></TaxTypeName>
+          <TaxDetails>
+            <TaxRate></TaxRate>
+          </TaxDetails>
+        </LinTax>
+        <LinMoa>
+          <MoaDetails>
+            <Moa amountTypeCode="" currencyCodeList="ISO_4217">
+              <Amount currencyIdentifier=""></Amount>
+            </Moa>
+          </MoaDetails>
+          <MoaDetails>
+            <Moa amountTypeCode="" currencyCodeList="ISO_4217">
+              <Amount currencyIdentifier=""></Amount>
+            </Moa>
+          </MoaDetails>
+        </LinMoa>
+      </Lin>
+    </LinSection>
+
+    <InvoiceMoa>
+      <AmountDetails>
+        <Moa amountTypeCode="" currencyCodeList="ISO_4217">
+          <Amount currencyIdentifier=""></Amount>
+        </Moa>
+      </AmountDetails>
+      <AmountDetails>
+        <Moa amountTypeCode="" currencyCodeList="ISO_4217">
+          <Amount currencyIdentifier=""></Amount>
+          <AmountDescription lang="fr"></AmountDescription>
+        </Moa>
+      </AmountDetails>
+      <AmountDetails>
+        <Moa amountTypeCode="" currencyCodeList="ISO_4217">
+          <Amount currencyIdentifier=""></Amount>
+        </Moa>
+      </AmountDetails>
+      <AmountDetails>
+        <Moa amountTypeCode="" currencyCodeList="ISO_4217">
+          <Amount currencyIdentifier=""></Amount>
+        </Moa>
+      </AmountDetails>
+      <AmountDetails>
+        <Moa amountTypeCode="" currencyCodeList="ISO_4217">
+          <Amount currencyIdentifier=""></Amount>
+        </Moa>
+      </AmountDetails>
+    </InvoiceMoa>
+
+    <InvoiceTax>
+      <InvoiceTaxDetails>
+        <Tax>
+          <TaxTypeName code=""></TaxTypeName>
+          <TaxDetails>
+            <TaxRate></TaxRate>
+          </TaxDetails>
+        </Tax>
+        <AmountDetails>
+          <Moa amountTypeCode="" currencyCodeList="ISO_4217">
+            <Amount currencyIdentifier=""></Amount>
+          </Moa>
+        </AmountDetails>
+      </InvoiceTaxDetails>
+
+      <InvoiceTaxDetails>
+        <Tax>
+          <TaxTypeName code=""></TaxTypeName>
+          <TaxDetails>
+            <TaxRate></TaxRate>
+          </TaxDetails>
+        </Tax>
+        <AmountDetails>
+          <Moa amountTypeCode="" currencyCodeList="ISO_4217">
+            <Amount currencyIdentifier=""></Amount>
+          </Moa>
+        </AmountDetails>
+        <AmountDetails>
+          <Moa amountTypeCode="" currencyCodeList="ISO_4217">
+            <Amount currencyIdentifier=""></Amount>
+          </Moa>
+        </AmountDetails>
+      </InvoiceTaxDetails>
+    </InvoiceTax>
+
+  </InvoiceBody>
+
+</TEIF>
