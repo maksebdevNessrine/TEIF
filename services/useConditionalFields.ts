@@ -78,7 +78,36 @@ export function useConditionalFields(
       documentType: data.documentType
     });
     console.log('👁️ Visibility State:', visibility);
-    return visibility as ConditionalFieldsState;
+    
+    // Map the visibility keys to include "show" prefix for compatibility with form
+    return {
+      showDueDate: visibility.dueDate,
+      showDeliveryDate: visibility.deliveryDate,
+      showDispatchDate: visibility.dispatchDate,
+      showPaymentDate: visibility.paymentDate,
+      showServicePeriod: visibility.servicePeriod,
+      showBankingDetails: visibility.bankingDetails,
+      showRib: visibility.rib,
+      showBankCode: visibility.bankCode,
+      showBankName: visibility.bankName,
+      showCheckNumber: visibility.checkNumber,
+      showCardDetails: visibility.cardDetails,
+      showPostalDetails: visibility.postalDetails,
+      showSupplierRC: visibility.supplierRC,
+      showBuyerRC: visibility.buyerRC,
+      showSupplierCapital: visibility.supplierCapital,
+      showBuyerCapital: visibility.buyerCapital,
+      showOrderReference: visibility.orderReference,
+      showContractReference: visibility.contractReference,
+      showDeliveryNoteReference: visibility.deliveryNoteReference,
+      showCreditReason: visibility.creditReason,
+      showPaymentTerms: visibility.paymentTerms,
+      showDeliveryInfo: visibility.deliveryInfo,
+      showStampDuty: visibility.stampDuty,
+      showGlobalDiscount: visibility.globalDiscount,
+      showAllowancesSection: visibility.allowancesSection,
+      showOptionalDatesSection: visibility.optionalDatesSection,
+    } as ConditionalFieldsState;
   }, [data, expandedSections]);
 }
 

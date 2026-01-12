@@ -106,20 +106,27 @@ export interface InvoiceData {
   ttnReference: string;
   paymentMeans: PaymentMeansCode;
   // Wire Transfer (I-114) fields
-  bankName?: string;
-  bankCode?: string;
-  bankRib?: string;
+  bankName?: string; // Bank name
+  bankCode?: string; // Bank clearing code
+  bankRib?: string; // RIB (20 digits) - Account number
+  bankAccountOwner?: string; // Account owner name - Required for I-114
   // Check Payment (I-117) fields
   checkNumber?: string; // Check number - Required for I-117
   // Card Payment (I-118) fields
-  cardType?: string; // VISA, MASTERCARD, AMEX, etc.
-  cardLast4?: string; // Last 4 digits of card
-  cardReference?: string; // Transaction/authorization code
+  cardType?: string; // VISA, MASTERCARD, AMEX, etc. - Required for I-118
+  cardLast4?: string; // Last 4 digits of card - Required for I-118
+  cardReference?: string; // Transaction/authorization reference code - Required for I-118
   // Postal Payment (I-115) fields
-  postalAccountNumber?: string; // Postal account number (Required for I-115)
-  postalAccountOwner?: string; // Account owner name (Required for I-115)
-  postalBranchCode?: string; // Postal branch identifier (Required for I-115)
-  postalServiceName?: string; // Postal service name (e.g., "La Poste") (Optional)
+  postalAccountNumber?: string; // Postal account number - Required for I-115
+  postalAccountOwner?: string; // Account owner name - Required for I-115
+  postalBranchCode?: string; // Postal branch identifier - Required for I-115 (4 digits)
+  postalServiceName?: string; // Postal service name (e.g., "La Poste") - Optional for I-115
+  // E-Payment (I-119) fields
+  ePaymentGateway?: string; // Payment gateway provider (PayPal, Stripe, etc.)
+  ePaymentTransactionId?: string; // Transaction ID from payment gateway
+  // Other Payment (I-120) fields
+  otherPaymentDescription?: string; // Description of other payment method
+  otherPaymentReference?: string; // Reference for other payment method
   // General
   amountDescriptionOverride?: string;
   ircRate?: number; // I-1604: IRC withholding tax rate (0-10%, optional)

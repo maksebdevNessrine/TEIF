@@ -202,13 +202,53 @@ export const generateTeifXml = (data: InvoiceData, minify: boolean = false): str
           <PaymentTearmsTypeCode>${data.paymentMeans}</PaymentTearmsTypeCode>
           <PaymentTearmsDescription>${PAYMENT_MEANS[data.paymentMeans]}</PaymentTearmsDescription>
         </Pyt>
-        ${data.bankRib ? `
+        ${data.bankRib && data.paymentMeans === 'I-114' ? `
         <PytFii functionCode="I-141">
-          <AccountHolder><AccountNumber>${data.bankRib}</AccountNumber></AccountHolder>
-          <InstitutionIdentification>
+          <AccountHolder>
+            <AccountNumber>${data.bankRib}</AccountNumber>
+            <OwnerIdentifier>${data.bankAccountOwner || ''}</OwnerIdentifier>
+          </AccountHolder>
+          <InstitutionIdentification nameCode="${data.bankCode || ''}">
             ${data.bankCode ? `<InstitutionIdentifier>${data.bankCode}</InstitutionIdentifier>` : ''}
             <InstitutionName>${data.bankName || 'BANK'}</InstitutionName>
           </InstitutionIdentification>
+        </PytFii>` : ''}
+        ${data.postalAccountNumber && data.paymentMeans === 'I-115' ? `
+        <PytFii functionCode="I-141">
+          <AccountHolder>
+            <AccountNumber>${data.postalAccountNumber}</AccountNumber>
+            <OwnerIdentifier>${data.postalAccountOwner || ''}</OwnerIdentifier>
+          </AccountHolder>
+          <InstitutionIdentification nameCode="${data.postalBranchCode || '0000'}">
+            <BranchIdentifier>${data.postalBranchCode || '0000'}</BranchIdentifier>
+            <InstitutionName>${data.postalServiceName || 'La Poste'}</InstitutionName>
+          </InstitutionIdentification>
+        </PytFii>` : ''}
+        ${data.checkNumber && data.paymentMeans === 'I-117' ? `
+        <PytFii functionCode="I-142">
+          <CheckReference>${data.checkNumber}</CheckReference>
+        </PytFii>` : ''}
+        ${data.cardReference && data.paymentMeans === 'I-118' ? `
+        <PytFii functionCode="I-143">
+          <CardIdentification>
+            <CardType>${data.cardType || 'VISA'}</CardType>
+            <CardNumber>${data.cardLast4 || ''}</CardNumber>
+            <AuthorizationCode>${data.cardReference}</AuthorizationCode>
+          </CardIdentification>
+        </PytFii>` : ''}
+        ${data.ePaymentTransactionId && data.paymentMeans === 'I-119' ? `
+        <PytFii functionCode="I-144">
+          <EPaymentReference>
+            <Gateway>${data.ePaymentGateway || 'ELECTRONIC'}</Gateway>
+            <TransactionId>${data.ePaymentTransactionId}</TransactionId>
+          </EPaymentReference>
+        </PytFii>` : ''}
+        ${data.otherPaymentReference && data.paymentMeans === 'I-120' ? `
+        <PytFii functionCode="I-145">
+          <OtherPaymentReference>
+            <Description>${data.otherPaymentDescription || 'Other'}</Description>
+            <Reference>${data.otherPaymentReference}</Reference>
+          </OtherPaymentReference>
         </PytFii>` : ''}
       </PytSectionDetails>
     </PytSection>

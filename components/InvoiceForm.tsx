@@ -5,6 +5,7 @@ import { useTranslation } from '../services/i18n';
 import { generateQrString, validateRib, numberToLettersFr } from '../services/xmlGenerator';
 import * as Validators from '../services/validators';
 import { useConditionalFields } from '../services/useConditionalFields';
+import { FormInput, FormSelect, FormSection, StepIndicator } from './design-system';
 
 interface PartnerFormProps {
   title: string;
@@ -230,168 +231,192 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
     <div className="space-y-8">
 
       {/* SECTION 1: DOCUMENT METADATA (Bgm - Document Identification) */}
-      <section className="bg-slate-900 p-8 border border-slate-800 space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-800 pb-8">
-          <h2 className="text-2xl font-semibold text-slate-100 flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-800 border border-slate-700 rounded flex items-center justify-center text-slate-300 font-mono text-lg">01</div>
-            <div className="flex flex-col">
-              <span className="tracking-tight">Document Details</span>
-              <span className="text-xs text-slate-400 font-normal tracking-wide">TEIF 1.8.8 Standard</span>
-            </div>
-          </h2>
-          <div className="flex items-center gap-4 bg-slate-800 p-3 rounded border border-slate-700">
-            <span className="text-xs font-medium text-slate-300 px-2">Currency (ISO-4217)</span>
-            <select value={data.currency} onChange={(e) => updateField('currency', e.target.value)} className="bg-slate-700 border border-slate-600 rounded px-4 py-2 text-sm font-medium text-slate-100 focus:outline-none focus:border-slate-500 transition-colors">
-              <option value="TND">TND</option>
-              <option value="EUR">EUR</option>
-              <option value="USD">USD</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="md:col-span-2">
-            <label className="block text-xs font-medium text-slate-400 mb-2">Document Type</label>
-            <select value={data.documentType} onChange={(e) => updateField('documentType', e.target.value as DocTypeCode)} className="w-full p-3 border border-slate-700 rounded bg-slate-800 font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors">
-              {Object.entries(DOCUMENT_TYPES).map(([c, l]) => (<option key={c} value={c}>{c} — {l.toUpperCase()}</option>))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">Operation Nature</label>
-            <select value={data.operationNature} onChange={(e) => updateField('operationNature', e.target.value)} className="w-full p-3 border border-slate-700 rounded bg-slate-800 font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors">
-              <option value="GOODS">{t('opGoods')}</option>
-              <option value="SERVICES">{t('opServices')}</option>
-              <option value="MIXED">{t('opMixed')}</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">Document Number</label>
-            <input type="text" placeholder="F-2024-0001" value={data.documentNumber} onChange={(e) => updateField('documentNumber', e.target.value)} className="w-full p-3 border border-slate-700 rounded bg-slate-800 font-mono font-medium text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-600 transition-colors" />
-          </div>
-        </div>
-      </section>
+      <FormSection 
+        title={t('docDetails')} 
+        description="TEIF 1.8.8 Standard - Document type and basic identification"
+        badge={{ label: "Required", variant: "default" }}
+      >
+        <FormSelect
+          label={t('docType')}
+          value={data.documentType}
+          onValueChange={(value) => updateField('documentType', value as DocTypeCode)}
+          options={Object.entries(DOCUMENT_TYPES).map(([code, label]) => ({
+            value: code,
+            label: `${code} — ${label.toUpperCase()}`
+          }))}
+          required
+        />
+        <FormSelect
+          label={t('opNature')}
+          value={data.operationNature}
+          onValueChange={(value) => updateField('operationNature', value)}
+          options={[
+            { value: 'GOODS', label: t('opGoods') },
+            { value: 'SERVICES', label: t('opServices') },
+            { value: 'MIXED', label: t('opMixed') }
+          ]}
+          required
+        />
+        <FormSelect
+          label={t('currencyLabel')}
+          value={data.currency}
+          onValueChange={(value) => updateField('currency', value)}
+          options={[
+            { value: 'TND', label: 'TND (Tunisian Dinar)' },
+            { value: 'EUR', label: 'EUR (Euro)' },
+            { value: 'USD', label: 'USD (US Dollar)' }
+          ]}
+          required
+        />
+        <FormInput
+          label={t('docNumber')}
+          placeholder="F-2024-0001"
+          value={data.documentNumber}
+          onChange={(e) => updateField('documentNumber', e.target.value)}
+          required
+        />
+        {visibility.showOrderReference && (
+          <FormInput
+            label="Order Reference (I-121)"
+            placeholder="PO-2024-001"
+            value={data.orderReference || ''}
+            onChange={(e) => updateField('orderReference', e.target.value)}
+            description="For PO and contracts"
+          />
+        )}
+        {visibility.showContractReference && (
+          <FormInput
+            label="Contract Reference (I-123)"
+            placeholder="CTR-2024-001"
+            value={data.contractReference || ''}
+            onChange={(e) => updateField('contractReference', e.target.value)}
+            description="For public contract documents"
+          />
+        )}
+        {visibility.showCreditReason && (
+          <FormInput
+            label="Credit Reason (I-124)"
+            placeholder="Reason for credit note"
+            value={data.creditReason || ''}
+            onChange={(e) => updateField('creditReason', e.target.value)}
+            description="Mandatory for credit notes"
+          />
+        )}
+      </FormSection>
 
       {/* SECTION 2: DATES (Dtm - All date information I-31 through I-38) */}
-      <section className="bg-slate-900 p-8 border border-slate-800 space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-800 pb-8">
-          <h2 className="text-2xl font-semibold text-slate-100 flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-800 border border-slate-700 rounded flex items-center justify-center text-slate-300 font-mono text-lg">02</div>
-            <div className="flex flex-col">
-              <span className="tracking-tight">Invoice Dates</span>
-              <span className="text-xs text-slate-400 font-normal tracking-wide">TEIF 1.8.8 Standard</span>
-            </div>
-          </h2>
-        </div>
-
-        {/* Required Dates */}
-        <div className={`grid gap-6 ${visibility.showDeliveryDate ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">Issue Date (I-31) *</label>
-            <input type="date" value={data.invoiceDate} onChange={(e) => updateField('invoiceDate', e.target.value)} className="w-full p-3 border border-slate-700 rounded bg-slate-800 font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" required />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">Due Date (I-32)</label>
-            <input type="date" value={data.dueDate || ''} onChange={(e) => updateField('dueDate', e.target.value)} className="w-full p-3 border border-slate-700 rounded bg-slate-800 font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" />
-          </div>
-          {visibility.showDeliveryDate && (
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">Delivery Date (I-33)</label>
-            <input type="date" value={data.deliveryDate || ''} onChange={(e) => updateField('deliveryDate', e.target.value)} className="w-full p-3 border border-slate-700 rounded bg-slate-800 font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" />
-          </div>
-          )}
-        </div>
-
-        {/* Service Period (I-36) */}
+      <FormSection 
+        title="Invoice Dates" 
+        description="TEIF 1.8.8 - Date information (I-31 through I-38)"
+        badge={{ label: "Required", variant: "default" }}
+      >
+        <FormInput
+          label="Issue Date (I-31)"
+          type="date"
+          value={data.invoiceDate}
+          onChange={(e) => updateField('invoiceDate', e.target.value)}
+          required
+        />
+        {visibility.showDueDate && (
+          <FormInput
+            label="Due Date (I-32)"
+            type="date"
+            value={data.dueDate || ''}
+            onChange={(e) => updateField('dueDate', e.target.value)}
+            description="Payment deadline"
+          />
+        )}
+        {visibility.showDeliveryDate && (
+          <FormInput
+            label="Delivery Date (I-33)"
+            type="date"
+            value={data.deliveryDate || ''}
+            onChange={(e) => updateField('deliveryDate', e.target.value)}
+            description="When goods are delivered"
+          />
+        )}
         {visibility.showServicePeriod && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-800 rounded border border-slate-700">
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">Period Start (I-36)</label>
-            <input type="date" value={data.periodStart || ''} onChange={(e) => updateField('periodStart', e.target.value)} className="w-full p-3 border border-slate-700 rounded bg-slate-900 font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">Period End (I-36)</label>
-            <input type="date" value={data.periodEnd || ''} onChange={(e) => updateField('periodEnd', e.target.value)} className="w-full p-3 border border-slate-700 rounded bg-slate-900 font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" />
-          </div>
-        </div>
+          <>
+            <FormInput
+              label="Period Start (I-36)"
+              type="date"
+              value={data.periodStart || ''}
+              onChange={(e) => updateField('periodStart', e.target.value)}
+              description="Service period start"
+            />
+            <FormInput
+              label="Period End (I-36)"
+              type="date"
+              value={data.periodEnd || ''}
+              onChange={(e) => updateField('periodEnd', e.target.value)}
+              description="Service period end"
+            />
+          </>
         )}
-
-        {/* Optional Dates Collapsible Section */}
-        <button
-          onClick={() => setExpandedSections({...expandedSections, optionalDates: !expandedSections.optionalDates})}
-          className="w-full flex justify-between items-center p-4 bg-slate-800 border border-slate-700 rounded hover:bg-slate-700 transition-colors"
-        >
-          <span className="text-sm font-medium text-slate-300 flex items-center gap-3">
-            <svg className={`w-4 h-4 transition-transform duration-300 ${expandedSections.optionalDates ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-            Optional Dates (I-34, I-35, I-37, I-38)
-          </span>
-          <span className="text-xs font-medium text-slate-400">{expandedSections.optionalDates ? 'Hide' : 'Show'}</span>
-        </button>
-
-        {expandedSections.optionalDates && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-800 border border-slate-700 rounded">
-            {visibility.showDispatchDate && (
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-2">Dispatch Date (I-34)</label>
-              <input type="date" value={data.dispatchDate || ''} onChange={(e) => updateField('dispatchDate', e.target.value)} className="w-full p-3 border border-slate-700 rounded bg-slate-900 font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" />
-              <p className="text-xs text-slate-500 mt-1">When goods are dispatched</p>
-            </div>
-            )}
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-2">Payment Date (I-35)</label>
-              <input type="date" value={data.paymentDate || ''} onChange={(e) => updateField('paymentDate', e.target.value)} className="w-full p-3 border border-slate-700 rounded bg-slate-900 font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" />
-              <p className="text-xs text-slate-500 mt-1">Expected payment date</p>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-2">Signature Date & Time (I-37)</label>
-              <input type="text" placeholder="DDMMYYHHmm" maxLength={10} value={data.signatureDate || ''} onChange={(e) => updateField('signatureDate', e.target.value)} className="w-full p-3 border border-slate-700 rounded bg-slate-900 font-mono font-medium text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-600 transition-colors" />
-              <p className="text-xs text-slate-500 mt-1">Format: DDMMYYHHmm</p>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-2">Other Date (I-38)</label>
-              <input type="date" value={data.otherDate || ''} onChange={(e) => updateField('otherDate', e.target.value)} className="w-full p-3 border border-slate-700 rounded bg-slate-900 font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" />
-              <p className="text-xs text-slate-500 mt-1">Any other relevant date</p>
-            </div>
-          </div>
+        {visibility.showDispatchDate && (
+          <FormInput
+            label="Dispatch Date (I-34)"
+            type="date"
+            value={data.dispatchDate || ''}
+            onChange={(e) => updateField('dispatchDate', e.target.value)}
+            description="When goods are dispatched"
+          />
         )}
-      </section>
+        <FormInput
+          label="Payment Date (I-35)"
+          type="date"
+          value={data.paymentDate || ''}
+          onChange={(e) => updateField('paymentDate', e.target.value)}
+          description="Expected payment date"
+        />
+        <FormInput
+          label="Signature Date & Time (I-37)"
+          type="text"
+          placeholder="DDMMYYHHmm"
+          maxLength={10}
+          value={data.signatureDate || ''}
+          onChange={(e) => updateField('signatureDate', e.target.value)}
+          helper="Format: DDMMYYHHmm"
+        />
+        <FormInput
+          label="Other Date (I-38)"
+          type="date"
+          value={data.otherDate || ''}
+          onChange={(e) => updateField('otherDate', e.target.value)}
+          description="Any other relevant date"
+        />
+      </FormSection>
 
       {/* SECTION 3: PARTNER INFORMATION (Rff - Party Information) */}
-      <section className="bg-slate-900 p-8 border border-slate-800 space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-800 pb-8">
-          <h2 className="text-2xl font-semibold text-slate-100 flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-800 border border-slate-700 rounded flex items-center justify-center text-slate-300 font-mono text-lg">03</div>
-            <div className="flex flex-col">
-              <span className="tracking-tight">Partner Information</span>
-              <span className="text-xs text-slate-400 font-normal tracking-wide">TEIF 1.8.8 Standard</span>
-            </div>
-          </h2>
+      <FormSection 
+        title={t('partnerInfo')} 
+        description="TEIF 1.8.8 - Supplier and Buyer details"
+        badge={{ label: "Required", variant: "default" }}
+        className="md:col-span-2"
+      >
+        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="border-r border-slate-700 pr-8 space-y-4">
+            <h3 className="text-base font-semibold text-slate-100 flex items-center gap-2">
+              <span className="w-6 h-6 rounded bg-slate-700 text-slate-200 flex items-center justify-center text-xs font-semibold">S</span>
+              {t('supplier')}
+            </h3>
+            <PartnerForm title={t('supplier')} path="supplier" partner={data.supplier} step="03a" updateField={updateField} lang={lang} />
+          </div>
+          <div className="border-l border-slate-700 pl-8 space-y-4">
+            <h3 className="text-base font-semibold text-slate-100 flex items-center gap-2">
+              <span className="w-6 h-6 rounded bg-slate-700 text-slate-200 flex items-center justify-center text-xs font-semibold">B</span>
+              {t('buyer')}
+            </h3>
+            <PartnerForm title={t('buyer')} path="buyer" partner={data.buyer} step="03b" updateField={updateField} lang={lang} />
+          </div>
         </div>
-      
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <div className="space-y-0">
-          <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-800 border border-slate-700 rounded flex items-center justify-center text-slate-300 font-mono text-sm">A</div>
-            {t('supplier')}
-          </h3>
-          <PartnerForm title={t('supplier')} path="supplier" partner={data.supplier} step="03a" updateField={updateField} lang={lang} />
-        </div>
-        <div className="space-y-0">
-          <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-800 border border-slate-700 rounded flex items-center justify-center text-slate-300 font-mono text-sm">B</div>
-            {t('buyer')}
-          </h3>
-          <PartnerForm title={t('buyer')} path="buyer" partner={data.buyer} step="03b" updateField={updateField} lang={lang} />
-        </div>
-      </div>
-      </section>
+      </FormSection>
 
       {/* SECTION 4: LINE ITEMS (Lin - Invoice Line Items) */}
-      <section className="bg-slate-900 p-8 border border-slate-800 space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-800 pb-8">
-          <h2 className="text-2xl font-semibold text-slate-100 flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-800 border border-slate-700 rounded flex items-center justify-center text-slate-300 font-mono text-lg">04</div>
+      <section className="bg-gradient-to-br from-slate-800/80 via-slate-800/50 to-slate-900/80 border border-slate-700/50 backdrop-blur-sm p-8 space-y-8 rounded-xl shadow-xl shadow-slate-900/30 hover:shadow-slate-900/50 transition-all duration-300">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-700/30 pb-8">
+          <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-4 group">
+            <div className="w-12 h-12 bg-gradient-to-br from-violet-600/90 to-purple-600/90 border border-violet-500/30 rounded-lg flex items-center justify-center text-white font-mono text-lg font-semibold shadow-lg shadow-violet-600/20 group-hover:shadow-violet-600/40 transition-all duration-300">04</div>
             <div className="flex flex-col">
               <span className="tracking-tight">Invoice Line Items</span>
               <span className="text-xs text-slate-400 font-normal tracking-wide">TEIF 1.8.8 Standard</span>
@@ -504,418 +529,441 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
       </section>
 
       {/* SECTION 5: ALLOWANCES & CHARGES (InvoiceAlc - Invoice Level Discounts/Surcharges) */}
-      <section className="bg-slate-800 p-8 border border-slate-700 space-y-8">
-        <div className="border-b border-slate-700 pb-6">
+      <FormSection 
+        title="Allowances & Charges" 
+        description="Invoice-level discounts, surcharges, and allowances (I-150 to I-155)"
+        badge={{ label: "Optional", variant: "secondary" }}
+      >
+        <div className="md:col-span-2">
           <button
             onClick={() => setExpandedSections({...expandedSections, allowances: !expandedSections.allowances})}
-            className="w-full flex justify-between items-center p-4 bg-slate-900 border border-slate-700 rounded transition-colors hover:bg-slate-800 group"
+            className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 border border-slate-600 rounded-lg font-medium text-sm transition-colors flex items-center justify-between"
           >
-            <span className="text-sm font-medium text-slate-200 flex items-center gap-3">
-              <div className="w-10 h-10 bg-slate-700 rounded text-white flex items-center justify-center font-mono text-xs font-medium">05</div>
-              <span>{t('allowancesCharges')} (InvoiceAlc)</span>
-            </span>
-            <svg className={`w-5 h-5 transition-transform duration-300 text-slate-400 ${expandedSections.allowances ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+            <span>Allowances & Charges</span>
+            <span>{expandedSections.allowances ? '▼' : '▶'}</span>
           </button>
-        </div>
-
-        {expandedSections.allowances && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-top-2 duration-300">
-            {/* PARTNER TYPES */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-900 border border-slate-700 rounded">
-              <div>
-                <label className="block text-xs font-medium text-slate-400 uppercase mb-2">Supplier Partner Type (I-61→I-69)</label>
-                <select 
-                  value={data.supplier?.partnerType || 'I-62'} 
-                  onChange={(e) => onChange({...data, supplier: {...data.supplier, partnerType: e.target.value as any}})} 
-                  className="w-full p-2 border border-slate-700 rounded bg-slate-800 text-xs text-slate-100 focus:outline-none focus:border-slate-600 transition-colors cursor-pointer"
-                >
-                  <option value="I-61">I-61: Previous Partner</option>
-                  <option value="I-62">I-62: Supplier</option>
-                  <option value="I-63">I-63: Ship-to Party</option>
-                  <option value="I-64">I-64: Buyer</option>
-                  <option value="I-65">I-65: Payment Receiver</option>
-                  <option value="I-66">I-66: Delivery Party</option>
-                  <option value="I-67">I-67: Ultimate Customer</option>
-                  <option value="I-68">I-68: Goods Recipient</option>
-                  <option value="I-69">I-69: Bill Recipient</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-400 uppercase mb-2">Buyer Partner Type (I-61→I-69)</label>
-                <select 
-                  value={data.buyer?.partnerType || 'I-64'} 
-                  onChange={(e) => onChange({...data, buyer: {...data.buyer, partnerType: e.target.value as any}})} 
-                  className="w-full p-2 border border-slate-700 rounded bg-slate-800 text-xs text-slate-100 focus:outline-none focus:border-slate-600 transition-colors cursor-pointer"
-                >
-                  <option value="I-61">I-61: Previous Partner</option>
-                  <option value="I-62">I-62: Supplier</option>
-                  <option value="I-63">I-63: Ship-to Party</option>
-                  <option value="I-64">I-64: Buyer</option>
-                  <option value="I-65">I-65: Payment Receiver</option>
-                  <option value="I-66">I-66: Delivery Party</option>
-                  <option value="I-67">I-67: Ultimate Customer</option>
-                  <option value="I-68">I-68: Goods Recipient</option>
-                  <option value="I-69">I-69: Bill Recipient</option>
-                </select>
-              </div>
-            </div>
-
-            {/* INVOICE-LEVEL ALLOWANCES/CHARGES */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 bg-slate-900 border border-slate-700 rounded">
-                <h3 className="text-sm font-medium text-slate-200">Invoice-Level Allowances & Charges</h3>
-                <button
-                  onClick={() => {
-                    const newAllowance: any = {
-                      id: `alc-${Date.now()}`,
-                      type: 'allowance',
-                      code: 'I-153',
-                      description: 'Discount',
-                      amount: 0,
-                      basedOn: 'invoice'
-                    };
-                    onChange({...data, allowances: [...(data.allowances || []), newAllowance]});
-                  }}
-                  className="px-4 py-2 bg-purple-600 text-white text-[9px] font-black rounded-xl hover:bg-purple-700 transition-all shadow-sm hover:shadow-md"
-                >
-                  + Add Allowance
-                </button>
-              </div>
+          
+          {expandedSections.allowances && (
+            <div className="mt-4 space-y-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+              <button
+                onClick={() => {
+                  const newAllowance: any = {
+                    id: `alc-${Date.now()}`,
+                    type: 'allowance',
+                    code: 'I-153',
+                    description: 'Discount',
+                    amount: 0,
+                    basedOn: 'invoice'
+                  };
+                  onChange({...data, allowances: [...(data.allowances || []), newAllowance]});
+                }}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 rounded font-medium text-sm transition-colors"
+              >
+                + Add Allowance/Charge
+              </button>
 
               {data.allowances && data.allowances.length > 0 ? (
                 <div className="space-y-3">
                   {data.allowances.map((alc) => (
-                    <div key={alc.id} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 bg-slate-900 border border-slate-700 rounded transition-colors">
-                      <div>
-                        <label className="text-xs font-medium text-slate-400 uppercase mb-1 block">Type</label>
-                        <select 
-                          value={alc.type} 
-                          onChange={(e) => {
-                            const updated = data.allowances!.map(a => a.id === alc.id ? {...a, type: e.target.value as any} : a);
-                            onChange({...data, allowances: updated});
-                          }}
-                          className="w-full p-2 border border-slate-700 rounded bg-slate-800 text-xs text-slate-100 focus:outline-none focus:border-slate-600 transition-colors cursor-pointer"
-                        >
-                          <option value="allowance">Allowance (Discount)</option>
-                          <option value="charge">Charge (Surcharge)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-slate-400 uppercase mb-1 block">Code (I-151→I-155)</label>
-                        <select 
-                          value={alc.code} 
-                          onChange={(e) => {
-                            const updated = data.allowances!.map(a => a.id === alc.id ? {...a, code: e.target.value as any} : a);
-                            onChange({...data, allowances: updated});
-                          }}
-                          className="w-full p-2 border border-slate-700 rounded bg-slate-800 text-xs text-slate-100 focus:outline-none focus:border-slate-600 transition-colors cursor-pointer"
-                        >
-                          <option value="I-151">I-151: General Discount</option>
-                          <option value="I-152">I-152: Freight</option>
-                          <option value="I-153">I-153: Standard Discount</option>
-                          <option value="I-154">I-154: Insurance</option>
-                          <option value="I-155">I-155: Handling</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-[8px] font-black text-slate-400 uppercase mb-1 block">Description</label>
-                        <input 
-                          type="text" 
-                          value={alc.description} 
-                          onChange={(e) => {
-                            const updated = data.allowances!.map(a => a.id === alc.id ? {...a, description: e.target.value} : a);
-                            onChange({...data, allowances: updated});
-                          }}
-                          className="w-full p-2 border border-slate-200 rounded-xl text-[10px] font-black" 
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[8px] font-black text-slate-400 uppercase mb-1 block">Amount (TND)</label>
-                        <input 
-                          type="number" 
-                          step="0.001" 
-                          value={alc.amount} 
-                          onChange={(e) => {
-                            const updated = data.allowances!.map(a => a.id === alc.id ? {...a, amount: parseFloat(e.target.value) || 0} : a);
-                            onChange({...data, allowances: updated});
-                          }}
-                          className="w-full p-2 border border-slate-200 rounded-xl text-[10px] font-mono font-black text-right text-blue-700" 
-                        />
-                      </div>
-                      <div className="flex items-end">
-                        <button
-                          onClick={() => {
-                            const updated = data.allowances!.filter(a => a.id !== alc.id);
-                            onChange({...data, allowances: updated});
-                          }}
-                          className="w-full px-3 py-2 bg-red-50 text-red-600 text-[9px] font-black rounded-xl hover:bg-red-100 transition-all"
-                        >
-                          Remove
-                        </button>
-                      </div>
+                    <div key={alc.id} className="grid grid-cols-1 md:grid-cols-4 gap-2 p-3 bg-slate-900 border border-slate-700 rounded-lg hover:border-slate-600 transition-colors">
+                      <select 
+                        value={alc.type} 
+                        onChange={(e) => {
+                          const updated = data.allowances!.map(a => a.id === alc.id ? {...a, type: e.target.value as any} : a);
+                          onChange({...data, allowances: updated});
+                        }}
+                        className="px-3 py-2 border border-slate-700 rounded bg-slate-800 text-sm text-slate-100 focus:outline-none focus:border-slate-600 transition-colors cursor-pointer"
+                      >
+                        <option value="allowance">Allowance</option>
+                        <option value="charge">Charge</option>
+                      </select>
+                      <input 
+                        type="text" 
+                        value={alc.description} 
+                        onChange={(e) => {
+                          const updated = data.allowances!.map(a => a.id === alc.id ? {...a, description: e.target.value} : a);
+                          onChange({...data, allowances: updated});
+                        }}
+                        placeholder="Description"
+                        className="px-3 py-2 border border-slate-700 rounded bg-slate-800 text-sm text-slate-100 focus:outline-none focus:border-slate-600 transition-colors placeholder-slate-500"
+                      />
+                      <input 
+                        type="number" 
+                        step="0.001" 
+                        value={alc.amount} 
+                        onChange={(e) => {
+                          const updated = data.allowances!.map(a => a.id === alc.id ? {...a, amount: parseFloat(e.target.value) || 0} : a);
+                          onChange({...data, allowances: updated});
+                        }}
+                        placeholder="0.00"
+                        className="px-3 py-2 border border-slate-700 rounded bg-slate-800 text-sm text-slate-100 text-right font-mono focus:outline-none focus:border-slate-600 transition-colors placeholder-slate-500"
+                      />
+                      <button
+                        onClick={() => {
+                          const updated = data.allowances!.filter(a => a.id !== alc.id);
+                          onChange({...data, allowances: updated});
+                        }}
+                        className="px-3 py-2 bg-slate-700 hover:bg-red-600/20 text-slate-300 hover:text-red-400 rounded text-sm font-medium transition-colors"
+                      >
+                        ✕ Remove
+                      </button>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="py-12 text-center border-4 border-dashed border-slate-50 rounded-2xl">
-                  <div className="text-slate-200 font-black uppercase tracking-[0.5em] text-xs">No allowances added</div>
-                </div>
+                <p className="text-sm text-slate-400 text-center py-3">No allowances added</p>
               )}
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </div>
+      </FormSection>
 
       {/* SECTION 6: PAYMENT, BANK & FINANCIAL SUMMARY (Pyt, Bnk, Moa) */}
-      <section className="bg-slate-800 p-8 border border-slate-700 space-y-8">
+      <FormSection 
+        title="Payment & Financial Summary" 
+        description="Payment method, banking details, and invoice totals (I-111 through I-180)"
+        badge={{ label: "Required", variant: "default" }}
+      >
+        <FormSelect
+          label={t('paymentMeans')}
+          value={data.paymentMeans}
+          onValueChange={(value) => updateField('paymentMeans', value)}
+          options={Object.entries(PAYMENT_MEANS).map(([code, label]) => ({
+            value: code,
+            label: `${code} - ${label.toUpperCase()}`
+          }))}
+          required
+        />
+        <FormInput
+          label={t('ttnHash')}
+          type="text"
+          maxLength={26}
+          value={data.ttnReference}
+          onChange={(e) => updateField('ttnReference', e.target.value)}
+          placeholder="26-character hash"
+        />
+        {visibility.showGlobalDiscount && (
+          <FormInput
+            label="Discount Amount"
+            type="number"
+            step="0.001"
+            value={data.globalDiscount}
+            onChange={(e) => updateField('globalDiscount', parseFloat(e.target.value) || 0)}
+            description="Invoice-level discount"
+          />
+        )}
+        {visibility.showStampDuty && (
+          <FormInput
+            label="Stamp Duty (I-178)"
+            type="number"
+            step="0.001"
+            value={data.stampDuty}
+            onChange={(e) => updateField('stampDuty', parseFloat(e.target.value) || 0)}
+            description="Droit de timbre"
+          />
+        )}
+
+        {visibility.showBankingDetails && (
+          <>
+            <FormInput
+              label="Bank Code (I-114)"
+              type="text"
+              maxLength={5}
+              placeholder="00000"
+              value={data.bankCode || ''}
+              onChange={(e) => updateField('bankCode', e.target.value)}
+              description="Bank clearing/code"
+            />
+            <FormInput
+              label="Bank Name"
+              type="text"
+              placeholder="Bank of Tunisia"
+              value={data.bankName || ''}
+              onChange={(e) => updateField('bankName', e.target.value)}
+              description="Institution name"
+              required
+            />
+            <FormInput
+              label="Account Owner"
+              type="text"
+              placeholder="Owner Name"
+              value={data.bankAccountOwner || ''}
+              onChange={(e) => updateField('bankAccountOwner', e.target.value)}
+              description="Account holder name"
+              required
+            />
+            <FormInput
+              label="RIB Account (I-814)"
+              type="text"
+              maxLength={20}
+              placeholder="00000000000000000000"
+              value={data.bankRib || ''}
+              onChange={(e) => updateField('bankRib', e.target.value)}
+              description="20-digit account number"
+              error={data.bankRib && !isRibValid ? 'Invalid RIB (must be 20 digits with valid checksum)' : ''}
+              helper={isRibValid ? '✓ Valid RIB' : ''}
+              required
+            />
+          </>
+        )}
+
+        {visibility.showCheckNumber && (
+          <FormInput
+            label="Check Number (I-117)"
+            type="text"
+            placeholder="CHK-2024-001"
+            value={data.checkNumber || ''}
+            onChange={(e) => updateField('checkNumber', e.target.value)}
+            required
+          />
+        )}
+
+        {visibility.showCardDetails && (
+          <>
+            <FormSelect
+              label="Card Type (I-118)"
+              value={data.cardType || 'VISA'}
+              onValueChange={(value) => updateField('cardType', value)}
+              options={[
+                { value: 'VISA', label: 'VISA' },
+                { value: 'MASTERCARD', label: 'MasterCard' },
+                { value: 'AMEX', label: 'American Express' },
+              ]}
+              required
+            />
+            <FormInput
+              label="Last 4 Digits (I-118)"
+              type="text"
+              maxLength={4}
+              placeholder="0000"
+              value={data.cardLast4 || ''}
+              onChange={(e) => updateField('cardLast4', e.target.value.replace(/\D/g, ''))}
+              description="Last 4 digits of card"
+              required
+            />
+            <FormInput
+              label="Authorization Code (I-118)"
+              type="text"
+              placeholder="AUTH123456"
+              value={data.cardReference || ''}
+              onChange={(e) => updateField('cardReference', e.target.value)}
+              description="Transaction/authorization reference code"
+              required
+            />
+          </>
+        )}
+
+        {visibility.showPostalDetails && (
+          <>
+            <FormInput
+              label="Postal Account Number (I-115)"
+              type="text"
+              placeholder="0120021241115530"
+              value={data.postalAccountNumber || ''}
+              onChange={(e) => updateField('postalAccountNumber', e.target.value)}
+              description="Postal account for payment"
+              required
+            />
+            <FormInput
+              label="Postal Account Owner"
+              type="text"
+              placeholder="Account Holder Name"
+              value={data.postalAccountOwner || ''}
+              onChange={(e) => updateField('postalAccountOwner', e.target.value)}
+              required
+            />
+            <FormInput
+              label="Postal Branch Code"
+              type="text"
+              maxLength={4}
+              placeholder="0760"
+              value={data.postalBranchCode || ''}
+              onChange={(e) => updateField('postalBranchCode', e.target.value)}
+              required
+            />
+            <FormInput
+              label="Postal Service Name"
+              type="text"
+              placeholder="La Poste"
+              value={data.postalServiceName || ''}
+              onChange={(e) => updateField('postalServiceName', e.target.value)}
+              description="Optional: Postal service provider"
+            />
+          </>
+        )}
+
+        {visibility.showEPaymentDetails && (
+          <>
+            <FormInput
+              label="Payment Gateway (I-119)"
+              type="text"
+              placeholder="PayPal, Stripe, etc."
+              value={data.ePaymentGateway || ''}
+              onChange={(e) => updateField('ePaymentGateway', e.target.value)}
+              description="Payment gateway provider"
+              required
+            />
+            <FormInput
+              label="Transaction ID"
+              type="text"
+              placeholder="TXN123456789"
+              value={data.ePaymentTransactionId || ''}
+              onChange={(e) => updateField('ePaymentTransactionId', e.target.value)}
+              description="Transaction reference from gateway"
+              required
+            />
+          </>
+        )}
+
+        {visibility.showOtherPaymentDetails && (
+          <>
+            <FormInput
+              label="Payment Method Description (I-120)"
+              type="text"
+              placeholder="Description of payment method"
+              value={data.otherPaymentDescription || ''}
+              onChange={(e) => updateField('otherPaymentDescription', e.target.value)}
+              description="Describe the payment method"
+              required
+            />
+            <FormInput
+              label="Payment Reference"
+              type="text"
+              placeholder="Payment reference or confirmation"
+              value={data.otherPaymentReference || ''}
+              onChange={(e) => updateField('otherPaymentReference', e.target.value)}
+              description="Reference code or confirmation number"
+              required
+            />
+          </>
+        )}
+      </FormSection>
+
+      {/* CALCULATION SECTION - Invoice Summary */}
+      <section className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-8 space-y-6 shadow-2xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-700 pb-6">
-          <h2 className="text-xl font-medium text-slate-100 flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-700 rounded text-white flex items-center justify-center font-mono text-xs font-medium">06</div>
-            <div className="flex flex-col">
-              <span className="tracking-tight">{t('paymentBankTotals')} (Pyt/Bnk/Moa)</span>
-              <span className="text-xs text-slate-400 font-medium uppercase">TEIF 1.8.8 Standard</span>
-            </div>
+          <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
+            <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3v3m-6-1v-3m0-6h12a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z" />
+            </svg>
+            Invoice Calculation Summary
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-medium text-slate-400 uppercase mb-2">{t('paymentMeans')} (I-111)</label>
-                <select value={data.paymentMeans} onChange={(e) => updateField('paymentMeans', e.target.value)} className="w-full p-2 border border-slate-700 rounded bg-slate-900 text-xs text-slate-100 focus:outline-none focus:border-slate-600 transition-colors cursor-pointer">
-                  {Object.entries(PAYMENT_MEANS).map(([c, l]) => (<option key={c} value={c}>{c} - {l.toUpperCase()}</option>))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-400 uppercase mb-2">{t('ttnHash')}</label>
-                <input type="text" maxLength={26} value={data.ttnReference} onChange={(e) => updateField('ttnReference', e.target.value)} className="w-full p-2 border border-slate-700 rounded bg-slate-900 font-mono text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-600 transition-colors" placeholder="HASH DE 26 CARACTÈRES" />
-              </div>
+        {/* Calculation Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* LEFT COLUMN: Breakdown */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Subtotal HT (I-176)</span>
+              <span className="font-bold text-slate-100">{totals.ht.toFixed(3)}</span>
             </div>
 
-            {/* BANKING MODULE - Wire Transfer (I-114) */}
-            {visibility.showBankingDetails && (
-            <div className="p-6 bg-slate-800 border border-slate-700 space-y-4">
-              <h4 className="text-xs font-medium text-slate-300">{t('bankInfo')}</h4>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-400">{t('bankCode')}</label>
-                  <input type="text" maxLength={5} placeholder="00000" value={data.bankCode || ''} onChange={(e) => updateField('bankCode', e.target.value)} className="w-full p-2 border border-slate-700 rounded bg-slate-900 font-mono text-center text-xs text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <label className="text-xs font-medium text-slate-400">{t('bankNameLabel')}</label>
-                  <input type="text" placeholder="..." value={data.bankName || ''} onChange={(e) => updateField('bankName', e.target.value)} className="w-full p-2 border border-slate-700 rounded bg-slate-900 text-xs text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" />
-                </div>
+            {data.globalDiscount > 0 && (
+              <div className="flex justify-between items-center py-3 px-4 bg-red-500/10 rounded-lg border border-red-500/30">
+                <span className="text-xs font-medium text-red-400 uppercase tracking-wider">Global Discount (I-181)</span>
+                <span className="font-bold text-red-300">-{data.globalDiscount.toFixed(3)}</span>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-slate-400">{t('ribLabel')}</label>
-                <input 
-                  type="text" 
-                  maxLength={20} 
-                  placeholder="00 000 0000000000000 00" 
-                  value={data.bankRib || ''} 
-                  onChange={(e) => updateField('bankRib', e.target.value)} 
-                  className={`w-full p-3 border rounded font-mono text-center text-lg bg-slate-900 transition-all text-slate-100 placeholder-slate-600 focus:outline-none ${data.bankRib ? (isRibValid ? 'border-slate-600 focus:border-slate-500' : 'border-red-600 focus:border-red-500') : 'border-slate-700 focus:border-slate-600'}`} 
-                />
-                {data.bankRib && (
-                  <div className={`text-center text-xs font-medium ${isRibValid ? 'text-slate-400' : 'text-red-400'}`}>
-                    {isRibValid ? 'RIB Valid (MOD 97)' : 'Invalid RIB checksum'}
-                  </div>
-                )}
-              </div>
-            </div>
             )}
 
-            {/* CHECK PAYMENT MODULE - Check (I-117) */}
-            {visibility.showCheckNumber && (
-            <div className="p-6 bg-slate-800 border border-slate-700 space-y-4">
-              <h4 className="text-xs font-medium text-slate-300">Check Details (I-117)</h4>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-slate-400">Check Number *</label>
-                <input 
-                  type="text" 
-                  placeholder="CHK-2024-001" 
-                  value={data.checkNumber || ''} 
-                  onChange={(e) => updateField('checkNumber', e.target.value)} 
-                  className="w-full p-3 border border-slate-700 rounded bg-slate-900 font-mono text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-600 transition-colors" 
-                  required
-                />
-                <p className="text-xs text-slate-500">Required for check payments</p>
-              </div>
+            <div className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Net Total HT</span>
+              <span className="font-bold text-slate-100">{totals.netTotalHt.toFixed(3)}</span>
             </div>
+
+            {totals.fodec > 0 && (
+              <div className="flex justify-between items-center py-3 px-4 bg-amber-500/10 rounded-lg border border-amber-500/30">
+                <span className="text-xs font-medium text-amber-400 uppercase tracking-wider">FODEC (1%)</span>
+                <span className="font-bold text-amber-300">+{totals.fodec.toFixed(3)}</span>
+              </div>
             )}
 
-            {/* CARD PAYMENT MODULE - Card (I-118) */}
-            {visibility.showCardDetails && (
-            <div className="p-6 bg-slate-800 border border-slate-700 space-y-4">
-              <h4 className="text-xs font-medium text-slate-300">Card Payment Details (I-118)</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-400">Card Type</label>
-                  <select 
-                    value={data.cardType || 'VISA'} 
-                    onChange={(e) => updateField('cardType', e.target.value)} 
-                    className="w-full p-2 border border-slate-700 rounded bg-slate-900 text-xs text-slate-100 focus:outline-none focus:border-slate-600 transition-colors cursor-pointer"
-                  >
-                    <option value="VISA">VISA</option>
-                    <option value="MASTERCARD">MasterCard</option>
-                    <option value="AMEX">American Express</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-400">Last 4 Digits</label>
-                  <input 
-                    type="text" 
-                    maxLength={4}
-                    placeholder="0000" 
-                    value={data.cardLast4 || ''} 
-                    onChange={(e) => updateField('cardLast4', e.target.value.replace(/\D/g, ''))} 
-                    className="w-full p-2 border border-slate-700 rounded bg-slate-900 font-mono text-center text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-600 transition-colors"
-                  />
-                </div>
+            {totals.tva > 0 && (
+              <div className="flex justify-between items-center py-3 px-4 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
+                <span className="text-xs font-medium text-emerald-400 uppercase tracking-wider">VAT / TVA (I-177)</span>
+                <span className="font-bold text-emerald-300">+{totals.tva.toFixed(3)}</span>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-slate-400">Transaction Reference</label>
-                <input 
-                  type="text" 
-                  placeholder="Transaction or authorization code" 
-                  value={data.cardReference || ''} 
-                  onChange={(e) => updateField('cardReference', e.target.value)} 
-                  className="w-full p-2 border border-slate-700 rounded bg-slate-900 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-600 transition-colors"
-                />
-              </div>
-            </div>
             )}
 
-            {/* POSTAL PAYMENT MODULE - Postal (I-115) */}
-            {visibility.showPostalDetails && (
-            <div className="p-6 bg-slate-800 border border-slate-700 space-y-4">
-              <h4 className="text-xs font-medium text-slate-300">Postal Payment Details (I-115)</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-400">Account Number *</label>
-                  <input 
-                    type="text" 
-                    placeholder="0120021241115530" 
-                    value={data.postalAccountNumber || ''} 
-                    onChange={(e) => updateField('postalAccountNumber', e.target.value)} 
-                    className="w-full p-2 border border-slate-700 rounded bg-slate-900 font-mono text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-600 transition-colors"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-400">Account Owner *</label>
-                  <input 
-                    type="text" 
-                    placeholder="Account Holder Name" 
-                    value={data.postalAccountOwner || ''} 
-                    onChange={(e) => updateField('postalAccountOwner', e.target.value)} 
-                    className="w-full p-2 border border-slate-700 rounded bg-slate-900 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-600 transition-colors"
-                    required
-                  />
-                </div>
+            {data.stampDuty > 0 && (
+              <div className="flex justify-between items-center py-3 px-4 bg-purple-500/10 rounded-lg border border-purple-500/30">
+                <span className="text-xs font-medium text-purple-400 uppercase tracking-wider">Stamp Duty (I-178)</span>
+                <span className="font-bold text-purple-300">+{data.stampDuty.toFixed(3)}</span>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-400">Branch Code *</label>
-                  <input 
-                    type="text" 
-                    placeholder="0760" 
-                    value={data.postalBranchCode || ''} 
-                    onChange={(e) => updateField('postalBranchCode', e.target.value)} 
-                    className="w-full p-2 border border-slate-700 rounded bg-slate-900 font-mono text-center text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-600 transition-colors"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-400">Service Name (Optional)</label>
-                  <input 
-                    type="text" 
-                    placeholder="La Poste" 
-                    value={data.postalServiceName || ''} 
-                    onChange={(e) => updateField('postalServiceName', e.target.value)} 
-                    className="w-full p-2 border border-slate-700 rounded bg-slate-900 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-600 transition-colors"
-                  />
-                </div>
-              </div>
-              <p className="text-[7px] text-orange-600 italic">* Required fields for postal payment</p>
-            </div>
             )}
-
-            {/* AMOUNT IN LETTERS Module */}
-            <div className="space-y-3">
-              <label className="block text-xs font-medium text-slate-400 uppercase">{t('amountLettersLabel')}</label>
-              <textarea 
-                value={data.amountDescriptionOverride || calculatedLetters} 
-                onChange={(e) => updateField('amountDescriptionOverride', e.target.value)} 
-                className="w-full p-4 border border-slate-700 rounded bg-slate-900 text-xs text-slate-100 placeholder-slate-600 leading-relaxed h-32 font-mono focus:outline-none focus:border-slate-600 transition-colors"
-                placeholder="..."
-              />
-              <p className="text-xs text-slate-400 italic">Note: Le montant est auto-généré mais modifiable pour respecter vos spécificités juridiques.</p>
-            </div>
           </div>
 
-          {/* FINANCIAL SUMMARY MASTER CARD */}
-          <div className="bg-slate-900 text-white p-12 rounded-[3.5rem] shadow-2xl shadow-slate-900/60 flex flex-col justify-between relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-all duration-1000"></div>
-            
-            <div className="space-y-7 font-mono relative">
-              <div className="flex justify-between items-center text-xs opacity-50 tracking-widest">
-                <span className="uppercase">{t('totalGross')} HT</span>
-                <span className="font-bold">{(totals.ht + (data.globalDiscount || 0)).toFixed(3)}</span>
+          {/* RIGHT COLUMN: Final Amount */}
+          <div className="space-y-4 flex flex-col justify-center">
+            <div className="p-6 bg-gradient-to-br from-blue-600/20 to-blue-700/10 rounded-2xl border border-blue-500/40 space-y-4">
+              <div className="text-[11px] text-blue-400 font-black uppercase tracking-[0.5em]">Total Amount TTC (I-180)</div>
+              <div className="flex items-baseline gap-3">
+                <span className="text-6xl font-black tabular-nums tracking-tighter text-slate-100">{totals.totalTtc.toFixed(3)}</span>
+                <span className="text-xl font-black text-slate-500">{data.currency}</span>
               </div>
               
-              <div className="flex justify-between items-center py-4 px-6 bg-white/5 rounded-2xl border border-white/5 shadow-inner">
-                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{t('discountTotal')}</span>
-                <div className="flex items-center gap-3">
-                  <input 
-                    type="number" 
-                    step="0.001" 
-                    value={data.globalDiscount} 
-                    onChange={(e) => updateField('globalDiscount', parseFloat(e.target.value) || 0)} 
-                    className="w-32 bg-white/10 border-none rounded-xl px-4 py-2 text-right text-sm font-black text-white focus:ring-4 focus:ring-blue-500/50 outline-none transition-all" 
-                  />
-                  <span className="text-[10px] text-slate-500 font-bold uppercase">{data.currency}</span>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center text-base border-b border-white/10 pb-6">
-                <span className="uppercase tracking-[0.2em] font-black text-emerald-400">{t('netHt')}</span>
-                <span className="font-black text-2xl">{totals.netTotalHt.toFixed(3)}</span>
-              </div>
-
-              <div className="space-y-4 pt-2">
-                <div className="flex justify-between text-xs opacity-70">
-                  <span className="uppercase tracking-widest">{t('taxTotal')}</span>
-                  <span className="font-bold">{totals.tva.toFixed(3)}</span>
-                </div>
-                <div className="flex justify-between text-xs opacity-70">
-                  <span className="uppercase tracking-widest">{t('fodec')} (I-178 / 1%)</span>
-                  <span className="font-bold">{totals.fodec.toFixed(3)}</span>
-                </div>
-                <div className="flex justify-between text-xs text-amber-400 font-black">
-                  <span className="uppercase tracking-widest">{t('stampDuty')} (I-178)</span>
-                  <span className="font-bold">{data.stampDuty.toFixed(3)}</span>
+              {/* Amount in Words */}
+              <div className="pt-4 border-t border-slate-700/50">
+                <div className="text-[9px] text-slate-400 font-medium uppercase tracking-wider mb-2">{t('amountLetters')}</div>
+                <div className="text-sm font-semibold text-slate-200 italic capitalize leading-relaxed">
+                  {calculatedLetters}
                 </div>
               </div>
             </div>
 
-            <div className="mt-16 pt-10 border-t border-white/10 relative">
-              <div className="text-[11px] text-blue-400 font-black uppercase tracking-[0.5em] mb-4">{t('totalTtc')} (I-180)</div>
-              <div className="flex items-baseline gap-4">
-                <span className="text-7xl font-black tabular-nums tracking-tighter">{totals.totalTtc.toFixed(3)}</span>
-                <span className="text-2xl font-black text-slate-500 tracking-widest">{data.currency}</span>
+            {/* QR Code Display */}
+            {data.qrCodeEnabled && qrString && (
+              <div className="p-4 bg-white rounded-lg border border-slate-200">
+                <div className="text-[9px] text-slate-600 font-bold uppercase tracking-wider mb-2">QR Code (TTN Reference)</div>
+                <div className="bg-black p-2 rounded" style={{fontSize: 0}}>
+                  {/* QR visualization - uses the qrString */}
+                  <div className="text-[9px] text-slate-600 font-mono text-center p-2">TTN: {qrString.substring(0, 20)}...</div>
+                </div>
               </div>
-              <div className="mt-10 p-5 bg-white/5 border border-white/5 rounded-3xl shadow-inner backdrop-blur-sm">
-                 <div className="text-[9px] text-slate-600 font-black uppercase mb-2 tracking-[0.3em]">{t('qrSignature')}</div>
-                 <div className="text-[8px] font-mono opacity-20 break-all leading-relaxed select-none">{qrString}</div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
+
+        {/* Tax Summary Table */}
+        {Object.keys(data.lines || []).length > 0 && (
+          <div className="mt-6 pt-6 border-t border-slate-700">
+            <div className="text-sm font-semibold text-slate-300 mb-3">Tax Rate Breakdown</div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="text-slate-400 border-b border-slate-700">
+                    <th className="py-2 px-3">Rate</th>
+                    <th className="py-2 px-3 text-right">Base</th>
+                    <th className="py-2 px-3 text-right">Tax Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.lines
+                    .reduce((acc, line) => {
+                      const rate = (line.taxRate * 100).toFixed(0) + '%';
+                      const existing = acc.find(r => r.rate === rate);
+                      const base = line.quantity * line.unitPrice * (1 - line.discountRate / 100);
+                      const taxAmount = base * line.taxRate;
+                      if (existing) {
+                        existing.base += base;
+                        existing.amount += taxAmount;
+                      } else {
+                        acc.push({ rate, base, amount: taxAmount });
+                      }
+                      return acc;
+                    }, [] as Array<{rate: string, base: number, amount: number}>)
+                    .map((row) => (
+                      <tr key={row.rate} className="border-b border-slate-700 hover:bg-slate-800/30">
+                        <td className="py-2 px-3 font-medium text-slate-300">{row.rate}</td>
+                        <td className="py-2 px-3 text-right text-slate-400">{row.base.toFixed(3)}</td>
+                        <td className="py-2 px-3 text-right font-bold text-slate-200">{row.amount.toFixed(3)}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </section>
 
       <footer className="py-20 text-center space-y-4">

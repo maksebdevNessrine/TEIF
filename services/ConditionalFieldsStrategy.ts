@@ -116,6 +116,14 @@ export const ConditionalFieldsRules = {
     return data.paymentMeans === 'I-115'; // Paiement postal
   },
 
+  showEPaymentDetails: (data: InvoiceData): boolean => {
+    return data.paymentMeans === 'I-119'; // Paiement électronique
+  },
+
+  showOtherPaymentDetails: (data: InvoiceData): boolean => {
+    return data.paymentMeans === 'I-120'; // Autre
+  },
+
   // ============================================
   // PARTNER INFORMATION FIELDS
   // ============================================
@@ -242,42 +250,44 @@ export function getConditionalFieldsVisibility(
 ): Record<string, boolean> {
   return {
     // Date fields
-    showDueDate: ConditionalFieldsRules.showDueDate(data),
-    showDeliveryDate: ConditionalFieldsRules.showDeliveryDate(data),
-    showDispatchDate: ConditionalFieldsRules.showDispatchDate(data),
-    showPaymentDate: ConditionalFieldsRules.showPaymentDate(data),
-    showServicePeriod: ConditionalFieldsRules.showServicePeriod(data),
+    dueDate: ConditionalFieldsRules.showDueDate(data),
+    deliveryDate: ConditionalFieldsRules.showDeliveryDate(data),
+    dispatchDate: ConditionalFieldsRules.showDispatchDate(data),
+    paymentDate: ConditionalFieldsRules.showPaymentDate(data),
+    servicePeriod: ConditionalFieldsRules.showServicePeriod(data),
 
     // Payment fields
-    showBankingDetails: ConditionalFieldsRules.showBankingDetails(data),
-    showRib: ConditionalFieldsRules.showRib(data),
-    showBankCode: ConditionalFieldsRules.showBankCode(data),
-    showBankName: ConditionalFieldsRules.showBankName(data),
-    showCheckNumber: ConditionalFieldsRules.showCheckNumber(data),
-    showCardDetails: ConditionalFieldsRules.showCardDetails(data),
-    showPostalDetails: ConditionalFieldsRules.showPostalDetails(data),
+    bankingDetails: ConditionalFieldsRules.showBankingDetails(data),
+    rib: ConditionalFieldsRules.showRib(data),
+    bankCode: ConditionalFieldsRules.showBankCode(data),
+    bankName: ConditionalFieldsRules.showBankName(data),
+    checkNumber: ConditionalFieldsRules.showCheckNumber(data),
+    cardDetails: ConditionalFieldsRules.showCardDetails(data),
+    postalDetails: ConditionalFieldsRules.showPostalDetails(data),
+    ePaymentDetails: ConditionalFieldsRules.showEPaymentDetails(data),
+    otherPaymentDetails: ConditionalFieldsRules.showOtherPaymentDetails(data),
 
     // Partner fields
-    showSupplierRC: ConditionalFieldsRules.showSupplierRC(data),
-    showBuyerRC: ConditionalFieldsRules.showBuyerRC(data),
-    showSupplierCapital: ConditionalFieldsRules.showSupplierCapital(data),
-    showBuyerCapital: ConditionalFieldsRules.showBuyerCapital(data),
+    supplierRC: ConditionalFieldsRules.showSupplierRC(data),
+    buyerRC: ConditionalFieldsRules.showBuyerRC(data),
+    supplierCapital: ConditionalFieldsRules.showSupplierCapital(data),
+    buyerCapital: ConditionalFieldsRules.showBuyerCapital(data),
 
     // Document type specific
-    showPaymentTerms: ConditionalFieldsRules.showPaymentTerms(data),
-    showDeliveryInfo: ConditionalFieldsRules.showDeliveryInfo(data),
-    showOrderReference: ConditionalFieldsRules.showOrderReference(data),
-    showContractReference: ConditionalFieldsRules.showContractReference(data),
-    showDeliveryNoteReference: ConditionalFieldsRules.showDeliveryNoteReference(data),
-    showCreditReason: ConditionalFieldsRules.showCreditReason(data),
+    paymentTerms: ConditionalFieldsRules.showPaymentTerms(data),
+    deliveryInfo: ConditionalFieldsRules.showDeliveryInfo(data),
+    orderReference: ConditionalFieldsRules.showOrderReference(data),
+    contractReference: ConditionalFieldsRules.showContractReference(data),
+    deliveryNoteReference: ConditionalFieldsRules.showDeliveryNoteReference(data),
+    creditReason: ConditionalFieldsRules.showCreditReason(data),
 
     // Tax fields
-    showStampDuty: ConditionalFieldsRules.showStampDuty(data),
-    showGlobalDiscount: ConditionalFieldsRules.showGlobalDiscount(data),
+    stampDuty: ConditionalFieldsRules.showStampDuty(data),
+    globalDiscount: ConditionalFieldsRules.showGlobalDiscount(data),
 
     // Sections
-    showAllowancesSection: ConditionalFieldsRules.showAllowancesSection(expandedSections),
-    showOptionalDatesSection: ConditionalFieldsRules.showOptionalDatesSection(expandedSections),
+    allowancesSection: ConditionalFieldsRules.showAllowancesSection(expandedSections),
+    optionalDatesSection: ConditionalFieldsRules.showOptionalDatesSection(expandedSections),
   };
 }
 
