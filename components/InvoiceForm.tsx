@@ -306,12 +306,12 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
 
       {/* SECTION 2: DATES (Dtm - All date information I-31 through I-38) */}
       <FormSection 
-        title="Invoice Dates" 
+        title={t('invoiceDates')}
         description="TEIF 1.8.8 - Date information (I-31 through I-38)"
         badge={{ label: "Required", variant: "default" }}
       >
         <FormInput
-          label="Issue Date (I-31)"
+          label={t('issueDate')}
           type="date"
           value={data.invoiceDate}
           onChange={(e) => updateField('invoiceDate', e.target.value)}
@@ -319,7 +319,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
         />
         {visibility.showDueDate && (
           <FormInput
-            label="Due Date (I-32)"
+            label={t('dueDate')}
             type="date"
             value={data.dueDate || ''}
             onChange={(e) => updateField('dueDate', e.target.value)}
@@ -328,7 +328,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
         )}
         {visibility.showDeliveryDate && (
           <FormInput
-            label="Delivery Date (I-33)"
+            label={t('deliveryDate')}
             type="date"
             value={data.deliveryDate || ''}
             onChange={(e) => updateField('deliveryDate', e.target.value)}
@@ -338,14 +338,14 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
         {visibility.showServicePeriod && (
           <>
             <FormInput
-              label="Period Start (I-36)"
+              label={t('servicePeriodStart')}
               type="date"
               value={data.periodStart || ''}
               onChange={(e) => updateField('periodStart', e.target.value)}
               description="Service period start"
             />
             <FormInput
-              label="Period End (I-36)"
+              label={t('servicePeriodEnd')}
               type="date"
               value={data.periodEnd || ''}
               onChange={(e) => updateField('periodEnd', e.target.value)}
@@ -355,7 +355,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
         )}
         {visibility.showDispatchDate && (
           <FormInput
-            label="Dispatch Date (I-34)"
+            label={t('dispatchDate')}
             type="date"
             value={data.dispatchDate || ''}
             onChange={(e) => updateField('dispatchDate', e.target.value)}
@@ -363,14 +363,14 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
           />
         )}
         <FormInput
-          label="Payment Date (I-35)"
+          label={t('paymentDateLabel')}
           type="date"
           value={data.paymentDate || ''}
           onChange={(e) => updateField('paymentDate', e.target.value)}
           description="Expected payment date"
         />
         <FormInput
-          label="Signature Date & Time (I-37)"
+          label={t('signatureDateTime')}
           type="text"
           placeholder="DDMMYYHHmm"
           maxLength={10}
@@ -379,7 +379,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
           helper="Format: DDMMYYHHmm"
         />
         <FormInput
-          label="Other Date (I-38)"
+          label={t('otherDate')}
           type="date"
           value={data.otherDate || ''}
           onChange={(e) => updateField('otherDate', e.target.value)}
@@ -418,7 +418,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
           <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-4 group">
             <div className="w-12 h-12 bg-gradient-to-br from-violet-600/90 to-purple-600/90 border border-violet-500/30 rounded-lg flex items-center justify-center text-white font-mono text-lg font-semibold shadow-lg shadow-violet-600/20 group-hover:shadow-violet-600/40 transition-all duration-300">04</div>
             <div className="flex flex-col">
-              <span className="tracking-tight">Invoice Line Items</span>
+              <span className="tracking-tight">{t('invoiceLines')}</span>
               <span className="text-xs text-slate-400 font-normal tracking-wide">TEIF 1.8.8 Standard</span>
             </div>
           </h2>
@@ -530,7 +530,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
 
       {/* SECTION 5: ALLOWANCES & CHARGES (InvoiceAlc - Invoice Level Discounts/Surcharges) */}
       <FormSection 
-        title="Allowances & Charges" 
+        title={t('allowancesCharges')} 
         description="Invoice-level discounts, surcharges, and allowances (I-150 to I-155)"
         badge={{ label: "Optional", variant: "secondary" }}
       >
@@ -539,7 +539,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
             onClick={() => setExpandedSections({...expandedSections, allowances: !expandedSections.allowances})}
             className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 border border-slate-600 rounded-lg font-medium text-sm transition-colors flex items-center justify-between"
           >
-            <span>Allowances & Charges</span>
+            <span>{t('allowancesCharges')}</span>
             <span>{expandedSections.allowances ? '▼' : '▶'}</span>
           </button>
           
@@ -620,7 +620,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
 
       {/* SECTION 6: PAYMENT, BANK & FINANCIAL SUMMARY (Pyt, Bnk, Moa) */}
       <FormSection 
-        title="Payment & Financial Summary" 
+        title={t('paymentFinancialSummary')}
         description="Payment method, banking details, and invoice totals (I-111 through I-180)"
         badge={{ label: "Required", variant: "default" }}
       >
@@ -846,7 +846,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
             <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3v3m-6-1v-3m0-6h12a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z" />
             </svg>
-            Invoice Calculation Summary
+            {t('invoiceCalculationSummary')}
           </h2>
         </div>
 
@@ -855,39 +855,39 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
           {/* LEFT COLUMN: Breakdown */}
           <div className="space-y-4">
             <div className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
-              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Subtotal HT (I-176)</span>
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">{t('subtotalHt')}</span>
               <span className="font-bold text-slate-100">{totals.ht.toFixed(3)}</span>
             </div>
 
             {data.globalDiscount > 0 && (
               <div className="flex justify-between items-center py-3 px-4 bg-red-500/10 rounded-lg border border-red-500/30">
-                <span className="text-xs font-medium text-red-400 uppercase tracking-wider">Global Discount (I-181)</span>
+                <span className="text-xs font-medium text-red-400 uppercase tracking-wider">{t('allowancesCharges')} (I-181)</span>
                 <span className="font-bold text-red-300">-{data.globalDiscount.toFixed(3)}</span>
               </div>
             )}
 
             <div className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
-              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Net Total HT</span>
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">{t('netTotalHt')}</span>
               <span className="font-bold text-slate-100">{totals.netTotalHt.toFixed(3)}</span>
             </div>
 
             {totals.fodec > 0 && (
               <div className="flex justify-between items-center py-3 px-4 bg-amber-500/10 rounded-lg border border-amber-500/30">
-                <span className="text-xs font-medium text-amber-400 uppercase tracking-wider">FODEC (1%)</span>
+                <span className="text-xs font-medium text-amber-400 uppercase tracking-wider">{t('fodec')} (1%)</span>
                 <span className="font-bold text-amber-300">+{totals.fodec.toFixed(3)}</span>
               </div>
             )}
 
             {totals.tva > 0 && (
               <div className="flex justify-between items-center py-3 px-4 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
-                <span className="text-xs font-medium text-emerald-400 uppercase tracking-wider">VAT / TVA (I-177)</span>
+                <span className="text-xs font-medium text-emerald-400 uppercase tracking-wider">{t('tvaLabel')}</span>
                 <span className="font-bold text-emerald-300">+{totals.tva.toFixed(3)}</span>
               </div>
             )}
 
             {data.stampDuty > 0 && (
               <div className="flex justify-between items-center py-3 px-4 bg-purple-500/10 rounded-lg border border-purple-500/30">
-                <span className="text-xs font-medium text-purple-400 uppercase tracking-wider">Stamp Duty (I-178)</span>
+                <span className="text-xs font-medium text-purple-400 uppercase tracking-wider">{t('stampDutyLabel')}</span>
                 <span className="font-bold text-purple-300">+{data.stampDuty.toFixed(3)}</span>
               </div>
             )}
@@ -896,7 +896,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
           {/* RIGHT COLUMN: Final Amount */}
           <div className="space-y-4 flex flex-col justify-center">
             <div className="p-6 bg-gradient-to-br from-blue-600/20 to-blue-700/10 rounded-2xl border border-blue-500/40 space-y-4">
-              <div className="text-[11px] text-blue-400 font-black uppercase tracking-[0.5em]">Total Amount TTC (I-180)</div>
+              <div className="text-[11px] text-blue-400 font-black uppercase tracking-[0.5em]">{t('totalAmountTtc')}</div>
               <div className="flex items-baseline gap-3">
                 <span className="text-6xl font-black tabular-nums tracking-tighter text-slate-100">{totals.totalTtc.toFixed(3)}</span>
                 <span className="text-xl font-black text-slate-500">{data.currency}</span>
@@ -927,14 +927,14 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang }) => {
         {/* Tax Summary Table */}
         {Object.keys(data.lines || []).length > 0 && (
           <div className="mt-6 pt-6 border-t border-slate-700">
-            <div className="text-sm font-semibold text-slate-300 mb-3">Tax Rate Breakdown</div>
+            <div className="text-sm font-semibold text-slate-300 mb-3">{t('taxRateBreakdown')}</div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="text-slate-400 border-b border-slate-700">
-                    <th className="py-2 px-3">Rate</th>
-                    <th className="py-2 px-3 text-right">Base</th>
-                    <th className="py-2 px-3 text-right">Tax Amount</th>
+                    <th className="py-2 px-3">{t('rate')}</th>
+                    <th className="py-2 px-3 text-right">{t('base')}</th>
+                    <th className="py-2 px-3 text-right">{t('taxAmount')}</th>
                   </tr>
                 </thead>
                 <tbody>
