@@ -1,36 +1,24 @@
 FROM node:20-alpine AS builder
 
 WORKDIR /app
-
-# Set build environment
 ENV NODE_ENV=production
 
-# Copy entire monorepo
+# Copy entire repo
 COPY . .
 
-# Install pnpm and all dependencies
-RUN npm install -g pnpm@9.0.0 && \
-    pnpm install --frozen-lockfile
+# Install and build
+RUN npm install -g pnpm@9.0.0 && pnpm install --frozen-lockfile
 
-# Build ONLY frontend (vite handles it from package.json script)
+# Build with explicit error output
 RUN cd packages/frontend && pnpm run build
 
 
-# Production stage with Nginx
 FROM nginx:alpine
 
-# Copy built assets from builder
 COPY --from=builder /app/packages/frontend/dist /usr/share/nginx/html
-
-# Copy nginx configuration
 COPY packages/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port
 EXPOSE 80
-
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost/index.html || exit 1
-
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
