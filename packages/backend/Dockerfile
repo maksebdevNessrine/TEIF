@@ -5,20 +5,15 @@ WORKDIR /app
 # Set build environment
 ENV NODE_ENV=production
 
-# Copy workspace configuration files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+# Copy entire monorepo
+COPY . .
 
-# Copy packages
-COPY packages/shared ./packages/shared
-COPY packages/backend ./packages/backend
-
-# Install pnpm and dependencies
+# Install pnpm and all dependencies
 RUN npm install -g pnpm@9.0.0 && \
     pnpm install --frozen-lockfile
 
-# Build backend (from its own package directory)
-WORKDIR /app/packages/backend
-RUN pnpm build
+# Build ONLY backend (tsc handles it from package.json script)
+RUN cd packages/backend && pnpm run build
 
 # Set working directory for runtime
 WORKDIR /app

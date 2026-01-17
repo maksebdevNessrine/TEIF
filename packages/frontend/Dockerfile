@@ -5,20 +5,15 @@ WORKDIR /app
 # Set build environment
 ENV NODE_ENV=production
 
-# Copy workspace configuration files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+# Copy entire monorepo
+COPY . .
 
-# Copy packages
-COPY packages/shared ./packages/shared
-COPY packages/frontend ./packages/frontend
-
-# Install pnpm and dependencies
+# Install pnpm and all dependencies
 RUN npm install -g pnpm@9.0.0 && \
     pnpm install --frozen-lockfile
 
-# Build frontend (from its own package directory)
-WORKDIR /app/packages/frontend
-RUN pnpm build
+# Build ONLY frontend (vite handles it from package.json script)
+RUN cd packages/frontend && pnpm run build
 
 
 # Production stage with Nginx
