@@ -16,9 +16,6 @@ COPY packages/backend ./packages/backend
 RUN npm install -g pnpm@9.0.0 && \
     pnpm install --frozen-lockfile
 
-# Build shared package first
-RUN pnpm --filter=@teif/shared run build
-
 # Build backend (Prisma types already generated in repo)
 RUN pnpm --filter=@teif/backend run build
 

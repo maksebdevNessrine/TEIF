@@ -16,8 +16,7 @@ COPY packages/frontend ./packages/frontend
 RUN npm install -g pnpm@9.0.0 && \
     pnpm install --frozen-lockfile
 
-# Build shared package first, then frontend
-RUN pnpm --filter=@teif/shared run build
+# Build frontend
 RUN pnpm --filter=@teif/frontend run build
 
 
