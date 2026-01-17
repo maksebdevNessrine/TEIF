@@ -16,11 +16,8 @@ COPY packages/frontend ./packages/frontend
 RUN npm install -g pnpm@9.0.0 && \
     pnpm install --frozen-lockfile
 
-# Install Turbo globally for workspace builds
-RUN npm install -g turbo
-
-# Build frontend from root with Turbo (handles workspace dependencies)
-RUN turbo build --filter=@teif/frontend
+# Build frontend using root script (turbo handles dependencies)
+RUN pnpm run build
 
 
 # Production stage with Nginx
