@@ -2,6 +2,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Set build environment
+ENV NODE_ENV=production
+
 # Copy workspace configuration files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 
@@ -13,8 +16,9 @@ COPY packages/frontend ./packages/frontend
 RUN npm install -g pnpm@9.0.0 && \
     pnpm install --frozen-lockfile
 
-# Build frontend
-RUN pnpm run build
+# Build shared package first, then frontend
+RUN cd packages/shared && pnpm run build && cd ../../ && \
+    cd packages/frontend && pnpm run build
 
 
 # Production stage with Nginx

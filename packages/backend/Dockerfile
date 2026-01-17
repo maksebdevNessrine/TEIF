@@ -2,6 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Set build environment
+ENV NODE_ENV=production
+
 # Copy workspace configuration files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 
@@ -13,12 +16,13 @@ COPY packages/backend ./packages/backend
 RUN npm install -g pnpm@9.0.0 && \
     pnpm install --frozen-lockfile
 
-# Generate Prisma client
-WORKDIR /app/packages/backend
-RUN pnpm run db:generate
+# Build shared package first
+RUN cd packages/shared && pnpm run build
 
-# Build backend
-RUN pnpm run build
+# Generate Prisma client and build backend
+WORKDIR /app/packages/backend
+RUN pnpm run db:generate && \
+    pnpm run build
 
 # Set working directory for runtime
 WORKDIR /app
