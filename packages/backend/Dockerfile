@@ -19,10 +19,9 @@ RUN npm install -g pnpm@9.0.0 && \
 # Build shared package first
 RUN cd packages/shared && pnpm run build
 
-# Generate Prisma client and build backend
+# Build backend (Prisma types already generated in repo)
 WORKDIR /app/packages/backend
-RUN pnpm run db:generate && \
-    pnpm run build
+RUN pnpm run build
 
 # Set working directory for runtime
 WORKDIR /app
