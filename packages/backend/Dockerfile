@@ -17,11 +17,10 @@ RUN npm install -g pnpm@9.0.0 && \
     pnpm install --frozen-lockfile
 
 # Build shared package first
-RUN cd packages/shared && pnpm run build
+RUN pnpm --filter=@teif/shared run build
 
 # Build backend (Prisma types already generated in repo)
-WORKDIR /app/packages/backend
-RUN pnpm run build
+RUN pnpm --filter=@teif/backend run build
 
 # Set working directory for runtime
 WORKDIR /app

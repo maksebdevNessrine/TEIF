@@ -17,8 +17,8 @@ RUN npm install -g pnpm@9.0.0 && \
     pnpm install --frozen-lockfile
 
 # Build shared package first, then frontend
-RUN cd packages/shared && pnpm run build && cd ../../ && \
-    cd packages/frontend && pnpm run build
+RUN pnpm --filter=@teif/shared run build && \
+    pnpm --filter=@teif/frontend run build
 
 
 # Production stage with Nginx
