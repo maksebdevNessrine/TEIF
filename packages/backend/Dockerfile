@@ -16,8 +16,9 @@ COPY packages/backend ./packages/backend
 RUN npm install -g pnpm@9.0.0 && \
     pnpm install --frozen-lockfile
 
-# Build backend (Prisma types already generated in repo)
-RUN pnpm --filter=@teif/backend run build
+# Build backend from package directory
+WORKDIR /app/packages/backend
+RUN pnpm run build
 
 # Set working directory for runtime
 WORKDIR /app
