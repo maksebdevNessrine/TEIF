@@ -9,8 +9,8 @@ COPY . .
 # Install and build
 RUN npm install -g pnpm@9.0.0 && pnpm install --frozen-lockfile
 
-# Build with explicit error output
-RUN cd packages/frontend && pnpm run build
+# Build frontend using --cwd to stay in workspace context
+RUN pnpm --cwd packages/frontend run build
 
 
 FROM nginx:alpine
