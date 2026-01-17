@@ -1,0 +1,261 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator zod {
+  provider      = "zod-prisma-types"
+  output        = "./generated/zod"
+  useMultipleFiles = true
+  skipValidation = true
+  createInputTypes = true
+  coerceDate = true
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id                          String    @id @default(cuid())
+  email                       String    @unique
+  name                        String
+  passwordHash                String
+  emailVerified               Boolean   @default(false) // ✅ NEW: Track if email is verified
+  verificationCode            String?   // ✅ NEW: 6-digit code
+  verificationCodeExpires     DateTime? // ✅ NEW: Code expiry (10 minutes)
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+  
+  // Relations
+  invoices                    Invoice[]
+  refreshTokens               RefreshToken[]
+  
+  @@index([email])
+}
+
+// Refresh token model for session management
+model RefreshToken {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash     String    @unique // bcrypt hash of token
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
+  revokedAt     DateTime? // For token revocation
+  
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Invoice model for TEIF compliance
+model Invoice {
+  id                    String    @id @default(cuid())
+  documentType          String    // I-11 through I-16
+  documentNumber        String    @unique
+  invoiceDate           DateTime
+  dueDate               DateTime?
+  deliveryDate          DateTime?
+  dispatchDate          DateTime?
+  paymentDate           DateTime?
+  signatureDate         String?   // DDMMyyHHmm format
+  otherDate             DateTime? // I-38 - Other relevant date
+  periodStart           DateTime? // I-36 - Service period start
+  periodEnd             DateTime? // I-36 - Service period end
+  operationNature       String    // GOODS, SERVICES, MIXED
+  currency              String    @default("TND")
+  
+  // Reference Fields (I-81, I-82, I-83)
+  orderReference        String?   // I-81 - Order reference
+  contractReference     String?   // I-82 - Contract reference
+  deliveryNoteReference String?   // I-83 - Delivery note reference
+  
+  // User relationship
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id])
+  
+  // Supplier and Buyer references
+  supplierId            String
+  supplier              Partner   @relation("invoices_supplier", fields: [supplierId], references: [id])
+  
+  buyerId               String
+  buyer                 Partner   @relation("invoices_buyer", fields: [buyerId], references: [id])
+  
+  // Invoice lines
+  lines                 InvoiceLine[]
+  
+  // Allowances and charges
+  allowances            AllowanceCharge[]
+  
+  // Financial
+  globalDiscount        Float     @default(0)
+  stampDuty             Float     @default(1.0)
+  ttnReference          String?
+  paymentMeans          String    // I-114 through I-120
+  
+  // Payment details - Bank (I-114)
+  bankName              String?
+  bankCode              String?
+  bankRib               String?   // 20 digits
+  bankAccountOwner      String?
+  
+  // Payment details - Check (I-117)
+  checkNumber           String?
+  
+  // Payment details - Card (I-118)
+  cardType              String?
+  cardLast4             String?
+  cardReference         String?
+  
+  // Payment details - Postal (I-115)
+  postalAccountNumber   String?   // Postal account number
+  postalAccountOwner    String?   // Account owner name
+  postalBranchCode      String?   // Postal branch code (4 digits)
+  postalServiceName     String?   // Postal service name (e.g., "La Poste")
+  
+  // Payment details - E-Payment (I-119)
+  ePaymentGateway       String?   // Payment gateway provider (PayPal, Stripe, etc.)
+  ePaymentTransactionId String?   // Transaction ID from gateway
+  
+  // Payment details - Other Payment (I-120)
+  otherPaymentDescription String?  // Description of other payment method
+  otherPaymentReference String?    // Reference for other payment method
+  
+  // IRC Withholding Tax
+  ircRate               Float?    // IRC withholding tax rate (0-10%)
+  ircAmount             Float?    // Calculated IRC amount
+  ircExemptionReason    String?   // Reason if IRC is exempted
+  
+  // QR Code Fields
+  qrCodeEnabled         Boolean   @default(false)  // Enable QR code generation
+  qrCodeContent         String?   // Base64 encoded QR code
+  
+  // Custom Amount Description
+  amountDescriptionOverride String? // Custom amount description in letters
+  
+  // XML Content
+  xmlContent            String    @db.Text        // Generated TEIF XML content
+  
+  // Status tracking
+  status                String    @default("draft") // draft, finalized, sent, paid, cancelled, voided
+  
+  // Denormalized Financial Totals (for efficient search/filtering)
+  totalHT               Float     @default(0)     // Total amount excluding tax
+  totalTVA              Float     @default(0)     // Total VAT amount
+  totalTTC              Float     @default(0)     // Total amount including tax
+  
+  // Soft Delete
+  deletedAt             DateTime?
+  
+  // JSON Metadata (flexible storage for additional invoice data)
+  metadata              Json?     @db.Json
+  
+  // Metadata
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([supplierId])
+  @@index([buyerId])
+  @@index([invoiceDate])
+  @@index([status])
+  @@index([totalTTC])
+  @@index([deletedAt])
+  @@index([documentType])
+  @@index([documentNumber(ops: raw("gin_trgm_ops"))], type: Gin)
+}
+
+model Partner {
+  id                    String    @id @default(cuid())
+  idType                String    // I-01, I-02, I-03, I-04
+  idValue               String
+  name                  String
+  addressDescription    String?
+  street                String
+  city                  String
+  postalCode            String
+  country               String
+  
+  // Optional fields
+  rc                    String?   // Registration Code
+  capital               String?
+  phone                 String?
+  email                 String?   // Removed @unique - partners may not have unique emails
+  partnerType           String?   // I-61 through I-69
+  
+  // Relations
+  supplierInvoices      Invoice[] @relation("invoices_supplier")
+  buyerInvoices         Invoice[] @relation("invoices_buyer")
+  
+  // Metadata
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  @@unique([idType, idValue])
+  @@index([email])
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin)
+}
+
+model InvoiceLine {
+  id                    String    @id @default(cuid())
+  invoiceId             String
+  invoice               Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  itemCode              String
+  description           String
+  quantity              Float
+  unit                  String    // UNIT, KG, H, TON, L, M2, M, M3, KWH
+  unitPrice             Float
+  discountRate          Float     @default(0)
+  taxRate               Float     // 0, 0.07, 0.13, 0.19
+  fodec                 Boolean   @default(false)
+  exemptionReason       String?
+  
+  // Calculated fields (denormalized for performance)
+  lineAmount            Float     // quantity * unitPrice * (1 - discountRate)
+  taxAmount             Float     // lineAmount * taxRate
+  totalAmount           Float     // lineAmount + taxAmount
+  
+  // Allowances and charges at line level
+  allowances            AllowanceCharge[]
+  
+  // Metadata
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  @@index([invoiceId])
+  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin)
+}
+
+// AllowanceCharge model for invoice-level and line-level discounts/surcharges
+model AllowanceCharge {
+  id              String    @id @default(cuid())
+  type            String    // 'allowance' or 'charge'
+  code            String    // I-151 through I-155
+  description     String
+  amount          Float
+  basedOn         String?   // 'line' or 'invoice'
+  
+  // Relations
+  invoiceId       String?
+  invoice         Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  lineId          String?
+  line            InvoiceLine? @relation(fields: [lineId], references: [id], onDelete: Cascade)
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([invoiceId])
+  @@index([lineId])
+  @@index([type])
+}
+
+// Future: Add more models as needed
+// - User (for authentication)
+// - AuditLog (for compliance tracking)

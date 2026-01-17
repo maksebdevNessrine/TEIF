@@ -1,0 +1,70 @@
+import type { Prisma } from '@prisma/client';
+
+import { z } from 'zod';
+import { NullableJsonNullValueInputSchema } from './NullableJsonNullValueInputSchema';
+import { InputJsonValueSchema } from './InputJsonValueSchema';
+import { UserCreateNestedOneWithoutInvoicesInputSchema } from './UserCreateNestedOneWithoutInvoicesInputSchema';
+import { PartnerCreateNestedOneWithoutSupplierInvoicesInputSchema } from './PartnerCreateNestedOneWithoutSupplierInvoicesInputSchema';
+import { InvoiceLineCreateNestedManyWithoutInvoiceInputSchema } from './InvoiceLineCreateNestedManyWithoutInvoiceInputSchema';
+import { AllowanceChargeCreateNestedManyWithoutInvoiceInputSchema } from './AllowanceChargeCreateNestedManyWithoutInvoiceInputSchema';
+
+export const InvoiceCreateWithoutBuyerInputSchema: z.ZodType<Prisma.InvoiceCreateWithoutBuyerInput> = z.object({
+  id: z.cuid().optional(),
+  documentType: z.string(),
+  documentNumber: z.string(),
+  invoiceDate: z.coerce.date(),
+  dueDate: z.coerce.date().optional().nullable(),
+  deliveryDate: z.coerce.date().optional().nullable(),
+  dispatchDate: z.coerce.date().optional().nullable(),
+  paymentDate: z.coerce.date().optional().nullable(),
+  signatureDate: z.string().optional().nullable(),
+  otherDate: z.coerce.date().optional().nullable(),
+  periodStart: z.coerce.date().optional().nullable(),
+  periodEnd: z.coerce.date().optional().nullable(),
+  operationNature: z.string(),
+  currency: z.string().optional(),
+  orderReference: z.string().optional().nullable(),
+  contractReference: z.string().optional().nullable(),
+  deliveryNoteReference: z.string().optional().nullable(),
+  globalDiscount: z.number().optional(),
+  stampDuty: z.number().optional(),
+  ttnReference: z.string().optional().nullable(),
+  paymentMeans: z.string(),
+  bankName: z.string().optional().nullable(),
+  bankCode: z.string().optional().nullable(),
+  bankRib: z.string().optional().nullable(),
+  bankAccountOwner: z.string().optional().nullable(),
+  checkNumber: z.string().optional().nullable(),
+  cardType: z.string().optional().nullable(),
+  cardLast4: z.string().optional().nullable(),
+  cardReference: z.string().optional().nullable(),
+  postalAccountNumber: z.string().optional().nullable(),
+  postalAccountOwner: z.string().optional().nullable(),
+  postalBranchCode: z.string().optional().nullable(),
+  postalServiceName: z.string().optional().nullable(),
+  ePaymentGateway: z.string().optional().nullable(),
+  ePaymentTransactionId: z.string().optional().nullable(),
+  otherPaymentDescription: z.string().optional().nullable(),
+  otherPaymentReference: z.string().optional().nullable(),
+  ircRate: z.number().optional().nullable(),
+  ircAmount: z.number().optional().nullable(),
+  ircExemptionReason: z.string().optional().nullable(),
+  qrCodeEnabled: z.boolean().optional(),
+  qrCodeContent: z.string().optional().nullable(),
+  amountDescriptionOverride: z.string().optional().nullable(),
+  xmlContent: z.string(),
+  status: z.string().optional(),
+  totalHT: z.number().optional(),
+  totalTVA: z.number().optional(),
+  totalTTC: z.number().optional(),
+  deletedAt: z.coerce.date().optional().nullable(),
+  metadata: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  user: z.lazy(() => UserCreateNestedOneWithoutInvoicesInputSchema),
+  supplier: z.lazy(() => PartnerCreateNestedOneWithoutSupplierInvoicesInputSchema),
+  lines: z.lazy(() => InvoiceLineCreateNestedManyWithoutInvoiceInputSchema).optional(),
+  allowances: z.lazy(() => AllowanceChargeCreateNestedManyWithoutInvoiceInputSchema).optional(),
+}).strict();
+
+export default InvoiceCreateWithoutBuyerInputSchema;

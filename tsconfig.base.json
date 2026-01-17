@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "module": "ESNext",
+    "target": "ES2020",
+    "baseUrl": ".",
+    "paths": {
+      "@teif/shared": ["./packages/shared/src"],
+      "@teif/shared/*": ["./packages/shared/src/*"],
+      "@teif/backend": ["./packages/backend/src/index.ts"],
+      "@teif/backend/*": ["./packages/backend/src/*"]
+    }
+  }
+}

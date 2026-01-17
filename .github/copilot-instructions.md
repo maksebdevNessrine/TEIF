@@ -6,6 +6,14 @@
 
 ---
 
+### WINDOWS TERMINAL RULES:
+- I am on Windows 11 using PowerShell.
+- DO NOT use Unix-style command chaining like `&&`.
+- Use the semicolon `;` to separate independent commands (e.g., `cd server; npm install`).
+- If you need to run a command ONLY if the previous one succeeds, use the PowerShell 7 syntax: `cmd1 && cmd2`. (Note: Only if I have PowerShell 7+).
+- Use backslashes `\` for file paths, or even better, wrap paths in quotes `"./path/to/file"`.
+- DO NOT use the pipe `|` unless you are actually passing data between programs.
+
 # PART I: CONSTITUTIONAL PRINCIPLES
 
 ## 1. Purpose and Authority

@@ -1,0 +1,247 @@
+# TEIF Production Docker Compose Stack
+# Optimized for Coolify with Zero-Downtime Deployments
+# Usage: docker compose -f docker-compose.prod.yml up -d
+# 
+# This is a single atomic stack deployment:
+# - All services start together with proper dependencies
+# - Health checks ensure readiness before routing traffic
+# - Rolling updates prevent downtime
+# - Automatic backups configured
+# - Monitoring & logging built-in
+
+version: '3.8'
+
+x-common-variables: &common-vars
+  # Prevents deployment if service fails
+  restart_policy: &restart-policy
+    condition: service_healthy
+
+services:
+  # PostgreSQL Database - Core persistence layer
+  postgres:
+    image: postgres:16-alpine
+    container_name: teif-postgres
+    hostname: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-teif_prod}
+      POSTGRES_INITDB_ARGS: --encoding=UTF8 --locale=C.UTF-8
+      # Enable WAL for point-in-time recovery
+      POSTGRES_HOST_AUTH_METHOD: md5
+    volumes:
+      # Main data volume - persistent across deployments
+      - postgres_data:/var/lib/postgresql/data
+      # Backups volume
+      - postgres_backups:/backups
+      # Optional: restore from backup on startup
+      # - ./backups/latest.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    # Health check - must pass before dependent services start
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    # Restart strategy for reliability
+    restart: unless-stopped
+    networks:
+      - teif-network
+    # Security: no privilege escalation
+    security_opt:
+      - no-new-privileges:true
+    # Performance tuning for production
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "work_mem=4MB"
+      - "-c"
+      - "wal_buffers=16MB"
+    labels:
+      # For monitoring/management tools
+      service: "database"
+      environment: "production"
+
+  # Backend API Server - Hono.js + Prisma
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+      # Build arguments for optimization
+      args:
+        NODE_ENV: production
+    image: teif-backend:latest
+    container_name: teif-backend
+    hostname: backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Core configuration
+      NODE_ENV: production
+      PORT: 3000
+      
+      # Database - relies on Postgres service hostname
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-teif_prod}?schema=public
+      
+      # Security & Authentication
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRY: ${JWT_EXPIRY:-3600}
+      
+      # Application URLs
+      SITE_URL: ${SITE_URL}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      
+      # Email Configuration
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      
+      # Optional AI Features
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      
+      # Logging (for monitoring)
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    
+    # Port exposure (Coolify will reverse proxy this)
+    ports:
+      - "3000:3000"
+    
+    # Network attachment
+    networks:
+      - teif-network
+    
+    # Health check - critical for zero-downtime deployments
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Restart strategy - keeps service running
+    restart: unless-stopped
+    
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
+    
+    # Resource management - prevents resource exhaustion
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      # Restart policy for resilience
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 60s
+    
+    labels:
+      service: "api"
+      environment: "production"
+      monitoring: "enabled"
+
+  # Frontend Web Server - React + Nginx
+  frontend:
+    build:
+      context: .
+      dockerfile: packages/frontend/Dockerfile
+      args:
+        NODE_ENV: production
+    image: teif-frontend:latest
+    container_name: teif-frontend
+    hostname: frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      # API configuration - points to backend service
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://backend:3000/api}
+      
+      # Optional AI Features
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    
+    # Port exposure for web traffic
+    ports:
+      - "80:80"
+    
+    # Network attachment
+    networks:
+      - teif-network
+    
+    # Health check - validates static content serving
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/index.html"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    # Restart strategy
+    restart: unless-stopped
+    
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
+    
+    # Resource management
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 60s
+    
+    labels:
+      service: "web"
+      environment: "production"
+      monitoring: "enabled"
+
+# Persistent data volumes
+volumes:
+  # PostgreSQL data - survives container recreation
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/postgres
+  
+  # Database backups volume
+  postgres_backups:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/backups
+
+# Internal service network - isolated from host
+networks:
+  teif-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16

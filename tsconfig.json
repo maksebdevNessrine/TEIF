@@ -13,19 +13,12 @@
     "types": [
       "node"
     ],
+    "baseUrl": ".",
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
     "allowJs": true,
     "jsx": "react-jsx",
-    "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@/lib/*": [
-        "components/lib/*"
-      ]
-    },
     "allowImportingTsExtensions": true,
     "noEmit": true
   }

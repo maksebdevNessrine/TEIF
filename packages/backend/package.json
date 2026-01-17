@@ -1,0 +1,41 @@
+{
+  "name": "@teif/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.12.0",
+    "@prisma/client": "^5.14.0",
+    "@supabase/supabase-js": "^2.43.0",
+    "@teif/shared": "workspace:*",
+    "bcrypt": "^5.1.1",
+    "hono": "^4.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.13",
+    "puppeteer": "^23.10.0",
+    "qrcode": "^1.5.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@hono/zod-validator": "^0.7.6",
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^22.14.0",
+    "@types/nodemailer": "^6.4.14",
+    "@types/qrcode": "^1.5.5",
+    "prisma": "^5.14.0",
+    "tsx": "^4.11.0",
+    "typescript": "~5.8.2",
+    "zod-prisma-types": "^3.3.10"
+  }
+}
