@@ -16,9 +16,8 @@ COPY packages/backend ./packages/backend
 RUN npm install -g pnpm@9.0.0 && \
     pnpm install --frozen-lockfile
 
-# Build backend from package directory
-WORKDIR /app/packages/backend
-RUN pnpm run build
+# Build backend from root with Turbo (handles workspace dependencies)
+RUN pnpm run build --filter=@teif/backend
 
 # Set working directory for runtime
 WORKDIR /app
