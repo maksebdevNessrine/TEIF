@@ -61,6 +61,16 @@ RUN { \
     pnpm --filter @teif/frontend build; \
     } 2>&1 | tee /tmp/frontend-build.log
 
+# Verify dist folder exists, if not show what went wrong
+RUN if [ ! -d "/app/packages/frontend/dist" ]; then \
+    echo "ERROR: dist folder not found!"; \
+    echo "=== BUILD LOG ==="; \
+    cat /tmp/frontend-build.log; \
+    echo "=== FRONTEND DIRECTORY ==="; \
+    ls -la /app/packages/frontend/; \
+    exit 1; \
+    fi && echo "✓ Frontend dist folder created successfully"
+
 
 # ============================================
 # PRODUCTION STAGE
