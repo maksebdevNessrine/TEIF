@@ -96,8 +96,7 @@ echo "BUILD SUCCESS"
 echo "========================================="
 EOF
 
-chmod +x /tmp/build-debug.sh
-/tmp/build-debug.sh
+RUN chmod +x /tmp/build-debug.sh && /tmp/build-debug.sh
 
 
 # ============================================
