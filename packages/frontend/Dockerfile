@@ -1,7 +1,9 @@
 FROM node:20-alpine AS builder
 
 WORKDIR /app
-ENV NODE_ENV=production
+
+# Build-time: must be development to install devDependencies (Vite, TypeScript, etc.)
+ENV NODE_ENV=development
 
 # Build-time env (REQUIRED for Vite)
 ARG VITE_API_BASE_URL
@@ -14,7 +16,7 @@ RUN apk add --no-cache libc6-compat
 COPY package.json pnpm-lock.yaml ./
 COPY packages ./packages
 
-# Install deps
+# Install deps (includes devDependencies because NODE_ENV=development)
 RUN npm install -g pnpm@9.0.0
 RUN pnpm install --frozen-lockfile
 
