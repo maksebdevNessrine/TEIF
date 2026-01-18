@@ -24,14 +24,28 @@ RUN corepack enable
 RUN pnpm config set node-linker hoisted
 
 # Install all dependencies (including devDependencies for build)
-RUN echo "Installing dependencies..." && pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # Copy source code after deps are installed (leverages Docker layer caching)
 COPY packages/backend packages/backend/
 COPY packages/shared packages/shared/
 
-# Build backend within workspace context
-RUN echo "Building @teif/backend..." && pnpm --filter @teif/backend build
+# Build diagnostic output
+RUN echo "=== ENV ===" && \
+    echo "PWD: $(pwd)" && \
+    echo "Node: $(node --version)" && \
+    echo "pnpm: $(pnpm --version)"
+
+RUN echo "=== DIR STRUCTURE ===" && ls -la packages/backend/
+
+RUN echo "=== PACKAGE.JSON ===" && cat packages/backend/package.json
+
+RUN echo "=== WORKSPACE CHECK ===" && pnpm list --depth=0
+
+RUN echo "=== FILTER CHECK ===" && pnpm ls --filter @teif/backend 2>&1 || true
+
+# Build backend - if this fails, the full error will be visible above
+RUN echo "=== BUILDING BACKEND ===" && pnpm --filter @teif/backend build
 
 
 # ============================================
