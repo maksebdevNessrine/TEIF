@@ -40,17 +40,64 @@ RUN echo "DEBUG: Current directory:" && pwd && echo "DEBUG: Files in /app:" && l
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Verify workspace structure
-RUN echo "=== Directory listing ===" && ls -la packages/frontend/ || true
+# Create comprehensive debug script
+RUN cat > /tmp/build-debug.sh << 'EOF'
+#!/bin/bash
+set -e
 
-# Verify package.json exists and is readable
-RUN echo "=== Package.json content ===" && cat packages/frontend/package.json || true
+echo "========================================="
+echo "COMPREHENSIVE BUILD DEBUG LOG"
+echo "========================================="
 
-# Check pnpm workspace
-RUN echo "=== Checking pnpm workspace ===" && pnpm list --depth=0 || true
+echo ""
+echo "1. Environment Check"
+echo "---"
+echo "PWD: $(pwd)"
+echo "Node version: $(node --version)"
+echo "pnpm version: $(pnpm --version)"
+echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL:-UNSET}"
 
-# Build frontend within workspace context
-RUN echo "=== Starting frontend build ===" && pnpm --filter @teif/frontend build
+echo ""
+echo "2. Directory Structure"
+echo "---"
+ls -la /app/packages/frontend/ || echo "ERROR: frontend dir not found"
+ls -la /app/packages/shared/ || echo "ERROR: shared dir not found"
+
+echo ""
+echo "3. Package.json Content"
+echo "---"
+cat /app/packages/frontend/package.json || echo "ERROR: package.json not found"
+
+echo ""
+echo "4. Workspace Verification"
+echo "---"
+pnpm list --depth=0 2>&1 || echo "ERROR: pnpm list failed"
+
+echo ""
+echo "5. Package Filter Test"
+echo "---"
+pnpm ls --filter @teif/frontend 2>&1 || echo "ERROR: filter test failed"
+
+echo ""
+echo "6. Frontend Build"
+echo "---"
+echo "Running: pnpm --filter @teif/frontend build"
+pnpm --filter @teif/frontend build 2>&1 || (
+  echo ""
+  echo "BUILD FAILED - Attempting diagnosis..."
+  echo "Checking if dist exists:"
+  ls -la /app/packages/frontend/dist/ || echo "dist does not exist"
+  exit 1
+)
+
+echo ""
+echo "========================================="
+echo "BUILD SUCCESS"
+echo "========================================="
+EOF
+
+chmod +x /tmp/build-debug.sh
+/tmp/build-debug.sh
 
 
 # ============================================
