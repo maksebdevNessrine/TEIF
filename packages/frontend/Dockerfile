@@ -40,23 +40,26 @@ RUN echo "DEBUG: Current directory:" && pwd && echo "DEBUG: Files in /app:" && l
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Build diagnostic output
-RUN echo "=== ENV ===" && \
+# Build diagnostic output to a file
+RUN { \
+    echo "=== FRONTEND BUILD DIAGNOSTICS ===" && \
     echo "PWD: $(pwd)" && \
     echo "Node: $(node --version)" && \
     echo "pnpm: $(pnpm --version)" && \
-    echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL:-UNSET}"
-
-RUN echo "=== DIR STRUCTURE ===" && ls -la packages/frontend/
-
-RUN echo "=== PACKAGE.JSON ===" && cat packages/frontend/package.json
-
-RUN echo "=== WORKSPACE CHECK ===" && pnpm list --depth=0
-
-RUN echo "=== FILTER CHECK ===" && pnpm ls --filter @teif/frontend 2>&1 || true
-
-# Build frontend - if this fails, the full error will be visible above
-RUN echo "=== BUILDING FRONTEND ===" && pnpm --filter @teif/frontend build
+    echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL:-UNSET}" && \
+    echo "" && \
+    echo "=== DIRECTORY ===" && \
+    ls -la packages/frontend/ && \
+    echo "" && \
+    echo "=== PACKAGE.JSON ===" && \
+    cat packages/frontend/package.json && \
+    echo "" && \
+    echo "=== WORKSPACE ===" && \
+    pnpm list --depth=0 && \
+    echo "" && \
+    echo "=== BUILDING ===" && \
+    pnpm --filter @teif/frontend build; \
+    } 2>&1 | tee /tmp/frontend-build.log
 
 
 # ============================================

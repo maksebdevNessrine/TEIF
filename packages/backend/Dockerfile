@@ -30,22 +30,25 @@ RUN pnpm install --frozen-lockfile
 COPY packages/backend packages/backend/
 COPY packages/shared packages/shared/
 
-# Build diagnostic output
-RUN echo "=== ENV ===" && \
+# Build diagnostic output to a file
+RUN { \
+    echo "=== BACKEND BUILD DIAGNOSTICS ===" && \
     echo "PWD: $(pwd)" && \
     echo "Node: $(node --version)" && \
-    echo "pnpm: $(pnpm --version)"
-
-RUN echo "=== DIR STRUCTURE ===" && ls -la packages/backend/
-
-RUN echo "=== PACKAGE.JSON ===" && cat packages/backend/package.json
-
-RUN echo "=== WORKSPACE CHECK ===" && pnpm list --depth=0
-
-RUN echo "=== FILTER CHECK ===" && pnpm ls --filter @teif/backend 2>&1 || true
-
-# Build backend - if this fails, the full error will be visible above
-RUN echo "=== BUILDING BACKEND ===" && pnpm --filter @teif/backend build
+    echo "pnpm: $(pnpm --version)" && \
+    echo "" && \
+    echo "=== DIRECTORY ===" && \
+    ls -la packages/backend/ && \
+    echo "" && \
+    echo "=== PACKAGE.JSON ===" && \
+    cat packages/backend/package.json && \
+    echo "" && \
+    echo "=== WORKSPACE ===" && \
+    pnpm list --depth=0 && \
+    echo "" && \
+    echo "=== BUILDING ===" && \
+    pnpm --filter @teif/backend build; \
+    } 2>&1 | tee /tmp/backend-build.log
 
 
 # ============================================
