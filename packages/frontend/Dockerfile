@@ -40,19 +40,15 @@ RUN echo "DEBUG: Current directory:" && pwd && echo "DEBUG: Files in /app:" && l
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Build diagnostic output
-RUN echo "=== FRONTEND BUILD START ==="
-RUN echo "PWD: $(pwd)"
-RUN echo "Node: $(node --version)"
-RUN echo "pnpm: $(pnpm --version)"
-RUN echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL}"
-RUN echo "=== Directory listing ===" && ls -la packages/frontend/
-RUN echo "=== Package.json ===" && cat packages/frontend/package.json
-RUN echo "=== pnpm-workspace.yaml ===" && cat pnpm-workspace.yaml
-RUN echo "=== Workspace packages ===" && pnpm list --depth=0
-RUN echo "=== All package.json files ===" && find /app -maxdepth 3 -name "package.json" -type f
-RUN echo "=== Starting build ===" && pnpm --filter @teif/frontend build
-RUN test -d /app/packages/frontend/dist && echo "✓ dist folder exists" || (echo "✗ dist NOT FOUND"; ls -laR /app/packages/frontend/; exit 1)
+# Copy source code after deps are installed (leverages Docker layer caching)
+COPY packages/frontend packages/frontend/
+COPY packages/shared packages/shared/
+
+# Build frontend with full error output
+RUN pnpm --filter @teif/frontend build 2>&1
+
+# Verify dist was created
+RUN test -d /app/packages/frontend/dist || (echo "DIST NOT FOUND"; ls -laR /app/packages/frontend/; exit 1)
 
 
 # ============================================
