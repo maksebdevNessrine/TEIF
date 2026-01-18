@@ -6,11 +6,12 @@ ENV NODE_ENV=production
 # Copy entire repo
 COPY . .
 
-# Install and build
-RUN npm install -g pnpm@9.0.0 && pnpm install --frozen-lockfile
+# Install dependencies  
+RUN npm install -g pnpm@9.0.0
+RUN pnpm install --frozen-lockfile
 
-# Build backend using --cwd to stay in workspace context
-RUN pnpm --cwd packages/backend run build
+# Use npx turbo to build backend (turbo is in node_modules)
+RUN npx turbo build --filter=backend
 
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

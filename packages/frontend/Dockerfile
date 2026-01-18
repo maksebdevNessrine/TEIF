@@ -6,11 +6,12 @@ ENV NODE_ENV=production
 # Copy entire repo
 COPY . .
 
-# Install and build
-RUN npm install -g pnpm@9.0.0 && pnpm install --frozen-lockfile
+# Install dependencies
+RUN npm install -g pnpm@9.0.0
+RUN pnpm install --frozen-lockfile
 
-# Build frontend using --cwd to stay in workspace context
-RUN pnpm --cwd packages/frontend run build
+# Use npx turbo to build frontend (turbo is in node_modules)
+RUN npx turbo build --filter=frontend -- --mode production
 
 
 FROM nginx:alpine
