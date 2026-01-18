@@ -44,8 +44,8 @@ COPY packages/shared packages/shared/
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Build frontend with full error output
-RUN pnpm --filter @teif/frontend build 2>&1
+# Build frontend - capture output to file and show on failure
+RUN pnpm --filter @teif/frontend build > /tmp/build.log 2>&1 || (cat /tmp/build.log && exit 1)
 
 # Verify dist was created
 RUN test -d /app/packages/frontend/dist || (echo "DIST NOT FOUND"; ls -laR /app/packages/frontend/; exit 1)
