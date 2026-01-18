@@ -25,7 +25,7 @@ RUN cd packages/frontend \
  && echo "=== VITE ENV ===" \
  && env | sort \
  && echo "=== BUILD START ===" \
- && pnpm build --debug 2>&1 | tee /tmp/vite-error.log \
+ && pnpm --filter @teif/frontend build 2>&1 | tee /tmp/vite-error.log \
  || (echo "=== VITE BUILD FAILED ===" && cat /tmp/vite-error.log && exit 1)
 
 
