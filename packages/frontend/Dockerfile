@@ -44,8 +44,17 @@ COPY packages/shared packages/shared/
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Build frontend - pipe output through tee to show live + save
-RUN bash -c 'set -o pipefail; pnpm --filter @teif/frontend build 2>&1 | tee /tmp/build.log'
+# Diagnostic output - show environment and verify workspace
+RUN set -eux; \
+    echo "=== Node Version ==="; node -v; \
+    echo "=== PNPM Version ==="; pnpm -v; \
+    echo "=== Frontend folder ==="; ls -la packages/frontend; \
+    echo "=== Frontend package.json ==="; cat packages/frontend/package.json | head -20; \
+    echo "=== Shared folder ==="; ls -la packages/shared || true; \
+    echo "=== Build starting ==="
+
+# Build frontend with verbose output
+RUN set -eux; pnpm --filter @teif/frontend build
 
 # Verify dist was created
 RUN test -d /app/packages/frontend/dist || (echo "DIST NOT FOUND"; ls -laR /app/packages/frontend/; exit 1)
