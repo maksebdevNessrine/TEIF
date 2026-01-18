@@ -12,9 +12,6 @@ ENV NODE_ENV=development
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
-# Debug: Show what VITE_API_BASE_URL is set to
-RUN echo "DEBUG: VITE_API_BASE_URL is set to: ${VITE_API_BASE_URL}"
-
 # Alpine compatibility for Vite/esbuild
 RUN apk add --no-cache libc6-compat
 
@@ -31,17 +28,16 @@ RUN corepack enable
 RUN pnpm config set node-linker hoisted
 
 # Install all dependencies (including devDependencies for build)
-RUN pnpm install --frozen-lockfile
-
-# Debug: Show workspace structure
-RUN echo "DEBUG: Current directory:" && pwd && echo "DEBUG: Files in /app:" && ls -la /app && echo "DEBUG: pnpm list:" && pnpm list --depth=0 || true
+RUN echo "Installing dependencies..." && pnpm install --frozen-lockfile
 
 # Copy source code after deps are installed (leverages Docker layer caching)
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
 # Build frontend within workspace context
-RUN echo "DEBUG: About to build @teif/frontend" && echo "DEBUG: VITE_API_BASE_URL=${VITE_API_BASE_URL}" && pnpm --filter @teif/frontend build --verbose 2>&1
+RUN echo "Building @teif/frontend..." && \
+    echo "VITE_API_BASE_URL=${VITE_API_BASE_URL}" && \
+    pnpm --filter @teif/frontend build
 
 
 # ============================================

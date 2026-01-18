@@ -24,14 +24,14 @@ RUN corepack enable
 RUN pnpm config set node-linker hoisted
 
 # Install all dependencies (including devDependencies for build)
-RUN pnpm install --frozen-lockfile
+RUN echo "Installing dependencies..." && pnpm install --frozen-lockfile
 
 # Copy source code after deps are installed (leverages Docker layer caching)
 COPY packages/backend packages/backend/
 COPY packages/shared packages/shared/
 
 # Build backend within workspace context
-RUN pnpm --filter @teif/backend build
+RUN echo "Building @teif/backend..." && pnpm --filter @teif/backend build
 
 
 # ============================================
