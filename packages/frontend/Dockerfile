@@ -47,8 +47,10 @@ RUN echo "Node: $(node --version)"
 RUN echo "pnpm: $(pnpm --version)"
 RUN echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL}"
 RUN echo "=== Directory listing ===" && ls -la packages/frontend/
-RUN echo "=== Package.json ===" && head -20 packages/frontend/package.json
-RUN echo "=== Workspace ===" && pnpm list --depth=0
+RUN echo "=== Package.json ===" && cat packages/frontend/package.json
+RUN echo "=== pnpm-workspace.yaml ===" && cat pnpm-workspace.yaml
+RUN echo "=== Workspace packages ===" && pnpm list --depth=0
+RUN echo "=== All package.json files ===" && find /app -maxdepth 3 -name "package.json" -type f
 RUN echo "=== Starting build ===" && pnpm --filter @teif/frontend build
 RUN test -d /app/packages/frontend/dist && echo "✓ dist folder exists" || (echo "✗ dist NOT FOUND"; ls -laR /app/packages/frontend/; exit 1)
 
