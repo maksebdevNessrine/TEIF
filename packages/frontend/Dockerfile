@@ -33,12 +33,15 @@ RUN pnpm config set node-linker hoisted
 # Install all dependencies (including devDependencies for build)
 RUN pnpm install --frozen-lockfile
 
+# Debug: Show workspace structure
+RUN echo "DEBUG: Current directory:" && pwd && echo "DEBUG: Files in /app:" && ls -la /app && echo "DEBUG: pnpm list:" && pnpm list --depth=0 || true
+
 # Copy source code after deps are installed (leverages Docker layer caching)
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
 # Build frontend within workspace context
-RUN pnpm --filter @teif/frontend build --verbose 2>&1
+RUN echo "DEBUG: About to build @teif/frontend" && echo "DEBUG: VITE_API_BASE_URL=${VITE_API_BASE_URL}" && pnpm --filter @teif/frontend build --verbose 2>&1
 
 
 # ============================================
