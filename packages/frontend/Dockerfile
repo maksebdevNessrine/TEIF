@@ -18,7 +18,7 @@ RUN echo "=== Directory structure ===" && ls -la packages/frontend/ | head -20
 RUN echo "=== package.json ===" && cat packages/frontend/package.json | grep -A5 '"scripts"'
 
 # Build frontend with error output
-RUN echo "=== Starting build ===" && npx turbo build --filter=frontend 2>&1 || (echo "Build failed with exit code $?"; exit 1)
+RUN echo "=== Starting build ===" && npx turbo build --filter=@teif/frontend 2>&1 || (echo "Build failed with exit code $?"; exit 1)
 
 
 FROM nginx:alpine

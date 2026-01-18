@@ -18,7 +18,7 @@ RUN echo "=== Directory structure ===" && ls -la packages/backend/ | head -20
 RUN echo "=== package.json ===" && cat packages/backend/package.json | grep -A5 '"scripts"'
 
 # Build backend with error output
-RUN echo "=== Starting build ===" && npx turbo build --filter=backend 2>&1 || (echo "Build failed with exit code $?"; exit 1)
+RUN echo "=== Starting build ===" && npx turbo build --filter=@teif/backend 2>&1 || (echo "Build failed with exit code $?"; exit 1)
 
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
