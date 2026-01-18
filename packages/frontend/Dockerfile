@@ -19,7 +19,9 @@ RUN npm install -g pnpm@9.0.0
 RUN pnpm install --frozen-lockfile
 
 # Build frontend via workspace filter (ensures correct build context)
-RUN pnpm --filter @teif/frontend build
+RUN echo "=== Building frontend ===" \
+ && pnpm --filter @teif/frontend build 2>&1 \
+ || (echo "=== FRONTEND BUILD FAILED ===" && exit 1)
 
 
 FROM nginx:alpine
