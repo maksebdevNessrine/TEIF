@@ -1,8 +1,6 @@
 FROM node:20-alpine AS builder
 
 WORKDIR /app
-
-# Build-time: must be development to install devDependencies (Vite, TypeScript, etc.)
 ENV NODE_ENV=development
 
 # Build-time env (REQUIRED for Vite)
@@ -16,17 +14,12 @@ RUN apk add --no-cache libc6-compat
 COPY package.json pnpm-lock.yaml ./
 COPY packages ./packages
 
-# Install deps (includes devDependencies because NODE_ENV=development)
+# Install deps
 RUN npm install -g pnpm@9.0.0
 RUN pnpm install --frozen-lockfile
 
-# 🚨 BUILD with full debug output - force stderr capture
-RUN cd packages/frontend \
- && echo "=== VITE ENV ===" \
- && env | sort \
- && echo "=== BUILD START ===" \
- && pnpm --filter @teif/frontend build 2>&1 | tee /tmp/vite-error.log \
- || (echo "=== VITE BUILD FAILED ===" && cat /tmp/vite-error.log && exit 1)
+# Build frontend via workspace filter (ensures correct build context)
+RUN pnpm --filter @teif/frontend build
 
 
 FROM nginx:alpine
