@@ -40,36 +40,27 @@ RUN echo "DEBUG: Current directory:" && pwd && echo "DEBUG: Files in /app:" && l
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Build diagnostic output to a file
-RUN { \
-    echo "=== FRONTEND BUILD DIAGNOSTICS ===" && \
+# Build diagnostic output
+RUN echo "=== FRONTEND BUILD START ===" && \
     echo "PWD: $(pwd)" && \
     echo "Node: $(node --version)" && \
     echo "pnpm: $(pnpm --version)" && \
-    echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL:-UNSET}" && \
+    echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL}" && \
     echo "" && \
-    echo "=== DIRECTORY ===" && \
+    echo "=== Directory listing ===" && \
     ls -la packages/frontend/ && \
     echo "" && \
-    echo "=== PACKAGE.JSON ===" && \
-    cat packages/frontend/package.json && \
+    echo "=== Package.json ===" && \
+    head -20 packages/frontend/package.json && \
     echo "" && \
-    echo "=== WORKSPACE ===" && \
+    echo "=== Workspace ===" && \
     pnpm list --depth=0 && \
     echo "" && \
-    echo "=== BUILDING ===" && \
-    pnpm --filter @teif/frontend build; \
-    } 2>&1 | tee /tmp/frontend-build.log
+    echo "=== Starting build ===" && \
+    pnpm --filter @teif/frontend build 2>&1
 
-# Verify dist folder exists, if not show what went wrong
-RUN if [ ! -d "/app/packages/frontend/dist" ]; then \
-    echo "ERROR: dist folder not found!"; \
-    echo "=== BUILD LOG ==="; \
-    cat /tmp/frontend-build.log; \
-    echo "=== FRONTEND DIRECTORY ==="; \
-    ls -la /app/packages/frontend/; \
-    exit 1; \
-    fi && echo "✓ Frontend dist folder created successfully"
+# Verify dist was created
+RUN test -d /app/packages/frontend/dist && echo "✓ dist folder exists" || (echo "✗ dist folder NOT FOUND"; ls -laR /app/packages/frontend/; exit 1)
 
 
 # ============================================
