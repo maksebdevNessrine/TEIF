@@ -21,7 +21,11 @@ RUN npm install -g pnpm@9.0.0
 RUN pnpm install --frozen-lockfile
 
 # 🚨 BUILD with full debug output
-RUN cd packages/frontend && pnpm build
+RUN cd packages/frontend \
+ && echo "=== VITE ENV ===" \
+ && env | sort \
+ && echo "=== BUILD START ===" \
+ && pnpm build --debug
 
 
 FROM nginx:alpine
