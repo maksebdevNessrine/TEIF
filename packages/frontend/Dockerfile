@@ -19,15 +19,7 @@ RUN npm install -g pnpm@9.0.0
 RUN pnpm install --frozen-lockfile
 
 # 🚨 BUILD with full debug output
-RUN cd packages/frontend \
- && echo "=== ENV ===" \
- && env | grep VITE \
- && echo "=== NODE ===" \
- && node -v \
- && echo "=== PNPM ===" \
- && pnpm -v \
- && echo "=== BUILD START ===" \
- && pnpm build --reporter=append-only || (echo "FRONTEND BUILD FAILED"; exit 1)
+RUN cd packages/frontend && pnpm build
 
 
 FROM nginx:alpine
