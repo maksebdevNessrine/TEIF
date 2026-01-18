@@ -7,6 +7,9 @@ ENV NODE_ENV=production
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
+# Alpine compatibility for Vite (esbuild requirement)
+RUN apk add --no-cache libc6-compat
+
 # Copy only what is needed
 COPY package.json pnpm-lock.yaml ./
 COPY packages ./packages
@@ -15,8 +18,16 @@ COPY packages ./packages
 RUN npm install -g pnpm@9.0.0
 RUN pnpm install --frozen-lockfile
 
-# 🚨 DIRECT build (NO TURBO)
-RUN cd packages/frontend && pnpm build
+# 🚨 BUILD with full debug output
+RUN cd packages/frontend \
+ && echo "=== ENV ===" \
+ && env | grep VITE \
+ && echo "=== NODE ===" \
+ && node -v \
+ && echo "=== PNPM ===" \
+ && pnpm -v \
+ && echo "=== BUILD START ===" \
+ && pnpm build --reporter=append-only || (echo "FRONTEND BUILD FAILED"; exit 1)
 
 
 FROM nginx:alpine
