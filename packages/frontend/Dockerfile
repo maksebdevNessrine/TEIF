@@ -40,63 +40,23 @@ RUN echo "DEBUG: Current directory:" && pwd && echo "DEBUG: Files in /app:" && l
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Create comprehensive debug script
-RUN cat > /tmp/build-debug.sh << 'EOF'
-#!/bin/bash
-set -e
+# Build diagnostic output
+RUN echo "=== ENV ===" && \
+    echo "PWD: $(pwd)" && \
+    echo "Node: $(node --version)" && \
+    echo "pnpm: $(pnpm --version)" && \
+    echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL:-UNSET}"
 
-echo "========================================="
-echo "COMPREHENSIVE BUILD DEBUG LOG"
-echo "========================================="
+RUN echo "=== DIR STRUCTURE ===" && ls -la packages/frontend/
 
-echo ""
-echo "1. Environment Check"
-echo "---"
-echo "PWD: $(pwd)"
-echo "Node version: $(node --version)"
-echo "pnpm version: $(pnpm --version)"
-echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL:-UNSET}"
+RUN echo "=== PACKAGE.JSON ===" && cat packages/frontend/package.json
 
-echo ""
-echo "2. Directory Structure"
-echo "---"
-ls -la /app/packages/frontend/ || echo "ERROR: frontend dir not found"
-ls -la /app/packages/shared/ || echo "ERROR: shared dir not found"
+RUN echo "=== WORKSPACE CHECK ===" && pnpm list --depth=0
 
-echo ""
-echo "3. Package.json Content"
-echo "---"
-cat /app/packages/frontend/package.json || echo "ERROR: package.json not found"
+RUN echo "=== FILTER CHECK ===" && pnpm ls --filter @teif/frontend 2>&1 || true
 
-echo ""
-echo "4. Workspace Verification"
-echo "---"
-pnpm list --depth=0 2>&1 || echo "ERROR: pnpm list failed"
-
-echo ""
-echo "5. Package Filter Test"
-echo "---"
-pnpm ls --filter @teif/frontend 2>&1 || echo "ERROR: filter test failed"
-
-echo ""
-echo "6. Frontend Build"
-echo "---"
-echo "Running: pnpm --filter @teif/frontend build"
-pnpm --filter @teif/frontend build 2>&1 || (
-  echo ""
-  echo "BUILD FAILED - Attempting diagnosis..."
-  echo "Checking if dist exists:"
-  ls -la /app/packages/frontend/dist/ || echo "dist does not exist"
-  exit 1
-)
-
-echo ""
-echo "========================================="
-echo "BUILD SUCCESS"
-echo "========================================="
-EOF
-
-RUN chmod +x /tmp/build-debug.sh && /tmp/build-debug.sh
+# Build frontend - if this fails, the full error will be visible above
+RUN echo "=== BUILDING FRONTEND ===" && pnpm --filter @teif/frontend build
 
 
 # ============================================
