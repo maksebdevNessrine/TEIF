@@ -20,12 +20,13 @@ COPY packages ./packages
 RUN npm install -g pnpm@9.0.0
 RUN pnpm install --frozen-lockfile
 
-# 🚨 BUILD with full debug output
+# 🚨 BUILD with full debug output - force stderr capture
 RUN cd packages/frontend \
  && echo "=== VITE ENV ===" \
  && env | sort \
  && echo "=== BUILD START ===" \
- && pnpm build --debug
+ && pnpm build --debug 2>&1 | tee /tmp/vite-error.log \
+ || (echo "=== VITE BUILD FAILED ===" && cat /tmp/vite-error.log && exit 1)
 
 
 FROM nginx:alpine
