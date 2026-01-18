@@ -40,8 +40,17 @@ RUN echo "DEBUG: Current directory:" && pwd && echo "DEBUG: Files in /app:" && l
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
+# Verify workspace structure
+RUN echo "=== Directory listing ===" && ls -la packages/frontend/ || true
+
+# Verify package.json exists and is readable
+RUN echo "=== Package.json content ===" && cat packages/frontend/package.json || true
+
+# Check pnpm workspace
+RUN echo "=== Checking pnpm workspace ===" && pnpm list --depth=0 || true
+
 # Build frontend within workspace context
-RUN ls -la packages/frontend/ && cat packages/frontend/package.json && pnpm --filter @teif/frontend build
+RUN echo "=== Starting frontend build ===" && pnpm --filter @teif/frontend build
 
 
 # ============================================
