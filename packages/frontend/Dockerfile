@@ -44,17 +44,19 @@ COPY packages/shared packages/shared/
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Diagnostic output - show environment and verify workspace
+# Diagnostic output - verify pnpm filter works
 RUN set -eux; \
     echo "=== Node Version ==="; node -v; \
     echo "=== PNPM Version ==="; pnpm -v; \
-    echo "=== Frontend folder ==="; ls -la packages/frontend; \
-    echo "=== Frontend package.json ==="; cat packages/frontend/package.json | head -20; \
-    echo "=== Shared folder ==="; ls -la packages/shared || true; \
-    echo "=== Build starting ==="
+    echo "=== Current Directory ==="; pwd; \
+    echo "=== Root Contents ==="; ls -la; \
+    echo "=== Packages Directory ==="; ls -la packages/; \
+    echo "=== Frontend package.json name ==="; grep '"name"' packages/frontend/package.json; \
+    echo "=== Listing projects pnpm can see ==="; pnpm list -r --depth 0 || true; \
+    echo "=== Testing filter (dry-run) ==="; pnpm --filter @teif/frontend exec pwd || true
 
-# Build frontend with verbose output
-RUN set -eux; pnpm --filter @teif/frontend build
+# Build frontend - run and capture full output
+RUN pnpm --filter @teif/frontend build 2>&1 | head -100
 
 # Verify dist was created
 RUN test -d /app/packages/frontend/dist || (echo "DIST NOT FOUND"; ls -laR /app/packages/frontend/; exit 1)
