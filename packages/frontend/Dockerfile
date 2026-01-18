@@ -3,6 +3,10 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 ENV NODE_ENV=production
 
+# Build-time environment variables (required by Vite)
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
 # Copy entire repo
 COPY . .
 
