@@ -12,6 +12,9 @@ ENV NODE_ENV=development
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
+# Debug: Show what VITE_API_BASE_URL is set to
+RUN echo "DEBUG: VITE_API_BASE_URL is set to: ${VITE_API_BASE_URL}"
+
 # Alpine compatibility for Vite/esbuild
 RUN apk add --no-cache libc6-compat
 
@@ -35,7 +38,7 @@ COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
 # Build frontend within workspace context
-RUN pnpm --filter @teif/frontend build
+RUN pnpm --filter @teif/frontend build --verbose 2>&1
 
 
 # ============================================
