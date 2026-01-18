@@ -41,26 +41,16 @@ COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
 # Build diagnostic output
-RUN echo "=== FRONTEND BUILD START ===" && \
-    echo "PWD: $(pwd)" && \
-    echo "Node: $(node --version)" && \
-    echo "pnpm: $(pnpm --version)" && \
-    echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL}" && \
-    echo "" && \
-    echo "=== Directory listing ===" && \
-    ls -la packages/frontend/ && \
-    echo "" && \
-    echo "=== Package.json ===" && \
-    head -20 packages/frontend/package.json && \
-    echo "" && \
-    echo "=== Workspace ===" && \
-    pnpm list --depth=0 && \
-    echo "" && \
-    echo "=== Starting build ===" && \
-    pnpm --filter @teif/frontend build 2>&1
-
-# Verify dist was created
-RUN test -d /app/packages/frontend/dist && echo "✓ dist folder exists" || (echo "✗ dist folder NOT FOUND"; ls -laR /app/packages/frontend/; exit 1)
+RUN echo "=== FRONTEND BUILD START ==="
+RUN echo "PWD: $(pwd)"
+RUN echo "Node: $(node --version)"
+RUN echo "pnpm: $(pnpm --version)"
+RUN echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL}"
+RUN echo "=== Directory listing ===" && ls -la packages/frontend/
+RUN echo "=== Package.json ===" && head -20 packages/frontend/package.json
+RUN echo "=== Workspace ===" && pnpm list --depth=0
+RUN echo "=== Starting build ===" && pnpm --filter @teif/frontend build
+RUN test -d /app/packages/frontend/dist && echo "✓ dist folder exists" || (echo "✗ dist NOT FOUND"; ls -laR /app/packages/frontend/; exit 1)
 
 
 # ============================================
