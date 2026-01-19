@@ -13,7 +13,7 @@ import { InputJsonValueSchema } from './InputJsonValueSchema';
 import { InvoiceLineUncheckedUpdateManyWithoutInvoiceNestedInputSchema } from './InvoiceLineUncheckedUpdateManyWithoutInvoiceNestedInputSchema';
 
 export const InvoiceUncheckedUpdateWithoutAllowancesInputSchema: z.ZodType<Prisma.InvoiceUncheckedUpdateWithoutAllowancesInput> = z.object({
-  id: z.union([ z.cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   documentType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   documentNumber: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   invoiceDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),

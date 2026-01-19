@@ -7,7 +7,7 @@ import { InvoiceLineUncheckedCreateNestedManyWithoutInvoiceInputSchema } from '.
 import { AllowanceChargeUncheckedCreateNestedManyWithoutInvoiceInputSchema } from './AllowanceChargeUncheckedCreateNestedManyWithoutInvoiceInputSchema';
 
 export const InvoiceUncheckedCreateInputSchema: z.ZodType<Prisma.InvoiceUncheckedCreateInput> = z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   documentType: z.string(),
   documentNumber: z.string(),
   invoiceDate: z.coerce.date(),

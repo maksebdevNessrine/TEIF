@@ -9,7 +9,7 @@ import { PartnerCreateNestedOneWithoutBuyerInvoicesInputSchema } from './Partner
 import { AllowanceChargeCreateNestedManyWithoutInvoiceInputSchema } from './AllowanceChargeCreateNestedManyWithoutInvoiceInputSchema';
 
 export const InvoiceCreateWithoutLinesInputSchema: z.ZodType<Prisma.InvoiceCreateWithoutLinesInput> = z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   documentType: z.string(),
   documentNumber: z.string(),
   invoiceDate: z.coerce.date(),

@@ -10,18 +10,18 @@ import { UserWhereInputSchema } from './UserWhereInputSchema';
 
 export const RefreshTokenWhereUniqueInputSchema: z.ZodType<Prisma.RefreshTokenWhereUniqueInput> = z.union([
   z.object({
-    id: z.cuid(),
+    id: z.string().cuid(),
     tokenHash: z.string(),
   }),
   z.object({
-    id: z.cuid(),
+    id: z.string().cuid(),
   }),
   z.object({
     tokenHash: z.string(),
   }),
 ])
 .and(z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   tokenHash: z.string().optional(),
   AND: z.union([ z.lazy(() => RefreshTokenWhereInputSchema), z.lazy(() => RefreshTokenWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => RefreshTokenWhereInputSchema).array().optional(),

@@ -5,7 +5,7 @@ import { InvoiceUncheckedCreateNestedManyWithoutSupplierInputSchema } from './In
 import { InvoiceUncheckedCreateNestedManyWithoutBuyerInputSchema } from './InvoiceUncheckedCreateNestedManyWithoutBuyerInputSchema';
 
 export const PartnerUncheckedCreateInputSchema: z.ZodType<Prisma.PartnerUncheckedCreateInput> = z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   idType: z.string(),
   idValue: z.string(),
   name: z.string(),

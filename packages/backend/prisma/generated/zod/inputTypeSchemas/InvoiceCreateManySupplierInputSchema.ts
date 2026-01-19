@@ -5,7 +5,7 @@ import { NullableJsonNullValueInputSchema } from './NullableJsonNullValueInputSc
 import { InputJsonValueSchema } from './InputJsonValueSchema';
 
 export const InvoiceCreateManySupplierInputSchema: z.ZodType<Prisma.InvoiceCreateManySupplierInput> = z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   documentType: z.string(),
   documentNumber: z.string(),
   invoiceDate: z.coerce.date(),

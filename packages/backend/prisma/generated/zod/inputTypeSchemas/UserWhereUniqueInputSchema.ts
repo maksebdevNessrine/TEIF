@@ -12,18 +12,18 @@ import { RefreshTokenListRelationFilterSchema } from './RefreshTokenListRelation
 
 export const UserWhereUniqueInputSchema: z.ZodType<Prisma.UserWhereUniqueInput> = z.union([
   z.object({
-    id: z.cuid(),
+    id: z.string().cuid(),
     email: z.string(),
   }),
   z.object({
-    id: z.cuid(),
+    id: z.string().cuid(),
   }),
   z.object({
     email: z.string(),
   }),
 ])
 .and(z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   email: z.string().optional(),
   AND: z.union([ z.lazy(() => UserWhereInputSchema), z.lazy(() => UserWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => UserWhereInputSchema).array().optional(),

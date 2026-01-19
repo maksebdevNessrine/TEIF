@@ -10,7 +10,7 @@ import { InvoiceLineCreateNestedManyWithoutInvoiceInputSchema } from './InvoiceL
 import { AllowanceChargeCreateNestedManyWithoutInvoiceInputSchema } from './AllowanceChargeCreateNestedManyWithoutInvoiceInputSchema';
 
 export const InvoiceCreateInputSchema: z.ZodType<Prisma.InvoiceCreateInput> = z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   documentType: z.string(),
   documentNumber: z.string(),
   invoiceDate: z.coerce.date(),

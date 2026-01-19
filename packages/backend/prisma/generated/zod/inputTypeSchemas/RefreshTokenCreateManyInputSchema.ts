@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
 export const RefreshTokenCreateManyInputSchema: z.ZodType<Prisma.RefreshTokenCreateManyInput> = z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   userId: z.string(),
   tokenHash: z.string(),
   expiresAt: z.coerce.date(),

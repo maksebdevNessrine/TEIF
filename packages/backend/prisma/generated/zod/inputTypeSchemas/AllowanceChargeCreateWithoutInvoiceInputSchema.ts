@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { InvoiceLineCreateNestedOneWithoutAllowancesInputSchema } from './InvoiceLineCreateNestedOneWithoutAllowancesInputSchema';
 
 export const AllowanceChargeCreateWithoutInvoiceInputSchema: z.ZodType<Prisma.AllowanceChargeCreateWithoutInvoiceInput> = z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   type: z.string(),
   code: z.string(),
   description: z.string(),

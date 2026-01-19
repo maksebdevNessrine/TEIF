@@ -9,7 +9,7 @@ import { DateTimeFieldUpdateOperationsInputSchema } from './DateTimeFieldUpdateO
 import { InvoiceUpdateOneRequiredWithoutLinesNestedInputSchema } from './InvoiceUpdateOneRequiredWithoutLinesNestedInputSchema';
 
 export const InvoiceLineUpdateWithoutAllowancesInputSchema: z.ZodType<Prisma.InvoiceLineUpdateWithoutAllowancesInput> = z.object({
-  id: z.union([ z.cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   itemCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   quantity: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),

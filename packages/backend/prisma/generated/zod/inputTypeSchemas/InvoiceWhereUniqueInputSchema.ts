@@ -19,18 +19,18 @@ import { AllowanceChargeListRelationFilterSchema } from './AllowanceChargeListRe
 
 export const InvoiceWhereUniqueInputSchema: z.ZodType<Prisma.InvoiceWhereUniqueInput> = z.union([
   z.object({
-    id: z.cuid(),
+    id: z.string().cuid(),
     documentNumber: z.string(),
   }),
   z.object({
-    id: z.cuid(),
+    id: z.string().cuid(),
   }),
   z.object({
     documentNumber: z.string(),
   }),
 ])
 .and(z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   documentNumber: z.string().optional(),
   AND: z.union([ z.lazy(() => InvoiceWhereInputSchema), z.lazy(() => InvoiceWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => InvoiceWhereInputSchema).array().optional(),

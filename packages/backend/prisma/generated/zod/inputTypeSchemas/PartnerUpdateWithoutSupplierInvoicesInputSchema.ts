@@ -7,7 +7,7 @@ import { DateTimeFieldUpdateOperationsInputSchema } from './DateTimeFieldUpdateO
 import { InvoiceUpdateManyWithoutBuyerNestedInputSchema } from './InvoiceUpdateManyWithoutBuyerNestedInputSchema';
 
 export const PartnerUpdateWithoutSupplierInvoicesInputSchema: z.ZodType<Prisma.PartnerUpdateWithoutSupplierInvoicesInput> = z.object({
-  id: z.union([ z.cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   idType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   idValue: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),

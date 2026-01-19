@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { RefreshTokenUncheckedCreateNestedManyWithoutUserInputSchema } from './RefreshTokenUncheckedCreateNestedManyWithoutUserInputSchema';
 
 export const UserUncheckedCreateWithoutInvoicesInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutInvoicesInput> = z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   email: z.string(),
   name: z.string(),
   passwordHash: z.string(),

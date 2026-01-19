@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
 export const PartnerCreateManyInputSchema: z.ZodType<Prisma.PartnerCreateManyInput> = z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   idType: z.string(),
   idValue: z.string(),
   name: z.string(),

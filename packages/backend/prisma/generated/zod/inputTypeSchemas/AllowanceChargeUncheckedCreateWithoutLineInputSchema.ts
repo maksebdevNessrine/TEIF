@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
 export const AllowanceChargeUncheckedCreateWithoutLineInputSchema: z.ZodType<Prisma.AllowanceChargeUncheckedCreateWithoutLineInput> = z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   type: z.string(),
   code: z.string(),
   description: z.string(),

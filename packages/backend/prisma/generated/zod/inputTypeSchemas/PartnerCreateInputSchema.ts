@@ -5,7 +5,7 @@ import { InvoiceCreateNestedManyWithoutSupplierInputSchema } from './InvoiceCrea
 import { InvoiceCreateNestedManyWithoutBuyerInputSchema } from './InvoiceCreateNestedManyWithoutBuyerInputSchema';
 
 export const PartnerCreateInputSchema: z.ZodType<Prisma.PartnerCreateInput> = z.object({
-  id: z.cuid().optional(),
+  id: z.string().cuid().optional(),
   idType: z.string(),
   idValue: z.string(),
   name: z.string(),
