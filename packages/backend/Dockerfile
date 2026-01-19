@@ -20,7 +20,7 @@ RUN apk add --no-cache \
     harfbuzz
 
 # Copy workspace configuration and root package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.json ./
 
 # Copy all package.json files (maintains workspace structure)
 COPY packages/frontend/package.json packages/frontend/
@@ -40,7 +40,7 @@ COPY packages/backend packages/backend/
 COPY packages/shared packages/shared/
 
 # Generate Prisma client (CRITICAL - required for database operations)
-RUN pnpm --filter @teif/backend prisma generate
+RUN cd /app/packages/backend && npx prisma generate --schema=./prisma/schema.prisma
 
 # Build diagnostic output to a file
 RUN { \
@@ -58,7 +58,10 @@ RUN { \
     echo "=== WORKSPACE ===" && \
     pnpm list --depth=0 && \
     echo "" && \
-    echo "=== BUILDING ===" && \
+    echo "=== BUILDING SHARED ===" && \
+    pnpm --filter @teif/shared build && \
+    echo "" && \
+    echo "=== BUILDING BACKEND ===" && \
     pnpm --filter @teif/backend build; \
     } 2>&1 | tee /tmp/backend-build.log
 
