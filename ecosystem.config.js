@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'teif-backend',
-      script: 'tsx',
+      script: './node_modules/.bin/tsx',
       args: 'packages/backend/dist/index.js',
       instances: 6,
       exec_mode: 'cluster',
