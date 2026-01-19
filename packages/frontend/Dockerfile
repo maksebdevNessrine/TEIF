@@ -15,11 +15,11 @@ ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 RUN apk add --no-cache libc6-compat
 
 # Copy workspace configuration and root package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json tsconfig.base.json ./
 
 # Copy all package.json files (maintains workspace structure)
-COPY packages/frontend/package.json packages/frontend/
-COPY packages/shared/package.json packages/shared/
+COPY packages/frontend/package.json packages/frontend/tsconfig.json packages/frontend/
+COPY packages/shared/package.json packages/shared/tsconfig.json packages/shared/
 COPY packages/backend/package.json packages/backend/
 
 # Enable and configure pnpm
