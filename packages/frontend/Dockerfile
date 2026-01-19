@@ -33,23 +33,24 @@ RUN pnpm install --frozen-lockfile
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Show what we're working with
-RUN echo "=== FRONTEND BUILD DIAGNOSTICS ===" >&2; \
-    echo "Frontend folder contents:" >&2; \
-    ls -la /app/packages/frontend/ >&2; \
-    echo "package.json:" >&2; \
-    cat /app/packages/frontend/package.json | head -15 >&2
-
-# Build script - should be defined in frontend/package.json
+# Build frontend using pnpm (which is already installed and configured)
+# Run from the frontend directory
 RUN cd /app/packages/frontend && \
-    echo "=== Running: npm run build ===" >&2; \
-    npm run build 2>&1 >&2 || \
-    (echo "ERROR: npm run build failed" >&2; exit 1)
+    pnpm build 2>&1 | tee /tmp/vite-build.log; \
+    BUILD_STATUS=${PIPESTATUS[0]}; \
+    echo "Build exit status: $BUILD_STATUS" >&2; \
+    cat /tmp/vite-build.log >&2; \
+    if [ $BUILD_STATUS -ne 0 ]; then exit 1; fi
 
-# Verify dist folder was created
-RUN test -d /app/packages/frontend/dist && \
-    (echo "=== SUCCESS: dist folder created ===" >&2; ls -la /app/packages/frontend/dist/ >&2) || \
-    (echo "=== ERROR: dist folder NOT found ===" >&2; ls -laR /app/packages/frontend/ >&2; exit 1)
+# Verify dist folder exists
+RUN if [ -d /app/packages/frontend/dist ]; then \
+      echo "✓ SUCCESS: dist created" >&2; \
+      ls -la /app/packages/frontend/dist/ >&2; \
+    else \
+      echo "✗ ERROR: dist not found" >&2; \
+      ls -laR /app/packages/frontend/ >&2; \
+      exit 1; \
+    fi
 
 
 # ============================================
