@@ -33,24 +33,11 @@ RUN pnpm install --frozen-lockfile
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Build frontend using pnpm (which is already installed and configured)
-# Run from the frontend directory
-RUN cd /app/packages/frontend && \
-    pnpm build 2>&1 | tee /tmp/vite-build.log; \
-    BUILD_STATUS=${PIPESTATUS[0]}; \
-    echo "Build exit status: $BUILD_STATUS" >&2; \
-    cat /tmp/vite-build.log >&2; \
-    if [ $BUILD_STATUS -ne 0 ]; then exit 1; fi
+# Build frontend - let Docker handle exit codes natively
+RUN cd /app/packages/frontend && pnpm build
 
 # Verify dist folder exists
-RUN if [ -d /app/packages/frontend/dist ]; then \
-      echo "✓ SUCCESS: dist created" >&2; \
-      ls -la /app/packages/frontend/dist/ >&2; \
-    else \
-      echo "✗ ERROR: dist not found" >&2; \
-      ls -laR /app/packages/frontend/ >&2; \
-      exit 1; \
-    fi
+RUN test -d /app/packages/frontend/dist || (echo "ERROR: dist folder not created"; ls -laR /app/packages/frontend/; exit 1)
 
 
 # ============================================
