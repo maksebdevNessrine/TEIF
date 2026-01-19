@@ -164,7 +164,10 @@ echo -e "${GREEN}✓ Environment files created${NC}"
 # ===== PHASE 5: PostgreSQL Docker Setup =====
 echo -e "\n${BLUE}[Phase 5] Setting Up PostgreSQL with Docker...${NC}"
 
-cat > docker-compose.production.yml << 'EOF'
+# Generate DB password
+DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
+
+cat > docker-compose.production.yml << EOF
 version: '3.8'
 
 services:
@@ -175,7 +178,7 @@ services:
     environment:
       POSTGRES_DB: teif
       POSTGRES_USER: teif_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - /var/www/teif-data/postgres:/var/lib/postgresql/data
     ports:
@@ -190,9 +193,6 @@ volumes:
   postgres_data:
     driver: local
 EOF
-
-# Update docker-compose with password
-sed -i "s/\${POSTGRES_PASSWORD}/${DB_PASSWORD}/g" docker-compose.production.yml
 
 # Start PostgreSQL
 echo "Starting PostgreSQL container..."
@@ -287,8 +287,8 @@ echo -e "${GREEN}✓ Backend started with PM2${NC}"
 # ===== PHASE 9: Nginx Reverse Proxy =====
 echo -e "\n${BLUE}[Phase 9] Configuring Nginx Reverse Proxy...${NC}"
 
-# Create nginx config
-sudo tee /etc/nginx/sites-available/teif > /dev/null << NGINX_EOF
+# Create initial nginx config WITHOUT SSL (will update after cert)
+sudo tee /etc/nginx/sites-available/teif > /dev/null << 'NGINX_EOF'
 upstream backend {
     server 127.0.0.1:3000;
     keepalive 64;
@@ -296,30 +296,7 @@ upstream backend {
 
 server {
     listen 80;
-    server_name $DOMAIN;
-    return 301 https://\$server_name\$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name $DOMAIN;
-
-    # SSL (will be set by certbot)
-    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    ssl_prefer_server_ciphers on;
-
-    # Security headers
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-
-    # Logging
-    access_log /var/log/nginx/teif-access.log;
-    error_log /var/log/nginx/teif-error.log;
+    server_name _;
 
     # Gzip compression
     gzip on;
@@ -328,8 +305,8 @@ server {
 
     # Frontend - static files
     location / {
-        root $APP_PATH/packages/frontend/dist;
-        try_files \$uri \$uri/ /index.html;
+        root /var/www/teif/packages/frontend/dist;
+        try_files $uri $uri/ /index.html;
         expires 1h;
         add_header Cache-Control "public, max-age=3600";
     }
@@ -338,13 +315,13 @@ server {
     location /api/ {
         proxy_pass http://backend/;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_cache_bypass \$http_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
         proxy_read_timeout 60s;
         proxy_connect_timeout 60s;
     }
@@ -364,11 +341,11 @@ sudo rm -f /etc/nginx/sites-enabled/default
 # Test nginx config
 sudo nginx -t
 
-# Start nginx (may already be running from previous install)
+# Start nginx
 sudo systemctl restart nginx 2>/dev/null || sudo nginx
 sudo systemctl enable nginx 2>/dev/null || true
 
-echo -e "${GREEN}✓ Nginx configured${NC}"
+echo -e "${GREEN}✓ Nginx configured (HTTP only initially)${NC}"
 
 # ===== PHASE 10: SSL Certificate =====
 echo -e "\n${BLUE}[Phase 10] Setting Up SSL Certificate...${NC}"
@@ -376,23 +353,91 @@ echo -e "\n${BLUE}[Phase 10] Setting Up SSL Certificate...${NC}"
 echo "⚠️  Make sure your domain ($DOMAIN) DNS is pointing to this server IP!"
 read -p "Press Enter to continue with SSL setup... " || true
 
-# Check if cert already exists
+# Get SSL certificate
 if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
   echo -e "${GREEN}✓ SSL certificate already exists${NC}"
 else
-  sudo certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN || {
-    echo -e "${RED}✗ SSL setup failed - may already exist or DNS not ready${NC}"
+  echo "Getting SSL certificate for $DOMAIN..."
+  sudo certbot certonly --webroot -w /var/www/teif/packages/frontend/dist -d $DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN 2>/dev/null || \
+  sudo certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN 2>/dev/null || {
+    echo -e "${RED}⚠️  SSL setup failed (may need manual setup or DNS not ready yet)${NC}"
+    echo "You can manually run later: sudo certbot certonly --standalone -d $DOMAIN"
   }
 fi
 
-# Test renewal
-sudo certbot renew --dry-run 2>/dev/null || true
+# Update Nginx config with SSL if certificate exists
+if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+  echo "Updating Nginx with SSL configuration..."
+  sudo tee /etc/nginx/sites-available/teif > /dev/null << NGINX_SSL_EOF
+upstream backend {
+    server 127.0.0.1:3000;
+    keepalive 64;
+}
+
+server {
+    listen 80;
+    server_name $DOMAIN;
+    return 301 https://\$server_name\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name $DOMAIN;
+
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+
+    access_log /var/log/nginx/teif-access.log;
+    error_log /var/log/nginx/teif-error.log;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
+    gzip_min_length 1000;
+
+    location / {
+        root /var/www/teif/packages/frontend/dist;
+        try_files \$uri \$uri/ /index.html;
+        expires 1h;
+        add_header Cache-Control "public, max-age=3600";
+    }
+
+    location /api/ {
+        proxy_pass http://backend/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_read_timeout 60s;
+        proxy_connect_timeout 60s;
+    }
+
+    location /health {
+        proxy_pass http://backend/health;
+        access_log off;
+    }
+}
+NGINX_SSL_EOF
+
+  sudo nginx -t && sudo systemctl restart nginx
+  echo -e "${GREEN}✓ Nginx configured with SSL${NC}"
+fi
 
 # Enable certbot renewal
 sudo systemctl enable certbot.timer 2>/dev/null || true
 sudo systemctl start certbot.timer 2>/dev/null || true
 
-echo -e "${GREEN}✓ SSL certificate configured${NC}"
+echo -e "${GREEN}✓ SSL certificate setup complete${NC}"
 
 # ===== PHASE 11: Verification =====
 echo -e "\n${BLUE}[Phase 11] Verifying Setup...${NC}"
