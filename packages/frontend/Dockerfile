@@ -34,10 +34,11 @@ COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
 # Diagnostic: verify VITE_API_BASE_URL is set at build time
-RUN echo "BUILD ENV CHECK - VITE_API_BASE_URL=$VITE_API_BASE_URL"
+RUN echo "BUILD ENV CHECK:"; env | sort | grep VITE
 
-# Build frontend - force output to show errors
-RUN cd /app/packages/frontend && pnpm build || (echo "FRONTEND BUILD FAILED - see errors above"; exit 1)
+# Build frontend directly with Vite (bypass Turbo buffering)
+# Turbo hides output in non-interactive shells; use pnpm exec to run Vite directly
+RUN cd /app/packages/frontend && pnpm exec vite build --debug
 
 # Verify dist folder exists
 RUN test -d /app/packages/frontend/dist || (echo "ERROR: dist folder not created"; ls -laR /app/packages/frontend/; exit 1)
