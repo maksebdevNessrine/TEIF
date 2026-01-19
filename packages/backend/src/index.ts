@@ -100,13 +100,15 @@ async function startServer() {
     
     // Start HTTP server
     console.log(`🚀 Server starting on port ${port}...`);
-    serve({
+    
+    // serve() returns a promise that never resolves (keeps server alive)
+    await serve({
       fetch: app.fetch,
       port,
+    }, () => {
+      console.log(`✅ Server running at http://localhost:${port}`);
+      console.log(`📝 API documentation: http://localhost:${port}/api/health`);
     });
-    
-    console.log(`✅ Server running at http://localhost:${port}`);
-    console.log(`📝 API documentation: http://localhost:${port}/api/health`);
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
