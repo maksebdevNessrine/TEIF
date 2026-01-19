@@ -228,6 +228,7 @@ export const translations = {
     taxAmount: 'Montant de la Taxe',
     dispatchDate: "Date d'expédition (I-34)",
     paymentDateLabel: 'Date de paiement (I-35)',
+    signatureDate: 'Date & Heure de Signature (I-37)',
     servicePeriodStart: 'Début de prestation (I-36)',
     servicePeriodEnd: 'Fin de prestation (I-36)',
     otherDate: 'Autre date (I-38)'
@@ -343,6 +344,7 @@ export const translations = {
     taxAmount: 'Tax Amount',
     dispatchDate: 'Dispatch Date (I-34)',
     paymentDateLabel: 'Payment Date (I-35)',
+    signatureDate: 'Signature Date & Time (I-37)',
     servicePeriodStart: 'Period Start (I-36)',
     servicePeriodEnd: 'Period End (I-36)',
     otherDate: 'Other Date (I-38)'
