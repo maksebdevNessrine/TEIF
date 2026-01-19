@@ -293,9 +293,28 @@ echo -e "${GREEN}✓ Backend started with PM2${NC}"
 # ===== PHASE 9: Nginx Reverse Proxy =====
 echo -e "\n${BLUE}[Phase 9] Configuring Nginx Reverse Proxy...${NC}"
 
-# Kill old nginx processes if any
-sudo killall nginx 2>/dev/null || true
+# Stop nginx service completely
+echo "Stopping nginx service..."
+sudo systemctl stop nginx 2>/dev/null || true
 sleep 1
+
+# Kill any remaining nginx processes
+echo "Killing any remaining nginx processes..."
+sudo pkill -9 -f "nginx" 2>/dev/null || true
+sleep 1
+
+# Verify port 80 is free
+if sudo lsof -Pi :80 -sTCP:LISTEN -t >/dev/null 2>&1; then
+  echo -e "${RED}ERROR: Port 80 is still in use${NC}"
+  echo "Use this to see what's using port 80:"
+  echo "  sudo lsof -i :80"
+  echo ""
+  echo "To kill the process:"
+  echo "  sudo kill -9 <PID>"
+  exit 1
+fi
+
+echo "Port 80 is free, configuring Nginx..."
 
 # Create initial nginx config WITHOUT SSL (will update after cert)
 sudo tee /etc/nginx/sites-available/teif > /dev/null << 'NGINX_EOF'
@@ -351,8 +370,16 @@ sudo rm -f /etc/nginx/sites-enabled/default
 # Test nginx config
 sudo nginx -t
 
-# Start nginx
-sudo systemctl restart nginx 2>/dev/null || sudo nginx
+# Start nginx with proper error handling
+if sudo systemctl start nginx 2>/dev/null; then
+  echo -e "${GREEN}✓ Nginx started with systemctl${NC}"
+elif sudo nginx; then
+  echo -e "${GREEN}✓ Nginx started directly${NC}"
+else
+  echo -e "${RED}ERROR: Failed to start nginx${NC}"
+  exit 1
+fi
+
 sudo systemctl enable nginx 2>/dev/null || true
 
 echo -e "${GREEN}✓ Nginx configured (HTTP only initially)${NC}"
