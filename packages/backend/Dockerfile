@@ -39,6 +39,9 @@ RUN pnpm install --frozen-lockfile
 COPY packages/backend packages/backend/
 COPY packages/shared packages/shared/
 
+# Build shared package FIRST (backend depends on it)
+RUN pnpm --filter @teif/shared build
+
 # Generate Prisma client (CRITICAL - required for database operations)
 RUN cd /app/packages/backend && npx prisma generate --schema=./prisma/schema.prisma
 
@@ -57,9 +60,6 @@ RUN { \
     echo "" && \
     echo "=== WORKSPACE ===" && \
     pnpm list --depth=0 && \
-    echo "" && \
-    echo "=== BUILDING SHARED ===" && \
-    pnpm --filter @teif/shared build && \
     echo "" && \
     echo "=== BUILDING BACKEND ===" && \
     pnpm --filter @teif/backend build; \
