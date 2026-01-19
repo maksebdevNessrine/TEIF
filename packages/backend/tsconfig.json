@@ -4,15 +4,18 @@
     "target": "ES2022",
     "module": "commonjs",
     "lib": ["ES2022"],
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "outDir": "./dist",
     "rootDir": "./src",
     "skipLibCheck": true,
     "declaration": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "noImplicitAny": false,
+    "suppressImplicitAnyIndexErrors": true,
     "paths": {
       "@teif/shared": ["../shared/src"],
+      "@teif/shared/*": ["../shared/src/*"],
       "@teif/generated/zod": ["../prisma/generated/zod/index.ts"]
     }
   },
