@@ -108,8 +108,8 @@ USER nodejs
 
 EXPOSE 3000
 
-# More robust health check that actually connects to database
+# More robust health check that connects to server on all interfaces
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:3000/api/health || exit 1
+    CMD curl -f http://127.0.0.1:3000/api/health || exit 1
 
 CMD ["node", "dist/index.js"]

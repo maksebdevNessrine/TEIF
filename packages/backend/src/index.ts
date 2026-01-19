@@ -99,15 +99,16 @@ async function startServer() {
     await connectDatabase();
     
     // Start HTTP server
-    console.log(`🚀 Server starting on port ${port}...`);
+    console.log(`🚀 Server starting on 0.0.0.0:${port}...`);
     
     // serve() returns a promise that never resolves (keeps server alive)
     await serve({
       fetch: app.fetch,
       port,
+      hostname: '0.0.0.0', // Bind to all interfaces, not just localhost
     }, () => {
-      console.log(`✅ Server running at http://localhost:${port}`);
-      console.log(`📝 API documentation: http://localhost:${port}/api/health`);
+      console.log(`✅ Server running at http://0.0.0.0:${port}`);
+      console.log(`📝 API documentation: http://0.0.0.0:${port}/api/health`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
