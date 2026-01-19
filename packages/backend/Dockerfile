@@ -40,7 +40,11 @@ COPY packages/backend packages/backend/
 COPY packages/shared packages/shared/
 
 # Build shared package FIRST (backend depends on it)
-RUN pnpm --filter @teif/shared build
+# Use tsc directly with rootDir and outDir to ensure proper compilation
+RUN cd /app/packages/shared && npx tsc --rootDir ./src --outDir ./dist --declaration --declarationMap
+
+# Verify shared dist was created
+RUN test -d /app/packages/shared/dist || (echo "ERROR: shared dist not created"; ls -la /app/packages/shared/; exit 1)
 
 # Generate Prisma client (CRITICAL - required for database operations)
 RUN cd /app/packages/backend && npx prisma generate --schema=./prisma/schema.prisma
