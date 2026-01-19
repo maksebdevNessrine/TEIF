@@ -1,8 +1,16 @@
-import { prisma, Prisma } from '../lib/prisma';
-import { partnerService } from './partner.service';
-import { invoiceCalculationsService } from './invoice-calculations.service';
-import { xmlGeneratorService } from './xmlGenerator.service';
-import { invalidatePdfCache } from './pdf.service';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.invoiceService = void 0;
+exports.createInvoice = createInvoice;
+exports.getInvoiceById = getInvoiceById;
+exports.updateInvoice = updateInvoice;
+exports.deleteInvoice = deleteInvoice;
+exports.listInvoices = listInvoices;
+const prisma_1 = require("../lib/prisma");
+const partner_service_1 = require("./partner.service");
+const invoice_calculations_service_1 = require("./invoice-calculations.service");
+const xmlGenerator_service_1 = require("./xmlGenerator.service");
+const pdf_service_1 = require("./pdf.service");
 class AppError extends Error {
     statusCode;
     constructor(statusCode, message) {
@@ -23,33 +31,33 @@ class AppError extends Error {
  * @param userId - User ID from auth context
  * @param invoiceData - Already validated against InvoiceCreateApiSchema
  */
-export async function createInvoice(userId, invoiceData) {
+async function createInvoice(userId, invoiceData) {
     // Data is guaranteed to match InvoiceCreateApiSchema
     // TypeScript ensures type safety; no runtime validation needed
     const validatedData = invoiceData;
     // Use transaction for atomicity
-    const invoice = await prisma.$transaction(async (tx) => {
+    const invoice = await prisma_1.prisma.$transaction(async (tx) => {
         // Find or create supplier partner (cast string idType to IdType)
         const supplierData = {
             ...validatedData.supplier,
             idType: validatedData.supplier.idType, // Cast string to IdType
         };
-        const supplierId = await partnerService.findOrCreatePartner(supplierData);
+        const supplierId = await partner_service_1.partnerService.findOrCreatePartner(supplierData);
         // Find or create buyer partner (cast string idType to IdType)
         const buyerData = {
             ...validatedData.buyer,
             idType: validatedData.buyer.idType, // Cast string to IdType
         };
-        const buyerId = await partnerService.findOrCreatePartner(buyerData);
+        const buyerId = await partner_service_1.partnerService.findOrCreatePartner(buyerData);
         // Calculate line totals
         const linesWithTotals = (validatedData.lines || []).map((line) => ({
             ...line,
-            ...invoiceCalculationsService.calculateLineTotals(line),
+            ...invoice_calculations_service_1.invoiceCalculationsService.calculateLineTotals(line),
         }));
         // Calculate invoice totals
-        const invoiceTotals = invoiceCalculationsService.calculateInvoiceTotals(linesWithTotals, validatedData.globalDiscount || 0, validatedData.stampDuty || 0, validatedData.ircRate);
+        const invoiceTotals = invoice_calculations_service_1.invoiceCalculationsService.calculateInvoiceTotals(linesWithTotals, validatedData.globalDiscount || 0, validatedData.stampDuty || 0, validatedData.ircRate);
         // Generate XML content (cast DTO to InvoiceData format)
-        const xmlContent = xmlGeneratorService.generateInvoiceXml(validatedData);
+        const xmlContent = xmlGenerator_service_1.xmlGeneratorService.generateInvoiceXml(validatedData);
         // Create invoice record
         const createdInvoice = await tx.invoice.create({
             data: {
@@ -161,8 +169,8 @@ export async function createInvoice(userId, invoiceData) {
 /**
  * Get invoice by ID with all relations
  */
-export async function getInvoiceById(userId, invoiceId) {
-    const invoice = await prisma.invoice.findFirst({
+async function getInvoiceById(userId, invoiceId) {
+    const invoice = await prisma_1.prisma.invoice.findFirst({
         where: {
             id: invoiceId,
             userId,
@@ -192,11 +200,11 @@ export async function getInvoiceById(userId, invoiceId) {
  * @param invoiceId - Invoice ID to update
  * @param invoiceData - Already validated against InvoiceUpdateApiSchema
  */
-export async function updateInvoice(userId, invoiceId, invoiceData) {
+async function updateInvoice(userId, invoiceId, invoiceData) {
     // Data is guaranteed to match InvoiceUpdateApiSchema
     const validatedData = invoiceData;
     // Check invoice exists and belongs to user
-    const existingInvoice = await prisma.invoice.findFirst({
+    const existingInvoice = await prisma_1.prisma.invoice.findFirst({
         where: {
             id: invoiceId,
             userId,
@@ -207,7 +215,7 @@ export async function updateInvoice(userId, invoiceId, invoiceData) {
         throw new AppError(404, 'Invoice not found');
     }
     // Use transaction for atomicity
-    const updatedInvoice = await prisma.$transaction(async (tx) => {
+    const updatedInvoice = await prisma_1.prisma.$transaction(async (tx) => {
         // Find or create supplier partner (cast string idType to IdType) - only if provided
         let supplierId;
         if (validatedData.supplier) {
@@ -215,7 +223,7 @@ export async function updateInvoice(userId, invoiceId, invoiceData) {
                 ...validatedData.supplier,
                 idType: validatedData.supplier.idType, // Cast string to IdType
             };
-            supplierId = await partnerService.findOrCreatePartner(supplierData);
+            supplierId = await partner_service_1.partnerService.findOrCreatePartner(supplierData);
         }
         // Find or create buyer partner (cast string idType to IdType) - only if provided
         let buyerId;
@@ -224,17 +232,17 @@ export async function updateInvoice(userId, invoiceId, invoiceData) {
                 ...validatedData.buyer,
                 idType: validatedData.buyer.idType, // Cast string to IdType
             };
-            buyerId = await partnerService.findOrCreatePartner(buyerData);
+            buyerId = await partner_service_1.partnerService.findOrCreatePartner(buyerData);
         }
         // Calculate line totals (handle optional lines)
         const linesWithTotals = (validatedData.lines || []).map((line) => ({
             ...line,
-            ...invoiceCalculationsService.calculateLineTotals(line),
+            ...invoice_calculations_service_1.invoiceCalculationsService.calculateLineTotals(line),
         }));
         // Calculate invoice totals
-        const invoiceTotals = invoiceCalculationsService.calculateInvoiceTotals(linesWithTotals, validatedData.globalDiscount || 0, validatedData.stampDuty || 0, validatedData.ircRate);
+        const invoiceTotals = invoice_calculations_service_1.invoiceCalculationsService.calculateInvoiceTotals(linesWithTotals, validatedData.globalDiscount || 0, validatedData.stampDuty || 0, validatedData.ircRate);
         // Generate XML content (cast DTO to InvoiceData format)
-        const xmlContent = xmlGeneratorService.generateInvoiceXml(validatedData);
+        const xmlContent = xmlGenerator_service_1.xmlGeneratorService.generateInvoiceXml(validatedData);
         // Update invoice record
         const updated = await tx.invoice.update({
             where: { id: invoiceId },
@@ -346,14 +354,14 @@ export async function updateInvoice(userId, invoiceId, invoiceData) {
         };
     });
     // Invalidate PDF cache on successful update
-    await invalidatePdfCache(invoiceId, userId);
+    await (0, pdf_service_1.invalidatePdfCache)(invoiceId, userId);
     return updatedInvoice;
 }
 /**
  * Soft delete invoice
  */
-export async function deleteInvoice(userId, invoiceId) {
-    const invoice = await prisma.invoice.findFirst({
+async function deleteInvoice(userId, invoiceId) {
+    const invoice = await prisma_1.prisma.invoice.findFirst({
         where: {
             id: invoiceId,
             userId,
@@ -363,14 +371,14 @@ export async function deleteInvoice(userId, invoiceId) {
     if (!invoice) {
         throw new AppError(404, 'Invoice not found');
     }
-    await prisma.invoice.update({
+    await prisma_1.prisma.invoice.update({
         where: { id: invoiceId },
         data: {
             deletedAt: new Date(),
         },
     });
     // Invalidate PDF cache on successful delete
-    await invalidatePdfCache(invoiceId, userId);
+    await (0, pdf_service_1.invalidatePdfCache)(invoiceId, userId);
 }
 /**
  * List invoices with pagination and optional status filter
@@ -405,9 +413,9 @@ async function searchInvoices(userId, search, filters) {
     try {
         // Build dynamic WHERE conditions for filters
         let whereConditions = [
-            Prisma.sql `i."userId" = ${userId}`,
-            Prisma.sql `i."deletedAt" IS NULL`,
-            Prisma.sql `(
+            prisma_1.Prisma.sql `i."userId" = ${userId}`,
+            prisma_1.Prisma.sql `i."deletedAt" IS NULL`,
+            prisma_1.Prisma.sql `(
         similarity(i."documentNumber", ${search}) > ${similarity_threshold}
         OR similarity(s.name, ${search}) > ${similarity_threshold}
         OR similarity(b.name, ${search}) > ${similarity_threshold}
@@ -416,29 +424,29 @@ async function searchInvoices(userId, search, filters) {
         ];
         // Add status filter
         if (filters.status) {
-            whereConditions.push(Prisma.sql `i."status" = ${filters.status}`);
+            whereConditions.push(prisma_1.Prisma.sql `i."status" = ${filters.status}`);
         }
         // Add document type filter
         if (filters.documentType) {
-            whereConditions.push(Prisma.sql `i."documentType" = ${filters.documentType}`);
+            whereConditions.push(prisma_1.Prisma.sql `i."documentType" = ${filters.documentType}`);
         }
         // Add invoice date range filter
         if (filters.invoiceDate?.gte) {
-            whereConditions.push(Prisma.sql `i."invoiceDate" >= ${filters.invoiceDate.gte}`);
+            whereConditions.push(prisma_1.Prisma.sql `i."invoiceDate" >= ${filters.invoiceDate.gte}`);
         }
         if (filters.invoiceDate?.lte) {
-            whereConditions.push(Prisma.sql `i."invoiceDate" <= ${filters.invoiceDate.lte}`);
+            whereConditions.push(prisma_1.Prisma.sql `i."invoiceDate" <= ${filters.invoiceDate.lte}`);
         }
         // Add total amount range filter
         if (filters.totalTTC?.gte !== undefined) {
-            whereConditions.push(Prisma.sql `i."totalTTC" >= ${filters.totalTTC.gte}`);
+            whereConditions.push(prisma_1.Prisma.sql `i."totalTTC" >= ${filters.totalTTC.gte}`);
         }
         if (filters.totalTTC?.lte !== undefined) {
-            whereConditions.push(Prisma.sql `i."totalTTC" <= ${filters.totalTTC.lte}`);
+            whereConditions.push(prisma_1.Prisma.sql `i."totalTTC" <= ${filters.totalTTC.lte}`);
         }
         // Combine WHERE conditions
-        const whereClause = Prisma.sql `WHERE ${Prisma.join(whereConditions, ' AND ')}`;
-        const searchResults = await prisma.$queryRaw `
+        const whereClause = prisma_1.Prisma.sql `WHERE ${prisma_1.Prisma.join(whereConditions, ' AND ')}`;
+        const searchResults = await prisma_1.prisma.$queryRaw `
       SELECT DISTINCT i.id,
         GREATEST(
           similarity(i."documentNumber", ${search}),
@@ -464,7 +472,7 @@ async function searchInvoices(userId, search, filters) {
 /**
  * List invoices with advanced search and filtering
  */
-export async function listInvoices(userId, options) {
+async function listInvoices(userId, options) {
     const { page = 1, limit = 20, search, dateFrom, dateTo, documentType, minAmount, maxAmount, status, sortBy = 'date', sortOrder = 'desc', } = options;
     // Validate pagination
     if (page < 1 || limit < 1 || limit > 100) {
@@ -560,7 +568,7 @@ export async function listInvoices(userId, options) {
     const orderBy = buildOrderByClause(sortBy, sortOrder, !!search);
     // Execute parallel queries
     let [invoices, total] = await Promise.all([
-        prisma.invoice.findMany({
+        prisma_1.prisma.invoice.findMany({
             where,
             skip,
             take: limit,
@@ -576,7 +584,7 @@ export async function listInvoices(userId, options) {
                 allowances: true,
             },
         }),
-        prisma.invoice.count({ where }),
+        prisma_1.prisma.invoice.count({ where }),
     ]);
     // Restore search relevance order if search was active
     if (idOrderMap) {
@@ -603,7 +611,7 @@ export async function listInvoices(userId, options) {
         },
     };
 }
-export const invoiceService = {
+exports.invoiceService = {
     createInvoice,
     getInvoiceById,
     updateInvoice,

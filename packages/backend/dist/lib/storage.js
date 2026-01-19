@@ -1,9 +1,18 @@
+"use strict";
 /**
  * Supabase Storage client for PDF caching and retrieval
  */
-import { createClient } from '@supabase/supabase-js';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.storageService = void 0;
+exports.initializeStorage = initializeStorage;
+exports.ensureBucketExists = ensureBucketExists;
+exports.uploadPdf = uploadPdf;
+exports.downloadPdf = downloadPdf;
+exports.deletePdf = deletePdf;
+exports.pdfExists = pdfExists;
+const supabase_js_1 = require("@supabase/supabase-js");
 let storageClient = null;
-export function initializeStorage() {
+function initializeStorage() {
     if (storageClient) {
         return storageClient;
     }
@@ -13,10 +22,10 @@ export function initializeStorage() {
     if (!supabaseUrl || !supabaseServiceKey) {
         throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables');
     }
-    storageClient = createClient(supabaseUrl, supabaseServiceKey);
+    storageClient = (0, supabase_js_1.createClient)(supabaseUrl, supabaseServiceKey);
     return storageClient;
 }
-export async function ensureBucketExists() {
+async function ensureBucketExists() {
     try {
         const client = initializeStorage();
         const bucketName = process.env.SUPABASE_STORAGE_BUCKET || 'invoice-pdfs';
@@ -46,7 +55,7 @@ export async function ensureBucketExists() {
 /**
  * Upload PDF to Supabase Storage
  */
-export async function uploadPdf(invoiceId, userId, language, buffer) {
+async function uploadPdf(invoiceId, userId, language, buffer) {
     try {
         const client = initializeStorage();
         const bucketName = process.env.SUPABASE_STORAGE_BUCKET || 'invoice-pdfs';
@@ -78,7 +87,7 @@ export async function uploadPdf(invoiceId, userId, language, buffer) {
 /**
  * Download PDF from Supabase Storage
  */
-export async function downloadPdf(invoiceId, userId, language) {
+async function downloadPdf(invoiceId, userId, language) {
     try {
         const client = initializeStorage();
         const bucketName = process.env.SUPABASE_STORAGE_BUCKET || 'invoice-pdfs';
@@ -104,7 +113,7 @@ export async function downloadPdf(invoiceId, userId, language) {
 /**
  * Delete PDF from Supabase Storage
  */
-export async function deletePdf(invoiceId, userId, language) {
+async function deletePdf(invoiceId, userId, language) {
     try {
         const client = initializeStorage();
         const bucketName = process.env.SUPABASE_STORAGE_BUCKET || 'invoice-pdfs';
@@ -152,7 +161,7 @@ export async function deletePdf(invoiceId, userId, language) {
 /**
  * Check if PDF exists in cache
  */
-export async function pdfExists(invoiceId, userId, language) {
+async function pdfExists(invoiceId, userId, language) {
     try {
         const client = initializeStorage();
         const bucketName = process.env.SUPABASE_STORAGE_BUCKET || 'invoice-pdfs';
@@ -169,7 +178,7 @@ export async function pdfExists(invoiceId, userId, language) {
         return false;
     }
 }
-export const storageService = {
+exports.storageService = {
     initializeStorage,
     ensureBucketExists,
     uploadPdf,

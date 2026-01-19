@@ -1,4 +1,10 @@
-import { prisma } from '../lib/prisma';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.partnerService = void 0;
+exports.findOrCreatePartner = findOrCreatePartner;
+exports.getPartnerById = getPartnerById;
+exports.updatePartner = updatePartner;
+const prisma_1 = require("../lib/prisma");
 /**
  * Map Prisma Partner result to shared Partner type
  */
@@ -13,9 +19,9 @@ function mapPrismaPartnerToType(prismaPartner) {
  * Find an existing partner by idType and idValue, or create a new one
  * Uses atomic upsert to ensure partner reuse across invoices
  */
-export async function findOrCreatePartner(partnerData) {
+async function findOrCreatePartner(partnerData) {
     const { idType, idValue } = partnerData;
-    const partner = await prisma.partner.upsert({
+    const partner = await prisma_1.prisma.partner.upsert({
         where: {
             idType_idValue: {
                 idType,
@@ -58,8 +64,8 @@ export async function findOrCreatePartner(partnerData) {
 /**
  * Get partner by ID
  */
-export async function getPartnerById(id) {
-    const partner = await prisma.partner.findUnique({
+async function getPartnerById(id) {
+    const partner = await prisma_1.prisma.partner.findUnique({
         where: { id },
     });
     return partner ? mapPrismaPartnerToType(partner) : null;
@@ -67,14 +73,14 @@ export async function getPartnerById(id) {
 /**
  * Update partner by ID
  */
-export async function updatePartner(id, partnerData) {
-    const updated = await prisma.partner.update({
+async function updatePartner(id, partnerData) {
+    const updated = await prisma_1.prisma.partner.update({
         where: { id },
         data: partnerData,
     });
     return mapPrismaPartnerToType(updated);
 }
-export const partnerService = {
+exports.partnerService = {
     findOrCreatePartner,
     getPartnerById,
     updatePartner,

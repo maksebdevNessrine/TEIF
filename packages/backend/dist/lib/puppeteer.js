@@ -1,20 +1,32 @@
+"use strict";
 /**
  * Puppeteer singleton instance manager for efficient PDF generation
  * Reuses browser instance across requests to avoid launch overhead
  */
-import puppeteer from 'puppeteer';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.puppeteerManager = void 0;
+exports.getBrowser = getBrowser;
+exports.getPage = getPage;
+exports.releasePage = releasePage;
+exports.closeBrowser = closeBrowser;
+exports.healthCheck = healthCheck;
+exports.getPoolStats = getPoolStats;
+const puppeteer_1 = __importDefault(require("puppeteer"));
 let browserInstance = null;
 let pagePool = [];
 const MAX_CONCURRENT_PAGES = 5;
 /**
  * Launch or retrieve existing browser instance
  */
-export async function getBrowser() {
+async function getBrowser() {
     if (browserInstance) {
         return browserInstance;
     }
     try {
-        browserInstance = await puppeteer.launch({
+        browserInstance = await puppeteer_1.default.launch({
             headless: true,
             args: [
                 '--no-sandbox',
@@ -40,7 +52,7 @@ export async function getBrowser() {
 /**
  * Get or create a new page from pool
  */
-export async function getPage() {
+async function getPage() {
     const browser = await getBrowser();
     // Reuse page from pool if available
     if (pagePool.length > 0) {
@@ -64,7 +76,7 @@ export async function getPage() {
 /**
  * Return page to pool for reuse
  */
-export async function releasePage(page) {
+async function releasePage(page) {
     try {
         if (page && pagePool.length < MAX_CONCURRENT_PAGES) {
             // Clear page content for reuse
@@ -89,7 +101,7 @@ export async function releasePage(page) {
 /**
  * Close browser and cleanup resources
  */
-export async function closeBrowser() {
+async function closeBrowser() {
     try {
         // Close all pages in pool
         for (const page of pagePool) {
@@ -116,7 +128,7 @@ export async function closeBrowser() {
 /**
  * Health check - ensure browser is running
  */
-export async function healthCheck() {
+async function healthCheck() {
     try {
         const browser = await getBrowser();
         const version = await browser.version();
@@ -132,14 +144,14 @@ export async function healthCheck() {
 /**
  * Get pool statistics
  */
-export function getPoolStats() {
+function getPoolStats() {
     return {
         available: pagePool.length,
         max: MAX_CONCURRENT_PAGES,
         isHealthy: browserInstance !== null,
     };
 }
-export const puppeteerManager = {
+exports.puppeteerManager = {
     getBrowser,
     getPage,
     releasePage,

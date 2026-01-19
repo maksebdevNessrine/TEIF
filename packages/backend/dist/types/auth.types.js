@@ -1,4 +1,5 @@
+"use strict";
 /**
  * Type definitions for authentication context
  */
-export {};
+Object.defineProperty(exports, "__esModule", { value: true });

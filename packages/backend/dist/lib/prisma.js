@@ -1,15 +1,21 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Prisma = exports.prisma = void 0;
+exports.connectDatabase = connectDatabase;
+exports.disconnectDatabase = disconnectDatabase;
+const client_1 = require("@prisma/client");
+Object.defineProperty(exports, "Prisma", { enumerable: true, get: function () { return client_1.Prisma; } });
 const globalForPrisma = globalThis;
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+exports.prisma = globalForPrisma.prisma ?? new client_1.PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
 });
 if (process.env.NODE_ENV !== 'production') {
-    globalForPrisma.prisma = prisma;
+    globalForPrisma.prisma = exports.prisma;
 }
 // Test database connection
-export async function connectDatabase() {
+async function connectDatabase() {
     try {
-        await prisma.$connect();
+        await exports.prisma.$connect();
         console.log('✅ Database connected successfully');
     }
     catch (error) {
@@ -17,7 +23,6 @@ export async function connectDatabase() {
         process.exit(1);
     }
 }
-export async function disconnectDatabase() {
-    await prisma.$disconnect();
+async function disconnectDatabase() {
+    await exports.prisma.$disconnect();
 }
-export { Prisma };

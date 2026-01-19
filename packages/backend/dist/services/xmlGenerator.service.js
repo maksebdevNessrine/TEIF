@@ -1,11 +1,15 @@
-import { generateTeifXml } from '@teif/shared/utils';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.xmlGeneratorService = void 0;
+exports.generateInvoiceXml = generateInvoiceXml;
+const utils_1 = require("@teif/shared/utils");
 /**
  * Generate TEIF-compliant XML from invoice data
  * Wraps the shared XML generation utility for backend use
  */
-export function generateInvoiceXml(data) {
-    return generateTeifXml(data, false);
+function generateInvoiceXml(data) {
+    return (0, utils_1.generateTeifXml)(data, false);
 }
-export const xmlGeneratorService = {
+exports.xmlGeneratorService = {
     generateInvoiceXml,
 };

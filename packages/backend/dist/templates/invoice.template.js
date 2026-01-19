@@ -1,7 +1,11 @@
+"use strict";
 /**
  * Invoice HTML template generator for PDF rendering
  * Supports TEIF compliance with multi-language support (FR, EN, AR)
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.invoiceTemplateService = void 0;
+exports.generateInvoiceHtml = generateInvoiceHtml;
 const translations = {
     fr: {
         invoice: 'Facture',
@@ -238,7 +242,7 @@ function getPaymentMethodLabel(code, language) {
     };
     return paymentMethods[code]?.[language] || code;
 }
-export function generateInvoiceHtml(invoice, language, qrCodeDataUrl) {
+function generateInvoiceHtml(invoice, language, qrCodeDataUrl) {
     const isRTL = language === 'ar';
     const dir = isRTL ? 'rtl' : 'ltr';
     const textAlign = isRTL ? 'right' : 'left';
@@ -858,6 +862,6 @@ export function generateInvoiceHtml(invoice, language, qrCodeDataUrl) {
 </html>
   `;
 }
-export const invoiceTemplateService = {
+exports.invoiceTemplateService = {
     generateInvoiceHtml,
 };

@@ -1,15 +1,18 @@
+"use strict";
 /**
  * Global Zod Error Handler Middleware
  * Catches Zod validation errors from @hono/zod-validator
  * Transforms them into user-friendly API responses
  */
-import { ZodError } from 'zod';
-export async function zodErrorHandler(c, next) {
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.zodErrorHandler = zodErrorHandler;
+const zod_1 = require("zod");
+async function zodErrorHandler(c, next) {
     try {
         await next();
     }
     catch (error) {
-        if (error instanceof ZodError) {
+        if (error instanceof zod_1.ZodError) {
             // Format Zod validation errors
             const details = error.errors.map((err) => ({
                 field: err.path.join('.'),

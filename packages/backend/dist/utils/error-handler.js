@@ -1,3 +1,4 @@
+"use strict";
 /**
  * Global Error Handler
  * Centralized error handling for all error types:
@@ -6,12 +7,21 @@
  * - Authentication errors
  * - Application errors
  */
-import { ZodError } from 'zod';
-import { Prisma } from '@prisma/client';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.handleZodError = handleZodError;
+exports.handlePrismaError = handlePrismaError;
+exports.handlePrismaClientError = handlePrismaClientError;
+exports.handleValidationError = handleValidationError;
+exports.handleAuthError = handleAuthError;
+exports.handleForbiddenError = handleForbiddenError;
+exports.handleUnknownError = handleUnknownError;
+exports.sendErrorResponse = sendErrorResponse;
+const zod_1 = require("zod");
+const client_1 = require("@prisma/client");
 /**
  * Handle Zod validation errors
  */
-export function handleZodError(error) {
+function handleZodError(error) {
     const details = error.errors.map((err) => ({
         field: err.path.join('.') || 'root',
         message: err.message,
@@ -30,7 +40,7 @@ export function handleZodError(error) {
 /**
  * Handle Prisma database errors
  */
-export function handlePrismaError(error) {
+function handlePrismaError(error) {
     switch (error.code) {
         case 'P2002':
             // Unique constraint violation
@@ -82,7 +92,7 @@ export function handlePrismaError(error) {
 /**
  * Handle Prisma client initialization errors
  */
-export function handlePrismaClientError(error) {
+function handlePrismaClientError(error) {
     return {
         success: false,
         error: 'Service Unavailable',
@@ -94,7 +104,7 @@ export function handlePrismaClientError(error) {
 /**
  * Handle runtime validation errors (custom)
  */
-export function handleValidationError(message, details) {
+function handleValidationError(message, details) {
     return {
         success: false,
         error: 'Validation Error',
@@ -107,7 +117,7 @@ export function handleValidationError(message, details) {
 /**
  * Handle authentication errors
  */
-export function handleAuthError(message = 'Unauthorized') {
+function handleAuthError(message = 'Unauthorized') {
     return {
         success: false,
         error: 'Authentication Failed',
@@ -119,7 +129,7 @@ export function handleAuthError(message = 'Unauthorized') {
 /**
  * Handle authorization errors
  */
-export function handleForbiddenError(message = 'Forbidden') {
+function handleForbiddenError(message = 'Forbidden') {
     return {
         success: false,
         error: 'Access Denied',
@@ -131,14 +141,14 @@ export function handleForbiddenError(message = 'Forbidden') {
 /**
  * Handle generic errors
  */
-export function handleUnknownError(error) {
-    if (error instanceof ZodError) {
+function handleUnknownError(error) {
+    if (error instanceof zod_1.ZodError) {
         return handleZodError(error);
     }
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof client_1.Prisma.PrismaClientKnownRequestError) {
         return handlePrismaError(error);
     }
-    if (error instanceof Prisma.PrismaClientInitializationError) {
+    if (error instanceof client_1.Prisma.PrismaClientInitializationError) {
         return handlePrismaClientError(error);
     }
     if (error instanceof Error) {
@@ -161,6 +171,6 @@ export function handleUnknownError(error) {
 /**
  * Global error response sender
  */
-export function sendErrorResponse(c, apiError) {
+function sendErrorResponse(c, apiError) {
     return c.json(apiError, apiError.statusCode);
 }

@@ -1,13 +1,18 @@
-import { calculateLineAmount, calculateTaxAmount } from '@teif/shared/utils';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.invoiceCalculationsService = void 0;
+exports.calculateLineTotals = calculateLineTotals;
+exports.calculateInvoiceTotals = calculateInvoiceTotals;
+const utils_1 = require("@teif/shared/utils");
 /**
  * Calculate line-level totals including amount and tax
  * @param line Line item with quantity, unitPrice, discount, and tax rates
  */
-export function calculateLineTotals(line) {
+function calculateLineTotals(line) {
     const discountRate = line.discountRate || 0;
     const taxRate = line.taxRate || 0;
-    const lineAmount = calculateLineAmount(line.quantity, line.unitPrice, discountRate);
-    const taxAmount = calculateTaxAmount(lineAmount, taxRate);
+    const lineAmount = (0, utils_1.calculateLineAmount)(line.quantity, line.unitPrice, discountRate);
+    const taxAmount = (0, utils_1.calculateTaxAmount)(lineAmount, taxRate);
     return {
         lineAmount,
         taxAmount,
@@ -21,7 +26,7 @@ export function calculateLineTotals(line) {
  * @param stampDuty Invoice-level stamp duty amount
  * @param ircRate Optional IRC withholding tax rate
  */
-export function calculateInvoiceTotals(lines, globalDiscount = 0, stampDuty = 0, ircRate) {
+function calculateInvoiceTotals(lines, globalDiscount = 0, stampDuty = 0, ircRate) {
     // Sum line totals
     const subtotalHT = lines.reduce((sum, line) => sum + line.lineAmount, 0);
     const subtotalTVA = lines.reduce((sum, line) => sum + line.taxAmount, 0);
@@ -43,7 +48,7 @@ export function calculateInvoiceTotals(lines, globalDiscount = 0, stampDuty = 0,
         ircAmount: ircRate ? ircAmount : undefined,
     };
 }
-export const invoiceCalculationsService = {
+exports.invoiceCalculationsService = {
     calculateLineTotals,
     calculateInvoiceTotals,
 };
