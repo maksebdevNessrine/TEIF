@@ -33,13 +33,17 @@ RUN pnpm install --frozen-lockfile
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Build frontend - verbose output
-RUN echo "Building @teif/frontend..." && \
-    pnpm --filter @teif/frontend build && \
-    echo "Build completed, checking dist folder..." && \
-    ls -la packages/frontend/ && \
-    echo "Checking if dist exists:" && \
-    test -d packages/frontend/dist && echo "✓ dist folder exists" || (echo "✗ dist folder NOT found"; exit 1)
+# Build using direct cd into frontend folder (avoids pnpm filter complexity)
+# This is more reliable in Docker environments
+RUN cd /app/packages/frontend && \
+    echo "=== Building Frontend ===" && \
+    echo "Directory: $(pwd)" && \
+    echo "Contents:" && \
+    ls -la && \
+    echo "--- Starting pnpm build ---" && \
+    pnpm build && \
+    echo "--- Build success! Checking dist ---" && \
+    test -d dist && echo "✓ dist folder created" || (echo "✗ ERROR: dist not found"; ls -laR; exit 1)
 
 
 # ============================================
