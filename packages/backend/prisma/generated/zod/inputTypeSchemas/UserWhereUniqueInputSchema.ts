@@ -37,6 +37,6 @@ export const UserWhereUniqueInputSchema: z.ZodType<Prisma.UserWhereUniqueInput> 
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   invoices: z.lazy(() => InvoiceListRelationFilterSchema).optional(),
   refreshTokens: z.lazy(() => RefreshTokenListRelationFilterSchema).optional(),
-}).strict());
+}).strict()) as any;
 
 export default UserWhereUniqueInputSchema;

@@ -18,7 +18,7 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src/**/*", "*.tsx", "*.ts"],
+  "include": ["src/**/*", "*.tsx", "*.ts", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     { "path": "../shared" }
   ]
