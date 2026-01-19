@@ -33,17 +33,23 @@ RUN pnpm install --frozen-lockfile
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Build using direct cd into frontend folder (avoids pnpm filter complexity)
-# This is more reliable in Docker environments
-RUN cd /app/packages/frontend && \
-    echo "=== Building Frontend ===" && \
-    echo "Directory: $(pwd)" && \
-    echo "Contents:" && \
-    ls -la && \
-    echo "--- Starting pnpm build ---" && \
-    pnpm build && \
-    echo "--- Build success! Checking dist ---" && \
-    test -d dist && echo "✓ dist folder created" || (echo "✗ ERROR: dist not found"; ls -laR; exit 1)
+# Diagnostic: Show what we have
+RUN echo "FRONTEND FOLDER CONTENTS:" >&2; ls -la /app/packages/frontend/ >&2
+
+# Diagnostic: Check if package.json exists
+RUN test -f /app/packages/frontend/package.json && echo "✓ package.json found" >&2 || (echo "✗ ERROR: package.json NOT found" >&2; exit 1)
+
+# Diagnostic: Show package.json name field
+RUN echo "PACKAGE NAME:" >&2; grep '"name"' /app/packages/frontend/package.json >&2
+
+# Step 1: Install node_modules in frontend
+RUN cd /app/packages/frontend && npm install 2>&1 >&2 || (echo "npm install failed" >&2; exit 1)
+
+# Step 2: Run build
+RUN cd /app/packages/frontend && npm run build 2>&1 >&2 || (echo "npm run build failed" >&2; exit 1)
+
+# Step 3: Verify dist exists
+RUN test -d /app/packages/frontend/dist && echo "✓ BUILD SUCCESS: dist created" >&2 || (echo "✗ BUILD FAILED: dist not found" >&2; ls -laR /app/packages/frontend/ >&2; exit 1)
 
 
 # ============================================
