@@ -33,8 +33,8 @@ RUN pnpm install --frozen-lockfile
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Verify build-time env is set
-RUN echo "VITE_API_BASE_URL value: ${VITE_API_BASE_URL}"
+# Diagnostic: verify VITE_API_BASE_URL is set at build time
+RUN echo "BUILD ENV CHECK - VITE_API_BASE_URL=$VITE_API_BASE_URL"
 
 # Build frontend - force output to show errors
 RUN cd /app/packages/frontend && pnpm build || (echo "FRONTEND BUILD FAILED - see errors above"; exit 1)
