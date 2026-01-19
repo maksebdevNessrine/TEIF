@@ -402,7 +402,8 @@ echo -e "${GREEN}✓ Nginx configured (HTTP only initially)${NC}"
 echo -e "\n${BLUE}[Phase 10] Setting Up SSL Certificate...${NC}"
 
 echo "⚠️  Make sure your domain ($DOMAIN) DNS is pointing to this server IP!"
-read -p "Press Enter to continue with SSL setup... " || true
+echo "Proceeding with SSL setup in 5 seconds..."
+sleep 5
 
 # Get SSL certificate
 if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
