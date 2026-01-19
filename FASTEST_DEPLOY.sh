@@ -230,7 +230,15 @@ echo "Generating Prisma client..."
 pnpm --filter @teif/backend exec prisma generate
 
 echo "Building backend..."
+# Clean build to ensure all files are compiled
+rm -rf packages/backend/dist
 pnpm --filter @teif/backend build
+
+# Verify middleware files exist
+if [ ! -f "$APP_PATH/packages/backend/dist/middleware/cors.js" ]; then
+  echo -e "${RED}ERROR: Backend middleware not compiled${NC}"
+  exit 1
+fi
 
 echo "Building frontend..."
 pnpm --filter @teif/frontend build
