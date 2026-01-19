@@ -465,6 +465,8 @@ export async function createUserWithVerification(name: string, email: string, pa
         email: true,
         name: true,
         emailVerified: true,
+        verificationCode: true,
+        verificationCodeExpires: true,
       },
     });
 
@@ -489,6 +491,14 @@ export async function verifyEmailCode(email: string, code: string) {
   try {
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        emailVerified: true,
+        verificationCode: true,
+        verificationCodeExpires: true,
+      },
     });
 
     if (!user) {
@@ -531,6 +541,8 @@ export async function verifyEmailCode(email: string, code: string) {
         email: true,
         name: true,
         emailVerified: true,
+        verificationCode: true,
+        verificationCodeExpires: true,
       },
     });
 
@@ -547,6 +559,12 @@ export async function resendVerificationCode(email: string) {
   try {
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        emailVerified: true,
+      },
     });
 
     if (!user) {
