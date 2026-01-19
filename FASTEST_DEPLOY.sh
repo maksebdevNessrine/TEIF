@@ -213,13 +213,16 @@ echo -e "\n${BLUE}[Phase 6] Installing Dependencies & Building...${NC}"
 
 pnpm install
 
-echo "Building shared package (with composite mode)..."
+echo "Building shared package..."
 cd $APP_PATH
-npx tsc --build packages/shared/tsconfig.json
+cd packages/shared
+npx tsc
+cd ../..
 
 echo "Verifying shared dist was created..."
-if [ ! -d "$APP_PATH/packages/shared/dist" ]; then
+if [ ! -d "$APP_PATH/packages/shared/dist" ] || [ ! -f "$APP_PATH/packages/shared/dist/index.d.ts" ]; then
   echo -e "${RED}ERROR: Shared dist not created${NC}"
+  ls -la $APP_PATH/packages/shared/dist/ || echo "dist folder doesn't exist"
   exit 1
 fi
 
