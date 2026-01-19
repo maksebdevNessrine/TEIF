@@ -23,7 +23,15 @@ echo -e "${BLUE}========================================${NC}"
 DOMAIN="${1:-efatoura.duckdns.org}"
 APP_USER="ubuntu"
 APP_PATH="/var/www/teif"
-REPO_URL="${2:-https://github.com/YOUR-REPO/teif.git}"
+REPO_URL="${2:-}"
+
+# Validate REPO_URL
+if [ -z "$REPO_URL" ]; then
+  echo -e "${RED}ERROR: Repository URL required!${NC}"
+  echo "Usage: bash FASTEST_DEPLOY.sh <domain> <repo-url>"
+  echo "Example: bash FASTEST_DEPLOY.sh efatoura.duckdns.org https://github.com/maksebdevNessrine/teif.git"
+  exit 1
+fi
 
 echo -e "\n${BLUE}Configuration:${NC}"
 echo "  Domain: $DOMAIN"
@@ -39,6 +47,10 @@ sudo apt install -y \
   curl wget git nano htop build-essential \
   postgresql-client-common \
   nginx certbot python3-certbot-nginx
+
+# Stop existing Nginx to avoid port conflicts
+echo "Stopping existing Nginx if running..."
+sudo systemctl stop nginx 2>/dev/null || true
 
 # Install Node.js 20.x
 if ! command -v node &> /dev/null; then
@@ -85,8 +97,10 @@ echo -e "\n${BLUE}[Phase 2] Setting Up Directories...${NC}"
 
 sudo mkdir -p $APP_PATH
 sudo chown $APP_USER:$APP_USER $APP_PATH
-mkdir -p /var/log/teif
-mkdir -p /var/www/teif-data/postgres
+sudo mkdir -p /var/log/teif
+sudo chown $APP_USER:$APP_USER /var/log/teif
+sudo mkdir -p /var/www/teif-data/postgres
+sudo chown $APP_USER:$APP_USER /var/www/teif-data/postgres
 
 # ===== PHASE 3: Clone Repository =====
 echo -e "\n${BLUE}[Phase 3] Cloning Repository...${NC}"
@@ -253,7 +267,10 @@ EOF
 pm2 delete teif-backend || true
 pm2 start ecosystem.config.js
 pm2 save
-pm2 startup -u $APP_USER --hp /home/$APP_USER
+
+# Startup script (handle errors gracefully)
+pm2 startup -u $APP_USER --hp /home/$APP_USER || true
+echo -e "${BLUE}Note: If pm2 startup fails, manually run: pm2 startup -u ubuntu --hp /home/ubuntu${NC}"
 
 echo -e "${GREEN}✓ Backend started with PM2${NC}"
 
@@ -337,9 +354,9 @@ sudo rm -f /etc/nginx/sites-enabled/default
 # Test nginx config
 sudo nginx -t
 
-# Start nginx
-sudo systemctl restart nginx
-sudo systemctl enable nginx
+# Start nginx (may already be running from previous install)
+sudo systemctl restart nginx 2>/dev/null || sudo nginx
+sudo systemctl enable nginx 2>/dev/null || true
 
 echo -e "${GREEN}✓ Nginx configured${NC}"
 
@@ -347,15 +364,23 @@ echo -e "${GREEN}✓ Nginx configured${NC}"
 echo -e "\n${BLUE}[Phase 10] Setting Up SSL Certificate...${NC}"
 
 echo "⚠️  Make sure your domain ($DOMAIN) DNS is pointing to this server IP!"
-read -p "Press Enter to continue with SSL setup... "
+read -p "Press Enter to continue with SSL setup... " || true
 
-sudo certbot certonly --nginx -d $DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN || true
+# Check if cert already exists
+if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+  echo -e "${GREEN}✓ SSL certificate already exists${NC}"
+else
+  sudo certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN || {
+    echo -e "${RED}✗ SSL setup failed - may already exist or DNS not ready${NC}"
+  }
+fi
 
 # Test renewal
-sudo certbot renew --dry-run || true
+sudo certbot renew --dry-run 2>/dev/null || true
 
-sudo systemctl enable certbot.timer
-sudo systemctl start certbot.timer
+# Enable certbot renewal
+sudo systemctl enable certbot.timer 2>/dev/null || true
+sudo systemctl start certbot.timer 2>/dev/null || true
 
 echo -e "${GREEN}✓ SSL certificate configured${NC}"
 
@@ -402,12 +427,12 @@ echo "  Nginx logs:        sudo tail -f /var/log/nginx/teif-error.log"
 echo "  Full logs:         sudo journalctl -f"
 
 echo -e "\n${BLUE}Next Steps:${NC}"
-echo "  1. Configure SENDGRID_API_KEY in packages/backend/.env"
-echo "  2. Test API: curl https://$DOMAIN/health"
-echo "  3. Check browser: https://$DOMAIN"
-echo "  4. Set up monitoring/backups"
+echo "  1. Configure SENDGRID_API_KEY in $APP_PATH/packages/backend/.env"
+echo "  2. Test API: curl http://localhost:3000/health"
+echo "  3. Check backend: pm2 logs teif-backend"
+echo "  4. Wait for SSL cert if not already set up"
+echo "  5. Visit: https://$DOMAIN"
 
 echo -e "\n${BLUE}Update/Redeploy:${NC}"
-echo "  git pull origin production && pnpm install && pnpm build && pnpm --filter @teif/backend exec prisma migrate deploy && pm2 restart teif-backend"
-
-echo -e "\n${GREEN}Deployment scripts saved in: $APP_PATH${NC}"
+echo "  1. Push code to production branch"
+echo "  2. SSH to VPS and run: bash $APP_PATH/redeploy.sh"
