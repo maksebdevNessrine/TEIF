@@ -33,8 +33,11 @@ RUN pnpm install --frozen-lockfile
 COPY packages/frontend packages/frontend/
 COPY packages/shared packages/shared/
 
-# Build frontend - let Docker handle exit codes natively
-RUN cd /app/packages/frontend && pnpm build
+# Verify build-time env is set
+RUN echo "VITE_API_BASE_URL value: ${VITE_API_BASE_URL}"
+
+# Build frontend - force output to show errors
+RUN cd /app/packages/frontend && pnpm build || (echo "FRONTEND BUILD FAILED - see errors above"; exit 1)
 
 # Verify dist folder exists
 RUN test -d /app/packages/frontend/dist || (echo "ERROR: dist folder not created"; ls -laR /app/packages/frontend/; exit 1)
