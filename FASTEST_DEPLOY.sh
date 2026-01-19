@@ -213,8 +213,15 @@ echo -e "\n${BLUE}[Phase 6] Installing Dependencies & Building...${NC}"
 
 pnpm install
 
-echo "Building shared package..."
-pnpm --filter @teif/shared build
+echo "Building shared package (with composite mode)..."
+cd $APP_PATH
+npx tsc --build packages/shared/tsconfig.json
+
+echo "Verifying shared dist was created..."
+if [ ! -d "$APP_PATH/packages/shared/dist" ]; then
+  echo -e "${RED}ERROR: Shared dist not created${NC}"
+  exit 1
+fi
 
 echo "Generating Prisma client..."
 pnpm --filter @teif/backend exec prisma generate
