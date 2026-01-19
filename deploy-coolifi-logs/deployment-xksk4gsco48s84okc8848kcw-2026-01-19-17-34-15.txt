@@ -1,0 +1,1624 @@
+2026-Jan-19 17:30:56.280190 Starting deployment of TEIF/production to localhost.
+2026-Jan-19 17:30:56.544836 Preparing container with helper image: ghcr.io/coollabsio/coolify-helper:1.0.12
+2026-Jan-19 17:30:56.693780 [CMD]: docker stop -t 30 xksk4gsco48s84okc8848kcw
+2026-Jan-19 17:30:56.693780 Error response from daemon: No such container: xksk4gsco48s84okc8848kcw
+2026-Jan-19 17:30:56.903705 [CMD]: docker run -d --network coolify --name xksk4gsco48s84okc8848kcw --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/coollabsio/coolify-helper:1.0.12
+2026-Jan-19 17:30:56.903705 ab13edf6b5777f8e68950e696a7dacaae11d961f79e1179b990705994624e4a9
+2026-Jan-19 17:30:57.818677 [CMD]: docker exec xksk4gsco48s84okc8848kcw bash -c 'GIT_SSH_COMMAND="ssh -o ConnectTimeout=30 -p 22 -o Port=22 -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" git ls-remote https://github.com/maksebdevNessrine/TEIF refs/heads/production'
+2026-Jan-19 17:30:57.818677 299f3ad71acc62438eb18a55c94ff0b17ac30cda refs/heads/production
+2026-Jan-19 17:30:57.833571 ----------------------------------------
+2026-Jan-19 17:30:57.840750 Importing maksebdevNessrine/TEIF:production (commit sha 299f3ad71acc62438eb18a55c94ff0b17ac30cda) to /artifacts/xksk4gsco48s84okc8848kcw.
+2026-Jan-19 17:30:58.059068 [CMD]: docker exec xksk4gsco48s84okc8848kcw bash -c 'git clone --depth=1 --recurse-submodules --shallow-submodules -b 'production' 'https://github.com/maksebdevNessrine/TEIF' '/artifacts/xksk4gsco48s84okc8848kcw' && cd '/artifacts/xksk4gsco48s84okc8848kcw' && if [ -f .gitmodules ]; then sed -i "s#git@\(.*\):#https://\1/#g" '/artifacts/xksk4gsco48s84okc8848kcw'/.gitmodules || true && git submodule sync && GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" git submodule update --init --recursive --depth=1; fi && cd '/artifacts/xksk4gsco48s84okc8848kcw' && GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" git lfs pull'
+2026-Jan-19 17:30:58.059068 Cloning into '/artifacts/xksk4gsco48s84okc8848kcw'...
+2026-Jan-19 17:30:59.449114 [CMD]: docker exec xksk4gsco48s84okc8848kcw bash -c 'cd /artifacts/xksk4gsco48s84okc8848kcw && git log -1 299f3ad71acc62438eb18a55c94ff0b17ac30cda --pretty=%B'
+2026-Jan-19 17:30:59.449114 fix: bind server to 0.0.0.0 for container port accessibility
+2026-Jan-19 17:31:01.987700 [CMD]: docker exec xksk4gsco48s84okc8848kcw bash -c 'test -f /artifacts/xksk4gsco48s84okc8848kcw/packages/backend/Dockerfile && echo 'exists' || echo 'not found''
+2026-Jan-19 17:31:01.987700 exists
+2026-Jan-19 17:31:02.235022 [CMD]: docker exec xksk4gsco48s84okc8848kcw bash -c 'cat /artifacts/xksk4gsco48s84okc8848kcw/packages/backend/Dockerfile'
+2026-Jan-19 17:31:02.235022 # ============================================
+2026-Jan-19 17:31:02.235022 # BUILDER STAGE
+2026-Jan-19 17:31:02.235022 # ============================================
+2026-Jan-19 17:31:02.235022 FROM node:20-alpine AS builder
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 WORKDIR /app
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Build-time environment (must be development for devDependencies)
+2026-Jan-19 17:31:02.235022 ENV NODE_ENV=development
+2026-Jan-19 17:31:02.235022 # Skip Puppeteer download - will use system Chromium
+2026-Jan-19 17:31:02.235022 ENV PUPPETEER_SKIP_DOWNLOAD=true
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Alpine compatibility + Prisma requirements
+2026-Jan-19 17:31:02.235022 RUN apk add --no-cache \
+2026-Jan-19 17:31:02.235022 libc6-compat \
+2026-Jan-19 17:31:02.235022 openssl \
+2026-Jan-19 17:31:02.235022 chromium \
+2026-Jan-19 17:31:02.235022 nss \
+2026-Jan-19 17:31:02.235022 freetype \
+2026-Jan-19 17:31:02.235022 harfbuzz
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Copy workspace configuration and root package files
+2026-Jan-19 17:31:02.235022 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Copy all package.json files (maintains workspace structure)
+2026-Jan-19 17:31:02.235022 COPY packages/frontend/package.json packages/frontend/
+2026-Jan-19 17:31:02.235022 COPY packages/shared/package.json packages/shared/
+2026-Jan-19 17:31:02.235022 COPY packages/backend/package.json packages/backend/
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Enable and configure pnpm
+2026-Jan-19 17:31:02.235022 RUN corepack enable
+2026-Jan-19 17:31:02.235022 RUN corepack prepare pnpm@10.28.1 --activate
+2026-Jan-19 17:31:02.235022 RUN pnpm config set node-linker hoisted
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Install all dependencies (including devDependencies for build)
+2026-Jan-19 17:31:02.235022 RUN pnpm install --frozen-lockfile
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Copy source code after deps are installed (leverages Docker layer caching)
+2026-Jan-19 17:31:02.235022 COPY packages/backend packages/backend/
+2026-Jan-19 17:31:02.235022 COPY packages/shared packages/shared/
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Generate Prisma client (CRITICAL - required for database operations)
+2026-Jan-19 17:31:02.235022 RUN pnpm --filter @teif/backend prisma generate
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Build diagnostic output to a file
+2026-Jan-19 17:31:02.235022 RUN { \
+2026-Jan-19 17:31:02.235022 echo "=== BACKEND BUILD DIAGNOSTICS ===" && \
+2026-Jan-19 17:31:02.235022 echo "PWD: $(pwd)" && \
+2026-Jan-19 17:31:02.235022 echo "Node: $(node --version)" && \
+2026-Jan-19 17:31:02.235022 echo "pnpm: $(pnpm --version)" && \
+2026-Jan-19 17:31:02.235022 echo "" && \
+2026-Jan-19 17:31:02.235022 echo "=== DIRECTORY ===" && \
+2026-Jan-19 17:31:02.235022 ls -la packages/backend/ && \
+2026-Jan-19 17:31:02.235022 echo "" && \
+2026-Jan-19 17:31:02.235022 echo "=== PACKAGE.JSON ===" && \
+2026-Jan-19 17:31:02.235022 cat packages/backend/package.json && \
+2026-Jan-19 17:31:02.235022 echo "" && \
+2026-Jan-19 17:31:02.235022 echo "=== WORKSPACE ===" && \
+2026-Jan-19 17:31:02.235022 pnpm list --depth=0 && \
+2026-Jan-19 17:31:02.235022 echo "" && \
+2026-Jan-19 17:31:02.235022 echo "=== BUILDING ===" && \
+2026-Jan-19 17:31:02.235022 pnpm --filter @teif/backend build; \
+2026-Jan-19 17:31:02.235022 } 2>&1 | tee /tmp/backend-build.log
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # ============================================
+2026-Jan-19 17:31:02.235022 # PRODUCTION STAGE
+2026-Jan-19 17:31:02.235022 # ============================================
+2026-Jan-19 17:31:02.235022 FROM node:20-alpine
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 WORKDIR /app
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Runtime environment
+2026-Jan-19 17:31:02.235022 ENV NODE_ENV=production
+2026-Jan-19 17:31:02.235022 ENV PORT=3000
+2026-Jan-19 17:31:02.235022 # Use system Chromium for Puppeteer (must match installation location)
+2026-Jan-19 17:31:02.235022 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Install runtime dependencies (critical for Prisma + database operations)
+2026-Jan-19 17:31:02.235022 RUN apk add --no-cache \
+2026-Jan-19 17:31:02.235022 libc6-compat \
+2026-Jan-19 17:31:02.235022 openssl \
+2026-Jan-19 17:31:02.235022 curl \
+2026-Jan-19 17:31:02.235022 chromium \
+2026-Jan-19 17:31:02.235022 nss \
+2026-Jan-19 17:31:02.235022 freetype \
+2026-Jan-19 17:31:02.235022 harfbuzz
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Create non-root user for security
+2026-Jan-19 17:31:02.235022 RUN addgroup -g 1001 -S nodejs && \
+2026-Jan-19 17:31:02.235022 adduser -S nodejs -u 1001
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Copy built application and minimal dependencies
+2026-Jan-19 17:31:02.235022 # Use multi-stage to avoid copying entire node_modules with devDependencies
+2026-Jan-19 17:31:02.235022 COPY --from=builder /app/packages/backend/dist ./dist
+2026-Jan-19 17:31:02.235022 COPY --from=builder /app/packages/backend/package.json ./
+2026-Jan-19 17:31:02.235022 COPY --from=builder /app/packages/shared ./packages/shared
+2026-Jan-19 17:31:02.235022 COPY --from=builder /app/package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Copy only production node_modules (excluding devDependencies)
+2026-Jan-19 17:31:02.235022 COPY --from=builder /app/node_modules ./node_modules
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Change ownership to nodejs user
+2026-Jan-19 17:31:02.235022 RUN chown -R nodejs:nodejs /app
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # Switch to non-root user
+2026-Jan-19 17:31:02.235022 USER nodejs
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 EXPOSE 3000
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 # More robust health check that connects to server on all interfaces
+2026-Jan-19 17:31:02.235022 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+2026-Jan-19 17:31:02.235022 CMD curl -f http://127.0.0.1:3000/api/health || exit 1
+2026-Jan-19 17:31:02.235022
+2026-Jan-19 17:31:02.235022 CMD ["node", "dist/index.js"]
+2026-Jan-19 17:31:02.490388 Added 48 ARG declarations to Dockerfile for service backend (multi-stage build, added to 2 stages).
+2026-Jan-19 17:31:02.716995 [CMD]: docker exec xksk4gsco48s84okc8848kcw bash -c 'test -f /artifacts/xksk4gsco48s84okc8848kcw/packages/frontend/Dockerfile && echo 'exists' || echo 'not found''
+2026-Jan-19 17:31:02.716995 exists
+2026-Jan-19 17:31:02.931060 [CMD]: docker exec xksk4gsco48s84okc8848kcw bash -c 'cat /artifacts/xksk4gsco48s84okc8848kcw/packages/frontend/Dockerfile'
+2026-Jan-19 17:31:02.931060 # ============================================
+2026-Jan-19 17:31:02.931060 # BUILDER STAGE
+2026-Jan-19 17:31:02.931060 # ============================================
+2026-Jan-19 17:31:02.931060 FROM node:20-alpine AS builder
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 WORKDIR /app
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 ENV NODE_ENV=development
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 # Build-time variables (injected by Coolify)
+2026-Jan-19 17:31:02.931060 ARG VITE_API_BASE_URL
+2026-Jan-19 17:31:02.931060 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 # Alpine compatibility for Vite/esbuild
+2026-Jan-19 17:31:02.931060 RUN apk add --no-cache libc6-compat
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 # Copy workspace configuration and root package files
+2026-Jan-19 17:31:02.931060 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json tsconfig.base.json ./
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 # Copy all package.json files (maintains workspace structure)
+2026-Jan-19 17:31:02.931060 COPY packages/frontend/package.json packages/frontend/tsconfig.json packages/frontend/
+2026-Jan-19 17:31:02.931060 COPY packages/shared/package.json packages/shared/tsconfig.json packages/shared/
+2026-Jan-19 17:31:02.931060 COPY packages/backend/package.json packages/backend/
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 # Enable and configure pnpm
+2026-Jan-19 17:31:02.931060 RUN corepack enable
+2026-Jan-19 17:31:02.931060 RUN pnpm config set node-linker hoisted
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 # Install all dependencies (including devDependencies for build)
+2026-Jan-19 17:31:02.931060 RUN pnpm install --frozen-lockfile
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 # Copy source code
+2026-Jan-19 17:31:02.931060 COPY packages/frontend packages/frontend/
+2026-Jan-19 17:31:02.931060 COPY packages/shared packages/shared/
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 # Diagnostic: verify VITE_API_BASE_URL is set at build time
+2026-Jan-19 17:31:02.931060 RUN echo "BUILD ENV CHECK:"; env | sort | grep VITE
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 # Build frontend directly with Vite (bypass Turbo buffering)
+2026-Jan-19 17:31:02.931060 # Turbo hides output in non-interactive shells; use pnpm exec to run Vite directly
+2026-Jan-19 17:31:02.931060 RUN cd /app/packages/frontend && pnpm exec vite build --debug
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 # Verify dist folder exists
+2026-Jan-19 17:31:02.931060 RUN test -d /app/packages/frontend/dist || (echo "ERROR: dist folder not created"; ls -laR /app/packages/frontend/; exit 1)
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 # ============================================
+2026-Jan-19 17:31:02.931060 # PRODUCTION STAGE
+2026-Jan-19 17:31:02.931060 # ============================================
+2026-Jan-19 17:31:02.931060 FROM nginx:1.25-alpine
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 COPY --from=builder /app/packages/frontend/dist /usr/share/nginx/html
+2026-Jan-19 17:31:02.931060 COPY packages/frontend/nginx.conf /etc/nginx/conf.d/default.conf
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 EXPOSE 80
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+2026-Jan-19 17:31:02.931060 CMD wget --no-verbose --tries=1 --spider http://localhost/index.html || exit 1
+2026-Jan-19 17:31:02.931060
+2026-Jan-19 17:31:02.931060 CMD ["nginx", "-g", "daemon off;"]
+2026-Jan-19 17:31:03.166662 Added 48 ARG declarations to Dockerfile for service frontend (multi-stage build, added to 2 stages).
+2026-Jan-19 17:31:03.178760 Pulling & building required images.
+2026-Jan-19 17:31:03.266777 Creating build-time .env file in /artifacts (outside Docker context).
+2026-Jan-19 17:31:03.745866 [CMD]: docker exec xksk4gsco48s84okc8848kcw bash -c 'cat /artifacts/build-time.env'
+2026-Jan-19 17:31:03.745866 COOLIFY_URL=''
+2026-Jan-19 17:31:03.745866 COOLIFY_FQDN=''
+2026-Jan-19 17:31:03.745866 SERVICE_NAME_POSTGRES='postgres'
+2026-Jan-19 17:31:03.745866 SERVICE_NAME_BACKEND='backend'
+2026-Jan-19 17:31:03.745866 SERVICE_NAME_FRONTEND='frontend'
+2026-Jan-19 17:31:03.745866 SERVICE_URL_BACKEND='https://efatoura.duckdns.org/api'
+2026-Jan-19 17:31:03.745866 SERVICE_FQDN_BACKEND='efatoura.duckdns.org'
+2026-Jan-19 17:31:03.745866 SERVICE_URL_FRONTEND='https://efatoura.duckdns.org'
+2026-Jan-19 17:31:03.745866 SERVICE_FQDN_FRONTEND='efatoura.duckdns.org'
+2026-Jan-19 17:31:03.745866 CORS_ORIGIN="https://efatoura.duckdns.org"
+2026-Jan-19 17:31:03.745866 DATABASE_URL="postgresql://postgres:DsUX2s8HTx+FbVXBFYVSwPRWx6nGp+0Cpsa5Pdzug44=@postgres:5432/teif_prod"
+2026-Jan-19 17:31:03.745866 GEMINI_API_KEY=<REDACTED>
+2026-Jan-19 17:31:03.745866 JWT_EXPIRY="3600"
+2026-Jan-19 17:31:03.745866 JWT_SECRET="jU918zwPEfoef52XXONJusWMkTVgK0MIT9FZPpXHULM="
+2026-Jan-19 17:31:03.745866 LOG_LEVEL="info"
+2026-Jan-19 17:31:03.745866 POSTGRES_DB="teif_prod"
+2026-Jan-19 17:31:03.745866 POSTGRES_PASSWORD="DsUX2s8HTx+FbVXBFYVSwPRWx6nGp+0Cpsa5Pdzug44="
+2026-Jan-19 17:31:03.745866 POSTGRES_USER="postgres"
+2026-Jan-19 17:31:03.745866 PRODUCTION_DOMAIN="efatoura.duckdns.org"
+2026-Jan-19 17:31:03.745866 SITE_URL="https://efatoura.duckdns.org"
+2026-Jan-19 17:31:03.745866 SMTP_FROM="<REDACTED>"
+2026-Jan-19 17:31:03.745866 SMTP_HOST="ssl0.ovh.net"
+2026-Jan-19 17:31:03.745866 SMTP_PASSWORD="Compta2025++"
+2026-Jan-19 17:31:03.745866 SMTP_PORT="587"
+2026-Jan-19 17:31:03.745866 SMTP_SECURE="false"
+2026-Jan-19 17:31:03.745866 SMTP_USER="<REDACTED>"
+2026-Jan-19 17:31:03.745866 VITE_API_BASE_URL="https://efatoura.duckdns.org/api"
+2026-Jan-19 17:31:03.759018 Adding build arguments to Docker Compose build command.
+2026-Jan-19 17:31:04.299675 [CMD]: docker exec xksk4gsco48s84okc8848kcw bash -c 'COOLIFY_BRANCH=production COOLIFY_RESOURCE_UUID=r8ko44c4ko088css8kcs48co docker compose --env-file /artifacts/build-time.env --project-name r8ko44c4ko088css8kcs48co --project-directory /artifacts/xksk4gsco48s84okc8848kcw -f /artifacts/xksk4gsco48s84okc8848kcw/docker-compose.prod.yml build --pull --no-cache --build-arg COOLIFY_URL --build-arg COOLIFY_FQDN --build-arg SERVICE_FQDN_BACKEND --build-arg SERVICE_FQDN_FRONTEND --build-arg SERVICE_URL_BACKEND --build-arg SERVICE_URL_FRONTEND --build-arg CORS_ORIGIN --build-arg DATABASE_URL --build-arg GEMINI_API_KEY --build-arg JWT_EXPIRY --build-arg JWT_SECRET --build-arg LOG_LEVEL --build-arg POSTGRES_DB --build-arg POSTGRES_PASSWORD --build-arg POSTGRES_USER --build-arg PRODUCTION_DOMAIN --build-arg SITE_URL --build-arg SMTP_FROM --build-arg SMTP_HOST --build-arg SMTP_PASSWORD --build-arg SMTP_PORT --build-arg SMTP_SECURE --build-arg SMTP_USER --build-arg VITE_API_BASE_URL --build-arg COOLIFY_BUILD_SECRETS_HASH=eddb4c11f0e7eec345b4b7970373c9883b1c90d8eb6cfc71c29a3b71a6bdbd14'
+2026-Jan-19 17:31:04.299675 #1 [internal] load local bake definitions
+2026-Jan-19 17:31:04.412721 #1 reading from stdin 3.50kB done
+2026-Jan-19 17:31:04.412721 #1 DONE 0.0s
+2026-Jan-19 17:31:04.588829 #2 [backend internal] load build definition from Dockerfile
+2026-Jan-19 17:31:04.588829 #2 transferring dockerfile: 4.33kB done
+2026-Jan-19 17:31:04.588829 #2 DONE 0.0s
+2026-Jan-19 17:31:04.588829
+2026-Jan-19 17:31:04.588829 #3 [frontend internal] load build definition from Dockerfile
+2026-Jan-19 17:31:04.588829 #3 transferring dockerfile: 2.95kB done
+2026-Jan-19 17:31:04.588829 #3 DONE 0.0s
+2026-Jan-19 17:31:04.588829
+2026-Jan-19 17:31:04.588829 #4 [frontend internal] load metadata for docker.io/library/node:20-alpine
+2026-Jan-19 17:31:05.331878 #4 DONE 0.8s
+2026-Jan-19 17:31:05.331878
+2026-Jan-19 17:31:05.331878 #5 [frontend internal] load .dockerignore
+2026-Jan-19 17:31:05.331878 #5 transferring context: 194B done
+2026-Jan-19 17:31:05.331878 #5 DONE 0.0s
+2026-Jan-19 17:31:05.331878
+2026-Jan-19 17:31:05.331878 #6 [frontend internal] load metadata for docker.io/library/nginx:1.25-alpine
+2026-Jan-19 17:31:05.331878 #6 DONE 0.9s
+2026-Jan-19 17:31:05.331878
+2026-Jan-19 17:31:05.331878 #7 [frontend builder 1/15] FROM docker.io/library/node:20-alpine@sha256:3960ed74dfe320a67bf8da9555b6bade25ebda2b22b6081d2f60fd7d5d430e9c
+2026-Jan-19 17:31:05.331878 #7 resolve docker.io/library/node:20-alpine@sha256:3960ed74dfe320a67bf8da9555b6bade25ebda2b22b6081d2f60fd7d5d430e9c 0.0s done
+2026-Jan-19 17:31:05.331878 #7 DONE 0.0s
+2026-Jan-19 17:31:05.331878
+2026-Jan-19 17:31:05.331878 #8 [frontend builder 2/15] WORKDIR /app
+2026-Jan-19 17:31:05.331878 #8 CACHED
+2026-Jan-19 17:31:05.331878
+2026-Jan-19 17:31:05.331878 #9 [frontend internal] load build context
+2026-Jan-19 17:31:05.439420 #9 transferring context: 730.49kB 0.1s done
+2026-Jan-19 17:31:05.439420 #9 DONE 0.1s
+2026-Jan-19 17:31:05.439420
+2026-Jan-19 17:31:05.439420 #10 [frontend stage-1 1/3] FROM docker.io/library/nginx:1.25-alpine@sha256:516475cc129da42866742567714ddc681e5eed7b9ee0b9e9c015e464b4221a00
+2026-Jan-19 17:31:05.439420 #10 resolve docker.io/library/nginx:1.25-alpine@sha256:516475cc129da42866742567714ddc681e5eed7b9ee0b9e9c015e464b4221a00 0.1s done
+2026-Jan-19 17:31:05.439420 #10 CACHED
+2026-Jan-19 17:31:05.439420
+2026-Jan-19 17:31:05.439420 #11 [backend internal] load build context
+2026-Jan-19 17:31:05.559557 #11 transferring context: 1.51MB 0.2s done
+2026-Jan-19 17:31:05.559557 #11 DONE 0.3s
+2026-Jan-19 17:31:05.559557
+2026-Jan-19 17:31:05.559557 #12 [backend builder 3/15] RUN apk add --no-cache libc6-compat openssl chromium nss freetype harfbuzz
+2026-Jan-19 17:31:06.479421 #12 1.075 ( 1/189) Installing libxau (1.0.12-r0)
+2026-Jan-19 17:31:06.479421 #12 1.084 ( 2/189) Installing libmd (1.1.0-r0)
+2026-Jan-19 17:31:06.479421 #12 1.090 ( 3/189) Installing libbsd (0.12.2-r0)
+2026-Jan-19 17:31:06.479421 #12 1.097 ( 4/189) Installing libxdmcp (1.1.5-r1)
+2026-Jan-19 17:31:06.479421 #12 1.103 ( 5/189) Installing libxcb (1.17.0-r1)
+2026-Jan-19 17:31:06.479421 #12 1.127 ( 6/189) Installing libx11 (1.8.12-r1)
+2026-Jan-19 17:31:06.576078 #12 ...
+2026-Jan-19 17:31:06.576078
+2026-Jan-19 17:31:06.576078 #13 [frontend builder 3/15] RUN apk add --no-cache libc6-compat
+2026-Jan-19 17:31:06.576078 #13 1.133 (1/3) Installing musl-obstack (1.2.3-r2)
+2026-Jan-19 17:31:06.576078 #13 1.140 (2/3) Installing libucontext (1.3.3-r0)
+2026-Jan-19 17:31:06.576078 #13 1.147 (3/3) Installing gcompat (1.1.0-r4)
+2026-Jan-19 17:31:06.576078 #13 1.157 OK: 11.0 MiB in 21 packages
+2026-Jan-19 17:31:06.576078 #13 DONE 1.3s
+2026-Jan-19 17:31:06.576078
+2026-Jan-19 17:31:06.576078 #12 [backend builder 3/15] RUN apk add --no-cache libc6-compat openssl chromium nss freetype harfbuzz
+2026-Jan-19 17:31:06.576078 #12 1.184 ( 7/189) Installing libxext (1.3.6-r2)
+2026-Jan-19 17:31:06.576078 #12 1.195 ( 8/189) Installing hwdata-pci (0.401-r0)
+2026-Jan-19 17:31:06.576078 #12 1.225 ( 9/189) Installing libpciaccess (0.18.1-r1)
+2026-Jan-19 17:31:06.677890 #12 ...
+2026-Jan-19 17:31:06.677890
+2026-Jan-19 17:31:06.677890 #14 [frontend builder 4/15] COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json tsconfig.base.json ./
+2026-Jan-19 17:31:06.677890 #14 DONE 0.1s
+2026-Jan-19 17:31:06.677890
+2026-Jan-19 17:31:06.677890 #12 [backend builder 3/15] RUN apk add --no-cache libc6-compat openssl chromium nss freetype harfbuzz
+2026-Jan-19 17:31:06.677890 #12 1.274 ( 10/189) Installing libdrm (2.4.131-r0)
+2026-Jan-19 17:31:06.677890 #12 1.291 ( 11/189) Installing chromium-angle (143.0.7499.169-r0)
+2026-Jan-19 17:31:06.677890 #12 1.369 ( 12/189) Installing chromium-common (143.0.7499.169-r0)
+2026-Jan-19 17:31:06.778409 #12 ...
+2026-Jan-19 17:31:06.778409
+2026-Jan-19 17:31:06.778409 #15 [frontend builder 5/15] COPY packages/frontend/package.json packages/frontend/tsconfig.json packages/frontend/
+2026-Jan-19 17:31:06.778409 #15 DONE 0.0s
+2026-Jan-19 17:31:06.778409
+2026-Jan-19 17:31:06.778409 #16 [frontend builder 6/15] COPY packages/shared/package.json packages/shared/tsconfig.json packages/shared/
+2026-Jan-19 17:31:06.778409 #16 DONE 0.0s
+2026-Jan-19 17:31:06.778409
+2026-Jan-19 17:31:06.778409 #17 [frontend builder 7/15] COPY packages/backend/package.json packages/backend/
+2026-Jan-19 17:31:06.778409 #17 DONE 0.0s
+2026-Jan-19 17:31:06.778409
+2026-Jan-19 17:31:06.778409 #12 [backend builder 3/15] RUN apk add --no-cache libc6-compat openssl chromium nss freetype harfbuzz
+2026-Jan-19 17:31:06.778409 #12 1.387 ( 13/189) Installing libexpat (2.7.3-r0)
+2026-Jan-19 17:31:06.778409 #12 1.394 ( 14/189) Installing brotli-libs (1.2.0-r0)
+2026-Jan-19 17:31:06.778409 #12 1.411 ( 15/189) Installing libbz2 (1.0.8-r6)
+2026-Jan-19 17:31:06.778409 #12 1.422 ( 16/189) Installing libpng (1.6.53-r0)
+2026-Jan-19 17:31:06.778409 #12 1.430 ( 17/189) Installing freetype (2.14.1-r0)
+2026-Jan-19 17:31:06.778409 #12 1.445 ( 18/189) Installing fontconfig (2.17.1-r0)
+2026-Jan-19 17:31:06.882493 #12 1.472 ( 19/189) Installing libfontenc (1.1.8-r0)
+2026-Jan-19 17:31:06.882493 #12 1.480 ( 20/189) Installing mkfontscale (1.2.3-r1)
+2026-Jan-19 17:31:06.882493 #12 1.493 ( 21/189) Installing font-opensans (0_git20210927-r1)
+2026-Jan-19 17:31:06.882493 #12 1.541 ( 22/189) Installing libffi (3.5.2-r0)
+2026-Jan-19 17:31:06.882493 #12 1.546 ( 23/189) Installing libintl (0.24.1-r1)
+2026-Jan-19 17:31:06.882493 #12 1.554 ( 24/189) Installing libeconf (0.8.0-r0)
+2026-Jan-19 17:31:06.882493 #12 1.573 ( 25/189) Installing libblkid (2.41.2-r0)
+2026-Jan-19 17:31:06.983072 #12 1.583 ( 26/189) Installing libmount (2.41.2-r0)
+2026-Jan-19 17:31:06.983072 #12 1.593 ( 27/189) Installing pcre2 (10.47-r0)
+2026-Jan-19 17:31:06.983072 #12 1.611 ( 28/189) Installing glib (2.86.3-r0)
+2026-Jan-19 17:31:06.983072 #12 1.675 ( 29/189) Installing gobject-introspection (1.86.0-r0)
+2026-Jan-19 17:31:07.094960 #12 1.686 ( 30/189) Installing pkgconf (2.5.1-r0)
+2026-Jan-19 17:31:07.094960 #12 1.695 ( 31/189) Installing hicolor-icon-theme (0.18-r0)
+2026-Jan-19 17:31:07.094960 #12 1.743 ( 32/189) Installing xz-libs (5.8.2-r0)
+2026-Jan-19 17:31:07.094960 #12 1.751 ( 33/189) Installing libxml2 (2.13.9-r0)
+2026-Jan-19 17:31:07.094960 #12 1.767 ( 34/189) Installing shared-mime-info (2.4-r6)
+2026-Jan-19 17:31:07.197989 #12 ...
+2026-Jan-19 17:31:07.197989
+2026-Jan-19 17:31:07.197989 #18 [frontend builder 8/15] RUN corepack enable
+2026-Jan-19 17:31:07.197989 #18 DONE 0.4s
+2026-Jan-19 17:31:07.197989
+2026-Jan-19 17:31:07.197989 #12 [backend builder 3/15] RUN apk add --no-cache libc6-compat openssl chromium nss freetype harfbuzz
+2026-Jan-19 17:31:07.197989 #12 1.788 ( 35/189) Installing libjpeg-turbo (3.1.2-r0)
+2026-Jan-19 17:31:07.197989 #12 1.800 ( 36/189) Installing libsharpyuv (1.6.0-r0)
+2026-Jan-19 17:31:07.197989 #12 1.806 ( 37/189) Installing libwebp (1.6.0-r0)
+2026-Jan-19 17:31:07.197989 #12 1.819 ( 38/189) Installing zstd-libs (1.5.7-r2)
+2026-Jan-19 17:31:07.197989 #12 1.838 ( 39/189) Installing tiff (4.7.1-r0)
+2026-Jan-19 17:31:07.197989 #12 1.849 ( 40/189) Installing gdk-pixbuf (2.44.4-r0)
+2026-Jan-19 17:31:07.197989 #12 1.863 ( 41/189) Installing gtk-update-icon-cache (3.24.51-r0)
+2026-Jan-19 17:31:07.197989 #12 1.869 ( 42/189) Installing libxcomposite (0.4.6-r5)
+2026-Jan-19 17:31:07.197989 #12 1.876 ( 43/189) Installing libxfixes (6.0.2-r0)
+2026-Jan-19 17:31:07.197989 #12 1.882 ( 44/189) Installing libxrender (0.9.12-r0)
+2026-Jan-19 17:31:07.197989 #12 1.889 ( 45/189) Installing libxcursor (1.2.3-r0)
+2026-Jan-19 17:31:07.301771 #12 1.898 ( 46/189) Installing libxdamage (1.1.6-r5)
+2026-Jan-19 17:31:07.301771 #12 1.993 ( 47/189) Installing libxi (1.8.2-r0)
+2026-Jan-19 17:31:07.404325 #12 2.003 ( 48/189) Installing libxinerama (1.1.5-r4)
+2026-Jan-19 17:31:07.404325 #12 2.008 ( 49/189) Installing libxrandr (1.5.4-r1)
+2026-Jan-19 17:31:07.404325 #12 2.016 ( 50/189) Installing libatk-1.0 (2.58.3-r0)
+2026-Jan-19 17:31:07.404325 #12 2.025 ( 51/189) Installing dbus-libs (1.16.2-r1)
+2026-Jan-19 17:31:07.404325 #12 2.034 ( 52/189) Installing at-spi2-core-libs (2.58.3-r0)
+2026-Jan-19 17:31:07.404325 #12 2.047 ( 53/189) Installing gdbm (1.26-r0)
+2026-Jan-19 17:31:07.404325 #12 2.055 ( 54/189) Installing mpdecimal (4.0.1-r0)
+2026-Jan-19 17:31:07.404325 #12 2.068 ( 55/189) Installing ncurses-terminfo-base (6.5_p20251123-r0)
+2026-Jan-19 17:31:07.404325 #12 2.077 ( 56/189) Installing libncursesw (6.5_p20251123-r0)
+2026-Jan-19 17:31:07.404325 #12 2.089 ( 57/189) Installing libpanelw (6.5_p20251123-r0)
+2026-Jan-19 17:31:07.404325 #12 2.096 ( 58/189) Installing readline (8.3.1-r0)
+2026-Jan-19 17:31:07.545696 #12 2.107 ( 59/189) Installing sqlite-libs (3.51.2-r0)
+2026-Jan-19 17:31:07.545696 #12 2.136 ( 60/189) Installing python3 (3.12.12-r0)
+2026-Jan-19 17:31:07.743325 #12 2.434 ( 61/189) Installing python3-pycache-pyc0 (3.12.12-r0)
+2026-Jan-19 17:31:07.954899 #12 2.638 ( 62/189) Installing pyc (3.12.12-r0)
+2026-Jan-19 17:31:07.954899 #12 2.638 ( 63/189) Installing python3-pyc (3.12.12-r0)
+2026-Jan-19 17:31:07.954899 #12 2.638 ( 64/189) Installing libxtst (1.2.5-r0)
+2026-Jan-19 17:31:07.954899 #12 2.645 ( 65/189) Installing at-spi2-core (2.58.3-r0)
+2026-Jan-19 17:31:08.070817 #12 2.655 ( 66/189) Installing libatk-bridge-2.0 (2.58.3-r0)
+2026-Jan-19 17:31:08.070817 #12 2.665 ( 67/189) Installing pixman (0.46.4-r0)
+2026-Jan-19 17:31:08.070817 #12 2.680 ( 68/189) Installing cairo (1.18.4-r0)
+2026-Jan-19 17:31:08.070817 #12 2.700 ( 69/189) Installing cairo-gobject (1.18.4-r0)
+2026-Jan-19 17:31:08.070817 #12 2.710 ( 70/189) Installing avahi-libs (0.8-r23)
+2026-Jan-19 17:31:08.070817 #12 2.720 ( 71/189) Installing gmp (6.3.0-r4)
+2026-Jan-19 17:31:08.070817 #12 2.730 ( 72/189) Installing nettle (3.10.2-r0)
+2026-Jan-19 17:31:08.070817 #12 2.744 ( 73/189) Installing libunistring (1.4.1-r0)
+2026-Jan-19 17:31:08.173115 #12 2.767 ( 74/189) Installing libidn2 (2.3.8-r0)
+2026-Jan-19 17:31:08.173115 #12 2.775 ( 75/189) Installing libtasn1 (4.21.0-r0)
+2026-Jan-19 17:31:08.173115 #12 2.783 ( 76/189) Installing p11-kit (0.25.5-r2)
+2026-Jan-19 17:31:08.173115 #12 2.802 ( 77/189) Installing gnutls (3.8.11-r0)
+2026-Jan-19 17:31:08.173115 #12 2.827 ( 78/189) Installing cups-libs (2.4.13-r0)
+2026-Jan-19 17:31:08.173115 #12 2.839 ( 79/189) Installing libepoxy (1.5.10-r1)
+2026-Jan-19 17:31:08.173115 #12 2.853 ( 80/189) Installing fribidi (1.0.16-r2)
+2026-Jan-19 17:31:08.173115 #12 2.860 ( 81/189) Installing graphite2 (1.3.14-r6)
+2026-Jan-19 17:31:08.298613 #12 2.870 ( 82/189) Installing harfbuzz (12.2.0-r0)
+2026-Jan-19 17:31:08.298613 #12 2.893 ( 83/189) Installing libxft (2.3.9-r0)
+2026-Jan-19 17:31:08.298613 #12 2.901 ( 84/189) Installing pango (1.56.4-r0)
+2026-Jan-19 17:31:08.298613 #12 2.916 ( 85/189) Installing wayland-libs-client (1.24.0-r0)
+2026-Jan-19 17:31:08.298613 #12 2.923 ( 86/189) Installing wayland-libs-cursor (1.24.0-r0)
+2026-Jan-19 17:31:08.298613 #12 2.931 ( 87/189) Installing wayland-libs-egl (1.24.0-r0)
+2026-Jan-19 17:31:08.298613 #12 2.938 ( 88/189) Installing xkeyboard-config (2.46-r0)
+2026-Jan-19 17:31:08.438320 #12 3.010 ( 89/189) Installing libxkbcommon (1.12.2-r0)
+2026-Jan-19 17:31:08.438320 #12 3.022 ( 90/189) Installing gtk+3.0 (3.24.51-r0)
+2026-Jan-19 17:31:08.438320 #12 3.128 ( 91/189) Installing icu-data-full (76.1-r1)
+2026-Jan-19 17:31:08.721064 #12 3.412 ( 92/189) Installing llvm21-libs (21.1.2-r1)
+2026-Jan-19 17:31:10.099812 #12 ...
+2026-Jan-19 17:31:10.099812
+2026-Jan-19 17:31:10.099812 #19 [frontend builder 9/15] RUN pnpm config set node-linker hoisted
+2026-Jan-19 17:31:10.099812 #19 0.378 ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-9.0.0.tgz
+2026-Jan-19 17:31:10.099812 #19 DONE 2.9s
+2026-Jan-19 17:31:10.225994 #20 [backend stage-1 3/10] RUN apk add --no-cache libc6-compat openssl curl chromium nss freetype harfbuzz
+2026-Jan-19 17:31:10.225994 #20 1.060 ( 1/195) Installing libxau (1.0.12-r0)
+2026-Jan-19 17:31:10.225994 #20 1.071 ( 2/195) Installing libmd (1.1.0-r0)
+2026-Jan-19 17:31:10.225994 #20 1.076 ( 3/195) Installing libbsd (0.12.2-r0)
+2026-Jan-19 17:31:10.225994 #20 1.083 ( 4/195) Installing libxdmcp (1.1.5-r1)
+2026-Jan-19 17:31:10.225994 #20 1.090 ( 5/195) Installing libxcb (1.17.0-r1)
+2026-Jan-19 17:31:10.225994 #20 1.111 ( 6/195) Installing libx11 (1.8.12-r1)
+2026-Jan-19 17:31:10.225994 #20 1.172 ( 7/195) Installing libxext (1.3.6-r2)
+2026-Jan-19 17:31:10.225994 #20 1.176 ( 8/195) Installing hwdata-pci (0.401-r0)
+2026-Jan-19 17:31:10.225994 #20 1.195 ( 9/195) Installing libpciaccess (0.18.1-r1)
+2026-Jan-19 17:31:10.225994 #20 1.202 ( 10/195) Installing libdrm (2.4.131-r0)
+2026-Jan-19 17:31:10.225994 #20 1.223 ( 11/195) Installing chromium-angle (143.0.7499.169-r0)
+2026-Jan-19 17:31:10.225994 #20 1.297 ( 12/195) Installing chromium-common (143.0.7499.169-r0)
+2026-Jan-19 17:31:10.225994 #20 1.316 ( 13/195) Installing libexpat (2.7.3-r0)
+2026-Jan-19 17:31:10.225994 #20 1.324 ( 14/195) Installing brotli-libs (1.2.0-r0)
+2026-Jan-19 17:31:10.225994 #20 1.342 ( 15/195) Installing libbz2 (1.0.8-r6)
+2026-Jan-19 17:31:10.225994 #20 1.354 ( 16/195) Installing libpng (1.6.53-r0)
+2026-Jan-19 17:31:10.225994 #20 1.366 ( 17/195) Installing freetype (2.14.1-r0)
+2026-Jan-19 17:31:10.225994 #20 1.384 ( 18/195) Installing fontconfig (2.17.1-r0)
+2026-Jan-19 17:31:10.225994 #20 1.404 ( 19/195) Installing libfontenc (1.1.8-r0)
+2026-Jan-19 17:31:10.225994 #20 1.411 ( 20/195) Installing mkfontscale (1.2.3-r1)
+2026-Jan-19 17:31:10.225994 #20 1.419 ( 21/195) Installing font-opensans (0_git20210927-r1)
+2026-Jan-19 17:31:10.225994 #20 1.463 ( 22/195) Installing libffi (3.5.2-r0)
+2026-Jan-19 17:31:10.225994 #20 1.469 ( 23/195) Installing libintl (0.24.1-r1)
+2026-Jan-19 17:31:10.225994 #20 1.477 ( 24/195) Installing libeconf (0.8.0-r0)
+2026-Jan-19 17:31:10.225994 #20 1.486 ( 25/195) Installing libblkid (2.41.2-r0)
+2026-Jan-19 17:31:10.225994 #20 1.499 ( 26/195) Installing libmount (2.41.2-r0)
+2026-Jan-19 17:31:10.225994 #20 1.509 ( 27/195) Installing pcre2 (10.47-r0)
+2026-Jan-19 17:31:10.225994 #20 1.524 ( 28/195) Installing glib (2.86.3-r0)
+2026-Jan-19 17:31:10.225994 #20 1.591 ( 29/195) Installing gobject-introspection (1.86.0-r0)
+2026-Jan-19 17:31:10.225994 #20 1.600 ( 30/195) Installing pkgconf (2.5.1-r0)
+2026-Jan-19 17:31:10.225994 #20 1.608 ( 31/195) Installing hicolor-icon-theme (0.18-r0)
+2026-Jan-19 17:31:10.225994 #20 1.665 ( 32/195) Installing xz-libs (5.8.2-r0)
+2026-Jan-19 17:31:10.225994 #20 1.673 ( 33/195) Installing libxml2 (2.13.9-r0)
+2026-Jan-19 17:31:10.225994 #20 1.691 ( 34/195) Installing shared-mime-info (2.4-r6)
+2026-Jan-19 17:31:10.225994 #20 1.712 ( 35/195) Installing libjpeg-turbo (3.1.2-r0)
+2026-Jan-19 17:31:10.225994 #20 1.727 ( 36/195) Installing libsharpyuv (1.6.0-r0)
+2026-Jan-19 17:31:10.225994 #20 1.738 ( 37/195) Installing libwebp (1.6.0-r0)
+2026-Jan-19 17:31:10.225994 #20 1.754 ( 38/195) Installing zstd-libs (1.5.7-r2)
+2026-Jan-19 17:31:10.225994 #20 1.773 ( 39/195) Installing tiff (4.7.1-r0)
+2026-Jan-19 17:31:10.225994 #20 1.786 ( 40/195) Installing gdk-pixbuf (2.44.4-r0)
+2026-Jan-19 17:31:10.225994 #20 1.802 ( 41/195) Installing gtk-update-icon-cache (3.24.51-r0)
+2026-Jan-19 17:31:10.225994 #20 1.809 ( 42/195) Installing libxcomposite (0.4.6-r5)
+2026-Jan-19 17:31:10.225994 #20 1.816 ( 43/195) Installing libxfixes (6.0.2-r0)
+2026-Jan-19 17:31:10.225994 #20 1.823 ( 44/195) Installing libxrender (0.9.12-r0)
+2026-Jan-19 17:31:10.225994 #20 1.836 ( 45/195) Installing libxcursor (1.2.3-r0)
+2026-Jan-19 17:31:10.225994 #20 1.841 ( 46/195) Installing libxdamage (1.1.6-r5)
+2026-Jan-19 17:31:10.225994 #20 1.851 ( 47/195) Installing libxi (1.8.2-r0)
+2026-Jan-19 17:31:10.225994 #20 1.858 ( 48/195) Installing libxinerama (1.1.5-r4)
+2026-Jan-19 17:31:10.225994 #20 1.865 ( 49/195) Installing libxrandr (1.5.4-r1)
+2026-Jan-19 17:31:10.225994 #20 1.873 ( 50/195) Installing libatk-1.0 (2.58.3-r0)
+2026-Jan-19 17:31:10.225994 #20 1.886 ( 51/195) Installing dbus-libs (1.16.2-r1)
+2026-Jan-19 17:31:10.225994 #20 1.898 ( 52/195) Installing at-spi2-core-libs (2.58.3-r0)
+2026-Jan-19 17:31:10.225994 #20 1.911 ( 53/195) Installing gdbm (1.26-r0)
+2026-Jan-19 17:31:10.225994 #20 1.920 ( 54/195) Installing mpdecimal (4.0.1-r0)
+2026-Jan-19 17:31:10.225994 #20 1.928 ( 55/195) Installing ncurses-terminfo-base (6.5_p20251123-r0)
+2026-Jan-19 17:31:10.225994 #20 1.939 ( 56/195) Installing libncursesw (6.5_p20251123-r0)
+2026-Jan-19 17:31:10.225994 #20 1.949 ( 57/195) Installing libpanelw (6.5_p20251123-r0)
+2026-Jan-19 17:31:10.225994 #20 1.955 ( 58/195) Installing readline (8.3.1-r0)
+2026-Jan-19 17:31:10.225994 #20 1.963 ( 59/195) Installing sqlite-libs (3.51.2-r0)
+2026-Jan-19 17:31:10.225994 #20 1.988 ( 60/195) Installing python3 (3.12.12-r0)
+2026-Jan-19 17:31:10.225994 #20 2.288 ( 61/195) Installing python3-pycache-pyc0 (3.12.12-r0)
+2026-Jan-19 17:31:10.225994 #20 2.472 ( 62/195) Installing pyc (3.12.12-r0)
+2026-Jan-19 17:31:10.225994 #20 2.472 ( 63/195) Installing python3-pyc (3.12.12-r0)
+2026-Jan-19 17:31:10.225994 #20 2.472 ( 64/195) Installing libxtst (1.2.5-r0)
+2026-Jan-19 17:31:10.225994 #20 2.479 ( 65/195) Installing at-spi2-core (2.58.3-r0)
+2026-Jan-19 17:31:10.225994 #20 2.494 ( 66/195) Installing libatk-bridge-2.0 (2.58.3-r0)
+2026-Jan-19 17:31:10.225994 #20 2.501 ( 67/195) Installing pixman (0.46.4-r0)
+2026-Jan-19 17:31:10.225994 #20 2.515 ( 68/195) Installing cairo (1.18.4-r0)
+2026-Jan-19 17:31:10.225994 #20 2.538 ( 69/195) Installing cairo-gobject (1.18.4-r0)
+2026-Jan-19 17:31:10.225994 #20 2.544 ( 70/195) Installing avahi-libs (0.8-r23)
+2026-Jan-19 17:31:10.225994 #20 2.553 ( 71/195) Installing gmp (6.3.0-r4)
+2026-Jan-19 17:31:10.225994 #20 2.565 ( 72/195) Installing nettle (3.10.2-r0)
+2026-Jan-19 17:31:10.225994 #20 2.585 ( 73/195) Installing libunistring (1.4.1-r0)
+2026-Jan-19 17:31:10.225994 #20 2.619 ( 74/195) Installing libidn2 (2.3.8-r0)
+2026-Jan-19 17:31:10.225994 #20 2.628 ( 75/195) Installing libtasn1 (4.21.0-r0)
+2026-Jan-19 17:31:10.225994 #20 2.636 ( 76/195) Installing p11-kit (0.25.5-r2)
+2026-Jan-19 17:31:10.225994 #20 2.658 ( 77/195) Installing gnutls (3.8.11-r0)
+2026-Jan-19 17:31:10.225994 #20 2.690 ( 78/195) Installing cups-libs (2.4.13-r0)
+2026-Jan-19 17:31:10.225994 #20 2.702 ( 79/195) Installing libepoxy (1.5.10-r1)
+2026-Jan-19 17:31:10.225994 #20 2.719 ( 80/195) Installing fribidi (1.0.16-r2)
+2026-Jan-19 17:31:10.225994 #20 2.727 ( 81/195) Installing graphite2 (1.3.14-r6)
+2026-Jan-19 17:31:10.225994 #20 2.741 ( 82/195) Installing harfbuzz (12.2.0-r0)
+2026-Jan-19 17:31:10.225994 #20 2.762 ( 83/195) Installing libxft (2.3.9-r0)
+2026-Jan-19 17:31:10.225994 #20 2.770 ( 84/195) Installing pango (1.56.4-r0)
+2026-Jan-19 17:31:10.225994 #20 2.787 ( 85/195) Installing wayland-libs-client (1.24.0-r0)
+2026-Jan-19 17:31:10.225994 #20 2.795 ( 86/195) Installing wayland-libs-cursor (1.24.0-r0)
+2026-Jan-19 17:31:10.225994 #20 2.801 ( 87/195) Installing wayland-libs-egl (1.24.0-r0)
+2026-Jan-19 17:31:10.225994 #20 2.807 ( 88/195) Installing xkeyboard-config (2.46-r0)
+2026-Jan-19 17:31:10.225994 #20 2.865 ( 89/195) Installing libxkbcommon (1.12.2-r0)
+2026-Jan-19 17:31:10.225994 #20 2.875 ( 90/195) Installing gtk+3.0 (3.24.51-r0)
+2026-Jan-19 17:31:10.225994 #20 2.987 ( 91/195) Installing icu-data-full (76.1-r1)
+2026-Jan-19 17:31:10.225994 #20 3.274 ( 92/195) Installing llvm21-libs (21.1.2-r1)
+2026-Jan-19 17:31:10.225994 #20 4.856 ( 93/195) Installing spirv-tools (1.4.321.0-r1)
+2026-Jan-19 17:31:10.225994 #20 4.914 ( 94/195) Installing libelf (0.194-r0)
+2026-Jan-19 17:31:10.329674 #20 4.922 ( 95/195) Installing libxshmfence (1.3.3-r0)
+2026-Jan-19 17:31:10.329674 #20 4.929 ( 96/195) Installing mesa (25.2.7-r1)
+2026-Jan-19 17:31:10.329674 #20 ...
+2026-Jan-19 17:31:10.329674
+2026-Jan-19 17:31:10.329674 #12 [backend builder 3/15] RUN apk add --no-cache libc6-compat openssl chromium nss freetype harfbuzz
+2026-Jan-19 17:31:10.329674 #12 5.020 ( 93/189) Installing spirv-tools (1.4.321.0-r1)
+2026-Jan-19 17:31:10.558289 #12 5.080 ( 94/189) Installing libelf (0.194-r0)
+2026-Jan-19 17:31:10.558289 #12 5.088 ( 95/189) Installing libxshmfence (1.3.3-r0)
+2026-Jan-19 17:31:10.558289 #12 5.098 ( 96/189) Installing mesa (25.2.7-r1)
+2026-Jan-19 17:31:10.835537 #12 5.431 ( 97/189) Installing mesa-gbm (25.2.7-r1)
+2026-Jan-19 17:31:10.835537 #12 5.438 ( 98/189) Installing mesa-dri-gallium (25.2.7-r1)
+2026-Jan-19 17:31:10.835537 #12 5.445 ( 99/189) Installing eudev-libs (3.2.14-r6)
+2026-Jan-19 17:31:10.835537 #12 5.453 (100/189) Installing libmagic (5.46-r2)
+2026-Jan-19 17:31:10.835537 #12 5.501 (101/189) Installing file (5.46-r2)
+2026-Jan-19 17:31:10.835537 #12 5.508 (102/189) Installing xprop (1.2.8-r0)
+2026-Jan-19 17:31:10.835537 #12 5.516 (103/189) Installing libice (1.1.2-r0)
+2026-Jan-19 17:31:10.835537 #12 5.524 (104/189) Installing libuuid (2.41.2-r0)
+2026-Jan-19 17:31:10.947902 #12 5.532 (105/189) Installing libsm (1.2.6-r0)
+2026-Jan-19 17:31:10.947902 #12 5.539 (106/189) Installing libxt (1.3.1-r0)
+2026-Jan-19 17:31:10.947902 #12 5.553 (107/189) Installing libxmu (1.2.1-r0)
+2026-Jan-19 17:31:10.947902 #12 5.563 (108/189) Installing xset (1.2.5-r1)
+2026-Jan-19 17:31:10.947902 #12 5.582 (109/189) Installing xdg-utils (1.2.1-r1)
+2026-Jan-19 17:31:10.947902 #12 5.591 (110/189) Installing libogg (1.3.6-r0)
+2026-Jan-19 17:31:10.947902 #12 5.598 (111/189) Installing libflac (1.4.3-r2)
+2026-Jan-19 17:31:10.947902 #12 5.610 (112/189) Installing alsa-lib (1.2.14-r2)
+2026-Jan-19 17:31:10.947902 #12 5.638 (113/189) Installing libSvtAv1Enc (3.1.2-r0)
+2026-Jan-19 17:31:11.093134 #12 5.724 (114/189) Installing aom-libs (3.13.1-r0)
+2026-Jan-19 17:31:11.203943 #12 5.810 (115/189) Installing libva (2.22.0-r1)
+2026-Jan-19 17:31:11.203943 #12 5.819 (116/189) Installing libvdpau (1.5-r4)
+2026-Jan-19 17:31:11.203943 #12 5.857 (117/189) Installing libvpl (2.15.0-r1)
+2026-Jan-19 17:31:11.203943 #12 5.870 (118/189) Installing ffmpeg-libavutil (8.0.1-r1)
+2026-Jan-19 17:31:11.203943 #12 5.894 (119/189) Installing libdav1d (1.5.2-r0)
+2026-Jan-19 17:31:11.310268 #12 5.927 (120/189) Installing libhwy (1.3.0-r0)
+2026-Jan-19 17:31:11.310268 #12 5.933 (121/189) Installing lcms2 (2.17-r0)
+2026-Jan-19 17:31:11.310268 #12 5.946 (122/189) Installing libjxl (0.11.1-r3)
+2026-Jan-19 17:31:11.410053 #12 6.014 (123/189) Installing lame-libs (3.100-r5)
+2026-Jan-19 17:31:11.410053 #12 6.027 (124/189) Installing opus (1.5.2-r1)
+2026-Jan-19 17:31:11.410053 #12 6.044 (125/189) Installing rav1e-libs (0.8.1-r0)
+2026-Jan-19 17:31:11.410053 #12 6.074 (126/189) Installing glslang-libs (1.4.321.0-r0)
+2026-Jan-19 17:31:11.410053 #12 6.102 (127/189) Installing shaderc (2025.3-r0)
+2026-Jan-19 17:31:11.517447 #12 6.115 (128/189) Installing libgomp (15.2.0-r2)
+2026-Jan-19 17:31:11.517447 #12 6.127 (129/189) Installing soxr (0.1.3-r7)
+2026-Jan-19 17:31:11.517447 #12 6.138 (130/189) Installing ffmpeg-libswresample (8.0.1-r1)
+2026-Jan-19 17:31:11.517447 #12 6.151 (131/189) Installing libtheora (1.2.0-r0)
+2026-Jan-19 17:31:11.517447 #12 6.170 (132/189) Installing libvorbis (1.3.7-r2)
+2026-Jan-19 17:31:11.517447 #12 6.185 (133/189) Installing libvpx (1.15.2-r0)
+2026-Jan-19 17:31:11.618545 #12 6.236 (134/189) Installing libwebpmux (1.6.0-r0)
+2026-Jan-19 17:31:11.618545 #12 6.246 (135/189) Installing x264-libs (0.164.3108-r1)
+2026-Jan-19 17:31:11.618545 #12 6.299 (136/189) Installing numactl (2.0.18-r0)
+2026-Jan-19 17:31:11.618545 #12 6.310 (137/189) Installing x265-libs (4.1-r0)
+2026-Jan-19 17:31:11.765889 #12 6.455 (138/189) Installing xvidcore (1.3.7-r2)
+2026-Jan-19 17:31:11.927559 #12 6.468 (139/189) Installing ffmpeg-libavcodec (8.0.1-r1)
+2026-Jan-19 17:31:12.035354 #12 6.695 (140/189) Installing libudfread (1.2.0-r0)
+2026-Jan-19 17:31:12.035354 #12 6.701 (141/189) Installing libbluray (1.4.0-r0)
+2026-Jan-19 17:31:12.035354 #12 6.713 (142/189) Installing mpg123-libs (1.33.3-r0)
+2026-Jan-19 17:31:12.035354 #12 6.725 (143/189) Installing libopenmpt (0.8.3-r0)
+2026-Jan-19 17:31:12.137896 #12 6.747 (144/189) Installing cjson (1.7.19-r1)
+2026-Jan-19 17:31:12.137896 #12 6.757 (145/189) Installing mbedtls (3.6.5-r0)
+2026-Jan-19 17:31:12.137896 #12 6.780 (146/189) Installing librist (0.2.10-r1)
+2026-Jan-19 17:31:12.137896 #12 6.796 (147/189) Installing libsrt (1.5.3-r1)
+2026-Jan-19 17:31:12.137896 #12 6.829 (148/189) Installing libssh (0.11.3-r0)
+2026-Jan-19 17:31:12.240856 #12 6.848 (149/189) Installing libsodium (1.0.20-r1)
+2026-Jan-19 17:31:12.240856 #12 6.859 (150/189) Installing libzmq (4.3.5-r2)
+2026-Jan-19 17:31:12.240856 #12 6.878 (151/189) Installing ffmpeg-libavformat (8.0.1-r1)
+2026-Jan-19 17:31:12.240856 #12 6.924 (152/189) Installing crc32c (1.1.2-r3)
+2026-Jan-19 17:31:12.347340 #12 6.939 (153/189) Installing double-conversion (3.3.1-r0)
+2026-Jan-19 17:31:12.347340 #12 6.947 (154/189) Installing harfbuzz-subset (12.2.0-r0)
+2026-Jan-19 17:31:12.347340 #12 6.972 (155/189) Installing minizip (1.3.1-r0)
+2026-Jan-19 17:31:12.347340 #12 6.988 (156/189) Installing nspr (4.36-r0)
+2026-Jan-19 17:31:12.347340 #12 7.004 (157/189) Installing nss (3.118.1-r0)
+2026-Jan-19 17:31:12.451395 #12 7.055 (158/189) Installing openh264 (2.6.0-r0)
+2026-Jan-19 17:31:12.451395 #12 7.080 (159/189) Installing libcamera-ipa (0.6.0-r0)
+2026-Jan-19 17:31:12.451395 #12 7.090 (160/189) Installing libunwind (1.8.1-r0)
+2026-Jan-19 17:31:12.451395 #12 7.101 (161/189) Installing yaml (0.2.5-r2)
+2026-Jan-19 17:31:12.451395 #12 7.115 (162/189) Installing libcamera (0.6.0-r0)
+2026-Jan-19 17:31:12.451395 #12 7.141 (163/189) Installing serd-libs (0.32.4-r0)
+2026-Jan-19 17:31:12.555278 #12 7.150 (164/189) Installing zix-libs (0.6.2-r0)
+2026-Jan-19 17:31:12.555278 #12 7.159 (165/189) Installing sord-libs (0.16.18-r0)
+2026-Jan-19 17:31:12.555278 #12 7.195 (166/189) Installing sratom (0.6.18-r0)
+2026-Jan-19 17:31:12.555278 #12 7.210 (167/189) Installing lilv-libs (0.24.26-r0)
+2026-Jan-19 17:31:12.555278 #12 7.225 (168/189) Installing speexdsp (1.2.1-r2)
+2026-Jan-19 17:31:12.555278 #12 7.241 (169/189) Installing libuv (1.51.0-r0)
+2026-Jan-19 17:31:12.659013 #12 7.255 (170/189) Installing roc-toolkit-libs (0.4.0-r1)
+2026-Jan-19 17:31:12.659013 #12 7.280 (171/189) Installing libsndfile (1.2.2-r2)
+2026-Jan-19 17:31:12.659013 #12 7.296 (172/189) Installing abseil-cpp-raw-logging-internal (20250814.1-r0)
+2026-Jan-19 17:31:12.659013 #12 7.304 (173/189) Installing abseil-cpp-strings-internal (20250814.1-r0)
+2026-Jan-19 17:31:12.659013 #12 7.315 (174/189) Installing abseil-cpp-strings (20250814.1-r0)
+2026-Jan-19 17:31:12.659013 #12 7.326 (175/189) Installing webrtc-audio-processing-2 (2.1-r1)
+2026-Jan-19 17:31:12.659013 #12 7.350 (176/189) Installing pipewire-libs (1.4.9-r4)
+2026-Jan-19 17:31:12.763811 #12 7.454 (177/189) Installing libasyncns (0.8-r4)
+2026-Jan-19 17:31:12.864888 #12 7.465 (178/189) Installing libltdl (2.5.4-r2)
+2026-Jan-19 17:31:12.864888 #12 7.479 (179/189) Installing orc (0.4.41-r0)
+2026-Jan-19 17:31:12.864888 #12 7.514 (180/189) Installing tdb-libs (1.4.14-r0)
+2026-Jan-19 17:31:12.864888 #12 7.534 (181/189) Installing libpulse (17.0-r5)
+2026-Jan-19 17:31:12.864888 #12 7.556 (182/189) Installing simdutf (7.5.0-r0)
+2026-Jan-19 17:31:13.060329 #12 7.570 (183/189) Installing libwebpdemux (1.6.0-r0)
+2026-Jan-19 17:31:13.060329 #12 7.577 (184/189) Installing libxslt (1.1.43-r3)
+2026-Jan-19 17:31:13.060329 #12 7.591 (185/189) Installing chromium (143.0.7499.169-r0)
+2026-Jan-19 17:31:15.679903 #12 10.33 (186/189) Installing musl-obstack (1.2.3-r2)
+2026-Jan-19 17:31:15.679903 #12 10.33 (187/189) Installing libucontext (1.3.3-r0)
+2026-Jan-19 17:31:15.679903 #12 10.34 (188/189) Installing gcompat (1.1.0-r4)
+2026-Jan-19 17:31:15.679903 #12 10.35 (189/189) Installing openssl (3.5.4-r0)
+2026-Jan-19 17:31:15.679903 #12 10.37 Executing busybox-1.37.0-r30.trigger
+2026-Jan-19 17:31:15.796679 #12 10.38 Executing fontconfig-2.17.1-r0.trigger
+2026-Jan-19 17:31:15.796679 #12 10.42 Executing mkfontscale-1.2.3-r1.trigger
+2026-Jan-19 17:31:15.796679 #12 10.45 Executing glib-2.86.3-r0.trigger
+2026-Jan-19 17:31:15.796679 #12 10.49 Executing shared-mime-info-2.4-r6.trigger
+2026-Jan-19 17:31:16.581845 #12 11.27 Executing gdk-pixbuf-2.44.4-r0.trigger
+2026-Jan-19 17:31:16.695250 #12 11.30 Executing gtk-update-icon-cache-3.24.51-r0.trigger
+2026-Jan-19 17:31:16.695250 #12 11.39 Executing gtk+3.0-3.24.51-r0.trigger
+2026-Jan-19 17:31:16.916582 #12 11.46 OK: 727.5 MiB in 207 packages
+2026-Jan-19 17:31:17.015966 #12 ...
+2026-Jan-19 17:31:17.015966
+2026-Jan-19 17:31:17.015966 #20 [backend stage-1 3/10] RUN apk add --no-cache libc6-compat openssl curl chromium nss freetype harfbuzz
+2026-Jan-19 17:31:17.015966 #20 5.312 ( 97/195) Installing mesa-gbm (25.2.7-r1)
+2026-Jan-19 17:31:17.015966 #20 5.325 ( 98/195) Installing mesa-dri-gallium (25.2.7-r1)
+2026-Jan-19 17:31:17.015966 #20 5.334 ( 99/195) Installing eudev-libs (3.2.14-r6)
+2026-Jan-19 17:31:17.015966 #20 5.343 (100/195) Installing libmagic (5.46-r2)
+2026-Jan-19 17:31:17.015966 #20 5.390 (101/195) Installing file (5.46-r2)
+2026-Jan-19 17:31:17.015966 #20 5.396 (102/195) Installing xprop (1.2.8-r0)
+2026-Jan-19 17:31:17.015966 #20 5.406 (103/195) Installing libice (1.1.2-r0)
+2026-Jan-19 17:31:17.015966 #20 5.417 (104/195) Installing libuuid (2.41.2-r0)
+2026-Jan-19 17:31:17.015966 #20 5.427 (105/195) Installing libsm (1.2.6-r0)
+2026-Jan-19 17:31:17.015966 #20 5.433 (106/195) Installing libxt (1.3.1-r0)
+2026-Jan-19 17:31:17.015966 #20 5.447 (107/195) Installing libxmu (1.2.1-r0)
+2026-Jan-19 17:31:17.015966 #20 5.461 (108/195) Installing xset (1.2.5-r1)
+2026-Jan-19 17:31:17.015966 #20 5.468 (109/195) Installing xdg-utils (1.2.1-r1)
+2026-Jan-19 17:31:17.015966 #20 5.477 (110/195) Installing libogg (1.3.6-r0)
+2026-Jan-19 17:31:17.015966 #20 5.484 (111/195) Installing libflac (1.4.3-r2)
+2026-Jan-19 17:31:17.015966 #20 5.499 (112/195) Installing alsa-lib (1.2.14-r2)
+2026-Jan-19 17:31:17.015966 #20 5.534 (113/195) Installing libSvtAv1Enc (3.1.2-r0)
+2026-Jan-19 17:31:17.015966 #20 5.616 (114/195) Installing aom-libs (3.13.1-r0)
+2026-Jan-19 17:31:17.015966 #20 5.695 (115/195) Installing libva (2.22.0-r1)
+2026-Jan-19 17:31:17.015966 #20 5.709 (116/195) Installing libvdpau (1.5-r4)
+2026-Jan-19 17:31:17.015966 #20 5.784 (117/195) Installing libvpl (2.15.0-r1)
+2026-Jan-19 17:31:17.015966 #20 5.796 (118/195) Installing ffmpeg-libavutil (8.0.1-r1)
+2026-Jan-19 17:31:17.015966 #20 5.813 (119/195) Installing libdav1d (1.5.2-r0)
+2026-Jan-19 17:31:17.015966 #20 5.839 (120/195) Installing libhwy (1.3.0-r0)
+2026-Jan-19 17:31:17.015966 #20 5.847 (121/195) Installing lcms2 (2.17-r0)
+2026-Jan-19 17:31:17.015966 #20 5.860 (122/195) Installing libjxl (0.11.1-r3)
+2026-Jan-19 17:31:17.015966 #20 5.928 (123/195) Installing lame-libs (3.100-r5)
+2026-Jan-19 17:31:17.015966 #20 5.941 (124/195) Installing opus (1.5.2-r1)
+2026-Jan-19 17:31:17.015966 #20 5.956 (125/195) Installing rav1e-libs (0.8.1-r0)
+2026-Jan-19 17:31:17.015966 #20 6.000 (126/195) Installing glslang-libs (1.4.321.0-r0)
+2026-Jan-19 17:31:17.015966 #20 6.032 (127/195) Installing shaderc (2025.3-r0)
+2026-Jan-19 17:31:17.015966 #20 6.044 (128/195) Installing libgomp (15.2.0-r2)
+2026-Jan-19 17:31:17.015966 #20 6.064 (129/195) Installing soxr (0.1.3-r7)
+2026-Jan-19 17:31:17.015966 #20 6.080 (130/195) Installing ffmpeg-libswresample (8.0.1-r1)
+2026-Jan-19 17:31:17.015966 #20 6.095 (131/195) Installing libtheora (1.2.0-r0)
+2026-Jan-19 17:31:17.015966 #20 6.115 (132/195) Installing libvorbis (1.3.7-r2)
+2026-Jan-19 17:31:17.015966 #20 6.129 (133/195) Installing libvpx (1.15.2-r0)
+2026-Jan-19 17:31:17.015966 #20 6.185 (134/195) Installing libwebpmux (1.6.0-r0)
+2026-Jan-19 17:31:17.015966 #20 6.202 (135/195) Installing x264-libs (0.164.3108-r1)
+2026-Jan-19 17:31:17.015966 #20 6.232 (136/195) Installing numactl (2.0.18-r0)
+2026-Jan-19 17:31:17.015966 #20 6.237 (137/195) Installing x265-libs (4.1-r0)
+2026-Jan-19 17:31:17.015966 #20 6.395 (138/195) Installing xvidcore (1.3.7-r2)
+2026-Jan-19 17:31:17.015966 #20 6.408 (139/195) Installing ffmpeg-libavcodec (8.0.1-r1)
+2026-Jan-19 17:31:17.015966 #20 6.619 (140/195) Installing libudfread (1.2.0-r0)
+2026-Jan-19 17:31:17.015966 #20 6.626 (141/195) Installing libbluray (1.4.0-r0)
+2026-Jan-19 17:31:17.015966 #20 6.636 (142/195) Installing mpg123-libs (1.33.3-r0)
+2026-Jan-19 17:31:17.015966 #20 6.648 (143/195) Installing libopenmpt (0.8.3-r0)
+2026-Jan-19 17:31:17.015966 #20 6.674 (144/195) Installing cjson (1.7.19-r1)
+2026-Jan-19 17:31:17.015966 #20 6.682 (145/195) Installing mbedtls (3.6.5-r0)
+2026-Jan-19 17:31:17.015966 #20 6.708 (146/195) Installing librist (0.2.10-r1)
+2026-Jan-19 17:31:17.015966 #20 6.715 (147/195) Installing libsrt (1.5.3-r1)
+2026-Jan-19 17:31:17.015966 #20 6.739 (148/195) Installing libssh (0.11.3-r0)
+2026-Jan-19 17:31:17.015966 #20 6.750 (149/195) Installing libsodium (1.0.20-r1)
+2026-Jan-19 17:31:17.015966 #20 6.760 (150/195) Installing libzmq (4.3.5-r2)
+2026-Jan-19 17:31:17.015966 #20 6.773 (151/195) Installing ffmpeg-libavformat (8.0.1-r1)
+2026-Jan-19 17:31:17.015966 #20 6.823 (152/195) Installing crc32c (1.1.2-r3)
+2026-Jan-19 17:31:17.015966 #20 6.836 (153/195) Installing double-conversion (3.3.1-r0)
+2026-Jan-19 17:31:17.015966 #20 6.849 (154/195) Installing harfbuzz-subset (12.2.0-r0)
+2026-Jan-19 17:31:17.015966 #20 6.872 (155/195) Installing minizip (1.3.1-r0)
+2026-Jan-19 17:31:17.015966 #20 6.915 (156/195) Installing nspr (4.36-r0)
+2026-Jan-19 17:31:17.015966 #20 6.932 (157/195) Installing nss (3.118.1-r0)
+2026-Jan-19 17:31:17.015966 #20 7.005 (158/195) Installing openh264 (2.6.0-r0)
+2026-Jan-19 17:31:17.015966 #20 7.027 (159/195) Installing libcamera-ipa (0.6.0-r0)
+2026-Jan-19 17:31:17.015966 #20 7.039 (160/195) Installing libunwind (1.8.1-r0)
+2026-Jan-19 17:31:17.015966 #20 7.053 (161/195) Installing yaml (0.2.5-r2)
+2026-Jan-19 17:31:17.015966 #20 7.062 (162/195) Installing libcamera (0.6.0-r0)
+2026-Jan-19 17:31:17.015966 #20 7.098 (163/195) Installing serd-libs (0.32.4-r0)
+2026-Jan-19 17:31:17.015966 #20 7.110 (164/195) Installing zix-libs (0.6.2-r0)
+2026-Jan-19 17:31:17.015966 #20 7.122 (165/195) Installing sord-libs (0.16.18-r0)
+2026-Jan-19 17:31:17.015966 #20 7.132 (166/195) Installing sratom (0.6.18-r0)
+2026-Jan-19 17:31:17.015966 #20 7.144 (167/195) Installing lilv-libs (0.24.26-r0)
+2026-Jan-19 17:31:17.015966 #20 7.160 (168/195) Installing speexdsp (1.2.1-r2)
+2026-Jan-19 17:31:17.015966 #20 7.173 (169/195) Installing libuv (1.51.0-r0)
+2026-Jan-19 17:31:17.015966 #20 7.187 (170/195) Installing roc-toolkit-libs (0.4.0-r1)
+2026-Jan-19 17:31:17.015966 #20 7.207 (171/195) Installing libsndfile (1.2.2-r2)
+2026-Jan-19 17:31:17.015966 #20 7.223 (172/195) Installing abseil-cpp-raw-logging-internal (20250814.1-r0)
+2026-Jan-19 17:31:17.015966 #20 7.231 (173/195) Installing abseil-cpp-strings-internal (20250814.1-r0)
+2026-Jan-19 17:31:17.015966 #20 7.237 (174/195) Installing abseil-cpp-strings (20250814.1-r0)
+2026-Jan-19 17:31:17.015966 #20 7.245 (175/195) Installing webrtc-audio-processing-2 (2.1-r1)
+2026-Jan-19 17:31:17.015966 #20 7.262 (176/195) Installing pipewire-libs (1.4.9-r4)
+2026-Jan-19 17:31:17.015966 #20 7.351 (177/195) Installing libasyncns (0.8-r4)
+2026-Jan-19 17:31:17.015966 #20 7.359 (178/195) Installing libltdl (2.5.4-r2)
+2026-Jan-19 17:31:17.015966 #20 7.367 (179/195) Installing orc (0.4.41-r0)
+2026-Jan-19 17:31:17.015966 #20 7.379 (180/195) Installing tdb-libs (1.4.14-r0)
+2026-Jan-19 17:31:17.015966 #20 7.390 (181/195) Installing libpulse (17.0-r5)
+2026-Jan-19 17:31:17.015966 #20 7.414 (182/195) Installing simdutf (7.5.0-r0)
+2026-Jan-19 17:31:17.015966 #20 7.427 (183/195) Installing libwebpdemux (1.6.0-r0)
+2026-Jan-19 17:31:17.015966 #20 7.435 (184/195) Installing libxslt (1.1.43-r3)
+2026-Jan-19 17:31:17.015966 #20 7.445 (185/195) Installing chromium (143.0.7499.169-r0)
+2026-Jan-19 17:31:17.015966 #20 10.01 (186/195) Installing c-ares (1.34.6-r0)
+2026-Jan-19 17:31:17.015966 #20 10.02 (187/195) Installing nghttp2-libs (1.68.0-r0)
+2026-Jan-19 17:31:17.015966 #20 10.03 (188/195) Installing nghttp3 (1.13.1-r0)
+2026-Jan-19 17:31:17.015966 #20 10.04 (189/195) Installing libpsl (0.21.5-r3)
+2026-Jan-19 17:31:17.015966 #20 10.04 (190/195) Installing libcurl (8.17.0-r1)
+2026-Jan-19 17:31:17.015966 #20 10.06 (191/195) Installing curl (8.17.0-r1)
+2026-Jan-19 17:31:17.015966 #20 10.07 (192/195) Installing musl-obstack (1.2.3-r2)
+2026-Jan-19 17:31:17.015966 #20 10.07 (193/195) Installing libucontext (1.3.3-r0)
+2026-Jan-19 17:31:17.015966 #20 10.08 (194/195) Installing gcompat (1.1.0-r4)
+2026-Jan-19 17:31:17.015966 #20 10.09 (195/195) Installing openssl (3.5.4-r0)
+2026-Jan-19 17:31:17.015966 #20 10.12 Executing busybox-1.37.0-r30.trigger
+2026-Jan-19 17:31:17.015966 #20 10.14 Executing fontconfig-2.17.1-r0.trigger
+2026-Jan-19 17:31:17.015966 #20 10.18 Executing mkfontscale-1.2.3-r1.trigger
+2026-Jan-19 17:31:17.015966 #20 10.21 Executing glib-2.86.3-r0.trigger
+2026-Jan-19 17:31:17.015966 #20 10.25 Executing shared-mime-info-2.4-r6.trigger
+2026-Jan-19 17:31:17.015966 #20 10.98 Executing gdk-pixbuf-2.44.4-r0.trigger
+2026-Jan-19 17:31:17.015966 #20 10.99 Executing gtk-update-icon-cache-3.24.51-r0.trigger
+2026-Jan-19 17:31:17.015966 #20 11.05 Executing gtk+3.0-3.24.51-r0.trigger
+2026-Jan-19 17:31:17.015966 #20 11.09 OK: 729.0 MiB in 213 packages
+2026-Jan-19 17:31:17.025782 #20 DONE 11.7s
+2026-Jan-19 17:31:17.025782
+2026-Jan-19 17:31:17.025782 #21 [frontend builder 10/15] RUN pnpm install --frozen-lockfile
+2026-Jan-19 17:31:17.025782 #21 1.057 Scope: all 4 workspace projects
+2026-Jan-19 17:31:17.025782 #21 1.278 Lockfile is up to date, resolution step is skipped
+2026-Jan-19 17:31:17.025782 #21 1.742 Packages: +766
+2026-Jan-19 17:31:17.025782 #21 1.742 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-Jan-19 17:31:17.025782 #21 2.350 Progress: resolved 0, reused 0, downloaded 1, added 0
+2026-Jan-19 17:31:17.025782 #21 2.505
+2026-Jan-19 17:31:17.025782 #21 2.505 ╭───────────────────────────────────────────────────────────────────╮
+2026-Jan-19 17:31:17.025782 #21 2.505 │ │
+2026-Jan-19 17:31:17.025782 #21 2.505 │ Update available! 9.0.0 → 10.28.1. │
+2026-Jan-19 17:31:17.025782 #21 2.505 │ Changelog: https://github.com/pnpm/pnpm/releases/tag/v10.28.1 │
+2026-Jan-19 17:31:17.025782 #21 2.505 │ Run "corepack prepare pnpm@10.28.1 --activate" to update. │
+2026-Jan-19 17:31:17.025782 #21 2.505 │ │
+2026-Jan-19 17:31:17.025782 #21 2.505 │ Follow @pnpmjs for updates: https://twitter.com/pnpmjs │
+2026-Jan-19 17:31:17.025782 #21 2.505 │ │
+2026-Jan-19 17:31:17.025782 #21 2.505 ╰───────────────────────────────────────────────────────────────────╯
+2026-Jan-19 17:31:17.025782 #21 2.505
+2026-Jan-19 17:31:17.025782 #21 3.357 Progress: resolved 0, reused 0, downloaded 41, added 30
+2026-Jan-19 17:31:17.025782 #21 4.374 Progress: resolved 0, reused 0, downloaded 70, added 63
+2026-Jan-19 17:31:17.025782 #21 5.376 Progress: resolved 0, reused 0, downloaded 103, added 93
+2026-Jan-19 17:31:17.025782 #21 6.394 Progress: resolved 0, reused 0, downloaded 179, added 179
+2026-Jan-19 17:31:17.198607 #21 ...
+2026-Jan-19 17:31:17.198607
+2026-Jan-19 17:31:17.198607 #12 [backend builder 3/15] RUN apk add --no-cache libc6-compat openssl chromium nss freetype harfbuzz
+2026-Jan-19 17:31:17.198607 #12 DONE 11.7s
+2026-Jan-19 17:31:17.198607
+2026-Jan-19 17:31:17.198607 #22 [backend builder 4/15] COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+2026-Jan-19 17:31:17.250062 #22 DONE 0.2s
+2026-Jan-19 17:31:17.250062
+2026-Jan-19 17:31:17.250062 #23 [backend stage-1 4/10] RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+2026-Jan-19 17:31:17.389460 #23 ...
+2026-Jan-19 17:31:17.389460
+2026-Jan-19 17:31:17.389460 #24 [backend builder 5/15] COPY packages/frontend/package.json packages/frontend/
+2026-Jan-19 17:31:17.389460 #24 DONE 0.1s
+2026-Jan-19 17:31:17.389460
+2026-Jan-19 17:31:17.389460 #25 [backend builder 6/15] COPY packages/shared/package.json packages/shared/
+2026-Jan-19 17:31:17.389460 #25 DONE 0.1s
+2026-Jan-19 17:31:17.501174 #26 [backend builder 7/15] COPY packages/backend/package.json packages/backend/
+2026-Jan-19 17:31:17.501174 #26 DONE 0.1s
+2026-Jan-19 17:31:17.501174
+2026-Jan-19 17:31:17.501174 #21 [frontend builder 10/15] RUN pnpm install --frozen-lockfile
+2026-Jan-19 17:31:17.501174 #21 7.403 Progress: resolved 0, reused 0, downloaded 273, added 268
+2026-Jan-19 17:31:17.667523 #21 ...
+2026-Jan-19 17:31:17.667523
+2026-Jan-19 17:31:17.667523 #23 [backend stage-1 4/10] RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+2026-Jan-19 17:31:17.667523 #23 DONE 0.5s
+2026-Jan-19 17:31:17.817765 #27 [backend builder 8/15] RUN corepack enable
+2026-Jan-19 17:31:18.036774 #27 DONE 0.6s
+2026-Jan-19 17:31:18.048868 #21 [frontend builder 10/15] RUN pnpm install --frozen-lockfile
+2026-Jan-19 17:31:18.501450 #21 8.404 Progress: resolved 0, reused 0, downloaded 446, added 453
+2026-Jan-19 17:31:18.517091
+2026-Jan-19 17:31:19.503412 #21 9.405 Progress: resolved 0, reused 0, downloaded 605, added 618
+2026-Jan-19 17:31:20.432416 #21 10.33 WARN Failed to create bin at /app/node_modules/.bin/supabase. ENOENT: no such file or directory, chmod '/app/node_modules/supabase/bin/supabase'
+2026-Jan-19 17:31:20.543201 #21 10.34 Progress: resolved 0, reused 0, downloaded 746, added 766, done
+2026-Jan-19 17:31:20.543201 #21 10.38 node_modules/@prisma/engines postinstall$ node scripts/postinstall.js
+2026-Jan-19 17:31:20.543201 #21 10.38 WARN Failed to create bin at /app/node_modules/supabase/node_modules/.bin/supabase. ENOENT: no such file or directory, chmod '/app/node_modules/supabase/bin/supabase'
+2026-Jan-19 17:31:20.543201 #21 10.40 node_modules/supabase postinstall$ node scripts/postinstall.js
+2026-Jan-19 17:31:20.543201 #21 10.41 node_modules/bcrypt install$ node-pre-gyp install --fallback-to-build
+2026-Jan-19 17:31:20.543201 #21 10.44 node_modules/esbuild postinstall$ node install.js
+2026-Jan-19 17:31:20.653682 #21 10.46 node_modules/puppeteer postinstall$ node install.mjs
+2026-Jan-19 17:31:20.653682 #21 10.55 node_modules/esbuild postinstall: Done
+2026-Jan-19 17:31:20.808399 #21 ...
+2026-Jan-19 17:31:20.808399
+2026-Jan-19 17:31:20.808399 #28 [backend builder 9/15] RUN corepack prepare pnpm@10.28.1 --activate
+2026-Jan-19 17:31:20.808399 #28 0.360 Preparing pnpm@10.28.1 for immediate activation...
+2026-Jan-19 17:31:20.808399 #28 DONE 2.7s
+2026-Jan-19 17:31:20.808399
+2026-Jan-19 17:31:20.808399 #21 [frontend builder 10/15] RUN pnpm install --frozen-lockfile
+2026-Jan-19 17:31:20.808399 #21 10.59 node_modules/bcrypt install: node-pre-gyp info it worked if it ends with ok
+2026-Jan-19 17:31:20.808399 #21 10.59 node_modules/bcrypt install: node-pre-gyp info using node-pre-gyp@1.0.11
+2026-Jan-19 17:31:20.808399 #21 10.59 node_modules/bcrypt install: node-pre-gyp info using node@20.20.0 | linux | x64
+2026-Jan-19 17:31:20.808399 #21 10.71 node_modules/supabase postinstall: Downloading https://github.com/supabase/cli/releases/download/v2.72.6/supabase_2.72.6_checksums.txt
+2026-Jan-19 17:31:20.971709 #21 10.78 node_modules/@prisma/engines postinstall: prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+2026-Jan-19 17:31:20.971709 #21 10.78 node_modules/@prisma/engines postinstall: Please manually install OpenSSL and try installing Prisma again.
+2026-Jan-19 17:31:20.971709 #21 10.78 node_modules/vite/node_modules/esbuild postinstall$ node install.js
+2026-Jan-19 17:31:20.971709 #21 10.80 node_modules/bcrypt install: node-pre-gyp info check checked for "/app/node_modules/bcrypt/lib/binding/napi-v3/bcrypt_lib.node" (not found)
+2026-Jan-19 17:31:20.971709 #21 10.80 node_modules/bcrypt install: node-pre-gyp http GET https://github.com/kelektiv/node.bcrypt.js/releases/download/v5.1.1/bcrypt_lib-v5.1.1-napi-v3-linux-x64-musl.tar.gz
+2026-Jan-19 17:31:20.971709 #21 10.87 node_modules/puppeteer postinstall: **INFO** Skipping Firefox download as instructed.
+2026-Jan-19 17:31:21.139788 #21 10.92 node_modules/vite/node_modules/esbuild postinstall: Done
+2026-Jan-19 17:31:21.249218 #21 11.04 node_modules/supabase postinstall: Downloading https://github.com/supabase/cli/releases/download/v2.72.6/supabase_linux_amd64.tar.gz
+2026-Jan-19 17:31:21.249218 #21 11.12 node_modules/bcrypt install: node-pre-gyp info install unpacking napi-v3/bcrypt_lib.node
+2026-Jan-19 17:31:21.249218 #21 11.15 node_modules/bcrypt install: node-pre-gyp info extracted file count: 1
+2026-Jan-19 17:31:21.419583 #21 11.15 node_modules/bcrypt install: [bcrypt] Success: "/app/node_modules/bcrypt/lib/binding/napi-v3/bcrypt_lib.node" is installed via remote
+2026-Jan-19 17:31:21.419583 #21 11.15 node_modules/bcrypt install: node-pre-gyp info ok
+2026-Jan-19 17:31:21.419583 #21 11.17 node_modules/bcrypt install: Done
+2026-Jan-19 17:31:22.132413 #21 12.03 node_modules/@prisma/engines postinstall: Done
+2026-Jan-19 17:31:23.155431 #21 13.06 node_modules/supabase postinstall: Checksum verified.
+2026-Jan-19 17:31:23.323159 #21 13.06 node_modules/supabase postinstall: Installed Supabase CLI successfully
+2026-Jan-19 17:31:23.323159 #21 13.07 node_modules/supabase postinstall: Done
+2026-Jan-19 17:31:23.983498 #21 ...
+2026-Jan-19 17:31:23.983498
+2026-Jan-19 17:31:23.983498 #29 [backend builder 10/15] RUN pnpm config set node-linker hoisted
+2026-Jan-19 17:31:23.983498 #29 0.430 ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-9.0.0.tgz
+2026-Jan-19 17:31:23.983498 #29 DONE 3.3s
+2026-Jan-19 17:31:24.135075 #30 [backend builder 11/15] RUN pnpm install --frozen-lockfile
+2026-Jan-19 17:31:25.041134 #30 1.056 Scope: all 4 workspace projects
+2026-Jan-19 17:31:25.283822 #30 1.299 Lockfile is up to date, resolution step is skipped
+2026-Jan-19 17:31:25.712796 #30 1.728 Packages: +766
+2026-Jan-19 17:31:25.712796 #30 1.728 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-Jan-19 17:31:26.215121 #30 2.230
+2026-Jan-19 17:31:26.215121 #30 2.230 ╭───────────────────────────────────────────────────────────────────╮
+2026-Jan-19 17:31:26.215121 #30 2.230 │ │
+2026-Jan-19 17:31:26.215121 #30 2.230 │ Update available! 9.0.0 → 10.28.1. │
+2026-Jan-19 17:31:26.215121 #30 2.230 │ Changelog: https://github.com/pnpm/pnpm/releases/tag/v10.28.1 │
+2026-Jan-19 17:31:26.215121 #30 2.230 │ Run "corepack prepare pnpm@10.28.1 --activate" to update. │
+2026-Jan-19 17:31:26.215121 #30 2.230 │ │
+2026-Jan-19 17:31:26.215121 #30 2.230 │ Follow @pnpmjs for updates: https://twitter.com/pnpmjs │
+2026-Jan-19 17:31:26.215121 #30 2.230 │ │
+2026-Jan-19 17:31:26.215121 #30 2.230 ╰───────────────────────────────────────────────────────────────────╯
+2026-Jan-19 17:31:26.215121 #30 2.230
+2026-Jan-19 17:31:26.370736 #30 2.235 Progress: resolved 0, reused 0, downloaded 1, added 0
+2026-Jan-19 17:31:27.224481 #30 3.240 Progress: resolved 0, reused 0, downloaded 51, added 41
+2026-Jan-19 17:31:27.501809 #30 3.517 WARN GET https://registry.npmjs.org/lucide-react/-/lucide-react-0.562.0.tgz error (ECONNRESET). Will retry in 10 seconds. 2 retries left.
+2026-Jan-19 17:31:28.229068 #30 4.243 Progress: resolved 0, reused 0, downloaded 82, added 73
+2026-Jan-19 17:31:29.234015 #30 5.247 Progress: resolved 0, reused 0, downloaded 158, added 154
+2026-Jan-19 17:31:30.239235 #30 6.255 Progress: resolved 0, reused 0, downloaded 274, added 274
+2026-Jan-19 17:31:30.581162 #30 ...
+2026-Jan-19 17:31:30.581162
+2026-Jan-19 17:31:30.581162 #21 [frontend builder 10/15] RUN pnpm install --frozen-lockfile
+2026-Jan-19 17:31:30.581162 #21 20.48 node_modules/puppeteer postinstall: chrome-headless-shell (131.0.6778.204) downloaded to /root/.cache/puppeteer/chrome-headless-shell/linux-131.0.6778.204
+2026-Jan-19 17:31:34.070984 #21 23.97 node_modules/puppeteer postinstall: chrome (131.0.6778.204) downloaded to /root/.cache/puppeteer/chrome/linux-131.0.6778.204
+2026-Jan-19 17:31:34.199866 #21 23.99 node_modules/puppeteer postinstall: Done
+2026-Jan-19 17:31:34.199866 #21 24.02 node_modules/prisma preinstall$ node scripts/preinstall-entry.js
+2026-Jan-19 17:31:34.199866 #21 24.10 node_modules/prisma preinstall: Done
+2026-Jan-19 17:31:34.335252 #21 24.24 node_modules/@prisma/client postinstall$ node scripts/postinstall.js
+2026-Jan-19 17:31:35.085348 #21 24.99 node_modules/@prisma/client postinstall: prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+2026-Jan-19 17:31:35.236493 #21 24.99 node_modules/@prisma/client postinstall: Please manually install OpenSSL and try installing Prisma again.
+2026-Jan-19 17:31:35.420834 #21 25.32 node_modules/@prisma/client postinstall: prisma:warn We could not find your Prisma schema in the default locations (see: https://pris.ly/d/prisma-schema-location).
+2026-Jan-19 17:31:35.597097 #21 25.32 node_modules/@prisma/client postinstall: If you have a Prisma schema file in a custom path, you will need to run
+2026-Jan-19 17:31:35.597097 #21 25.32 node_modules/@prisma/client postinstall: `prisma generate --schema=./path/to/your/schema.prisma` to generate Prisma Client.
+2026-Jan-19 17:31:35.597097 #21 25.32 node_modules/@prisma/client postinstall: If you do not have a Prisma schema file yet, you can ignore this message.
+2026-Jan-19 17:31:35.597097 #21 25.35 node_modules/@prisma/client postinstall: Done
+2026-Jan-19 17:31:35.960131 #21 25.86
+2026-Jan-19 17:31:36.142671 #21 26.05 Done in 25.6s
+2026-Jan-19 17:31:36.835176 #21 DONE 26.7s
+2026-Jan-19 17:31:36.835176
+2026-Jan-19 17:31:36.835176 #30 [backend builder 11/15] RUN pnpm install --frozen-lockfile
+2026-Jan-19 17:31:36.835176 #30 7.267 Progress: resolved 0, reused 0, downloaded 443, added 453
+2026-Jan-19 17:31:36.835176 #30 8.274 Progress: resolved 0, reused 0, downloaded 569, added 580
+2026-Jan-19 17:31:36.835176 #30 9.274 Progress: resolved 0, reused 0, downloaded 745, added 765
+2026-Jan-19 17:31:36.991189 #30 ...
+2026-Jan-19 17:31:36.991189
+2026-Jan-19 17:31:36.991189 #31 [frontend builder 11/15] COPY packages/frontend packages/frontend/
+2026-Jan-19 17:31:37.576502 #31 DONE 0.7s
+2026-Jan-19 17:31:37.576502
+2026-Jan-19 17:31:37.576502 #30 [backend builder 11/15] RUN pnpm install --frozen-lockfile
+2026-Jan-19 17:31:37.762944 #30 ...
+2026-Jan-19 17:31:37.762944
+2026-Jan-19 17:31:37.762944 #32 [frontend builder 12/15] COPY packages/shared packages/shared/
+2026-Jan-19 17:31:37.762944 #32 DONE 0.0s
+2026-Jan-19 17:31:37.762944
+2026-Jan-19 17:31:37.762944 #33 [frontend builder 13/15] RUN echo "BUILD ENV CHECK:"; env | sort | grep VITE
+2026-Jan-19 17:31:37.818846 #33 0.206 BUILD ENV CHECK:
+2026-Jan-19 17:31:38.012273 #33 0.208 VITE_API_BASE_URL=https://efatoura.duckdns.org/api
+2026-Jan-19 17:31:38.012273 #33 DONE 0.2s
+2026-Jan-19 17:31:38.012273
+2026-Jan-19 17:31:38.012273 #34 [frontend builder 14/15] RUN cd /app/packages/frontend && pnpm exec vite build --debug
+2026-Jan-19 17:31:39.358796 #34 1.495 2026-01-19T17:31:39.353Z vite:config config file loaded in 106.79ms
+2026-Jan-19 17:31:39.478388 #34 1.502 2026-01-19T17:31:39.360Z vite:env loading env files: [
+2026-Jan-19 17:31:39.478388 #34 1.502 '/app/packages/frontend/.env',
+2026-Jan-19 17:31:39.478388 #34 1.502 '/app/packages/frontend/.env.local',
+2026-Jan-19 17:31:39.478388 #34 1.502 '/app/packages/frontend/.env.production',
+2026-Jan-19 17:31:39.478388 #34 1.502 '/app/packages/frontend/.env.production.local'
+2026-Jan-19 17:31:39.478388 #34 1.502 ]
+2026-Jan-19 17:31:39.478388 #34 1.502 2026-01-19T17:31:39.360Z vite:env env files loaded in 5.66ms
+2026-Jan-19 17:31:39.478388 #34 1.504 2026-01-19T17:31:39.363Z vite:env using resolved env: {
+2026-Jan-19 17:31:39.478388 #34 1.504 DATABASE_URL: 'postgresql://postgres:DsUX2s8HTx+FbVXBFYVSwPRWx6nGp+0Cpsa5Pdzug44=@postgres:5432/teif_prod',
+2026-Jan-19 17:31:39.478388 #34 1.504 LOG_LEVEL: 'info',
+2026-Jan-19 17:31:39.478388 #34 1.504 NODE_VERSION: '20.20.0',
+2026-Jan-19 17:31:39.478388 #34 1.504 YARN_VERSION: '1.22.22',
+2026-Jan-19 17:31:39.478388 #34 1.504 SMTP_PORT: '587',
+2026-Jan-19 17:31:39.478388 #34 1.504 SHLVL: '1',
+2026-Jan-19 17:31:39.478388 #34 1.504 HOME: '/root',
+2026-Jan-19 17:31:39.478388 #34 1.504 OLDPWD: '/app',
+2026-Jan-19 17:31:39.478388 #34 1.504 COOLIFY_FQDN: '',
+2026-Jan-19 17:31:39.478388 #34 1.504 SERVICE_URL_BACKEND: 'https://efatoura.duckdns.org/api',
+2026-Jan-19 17:31:39.478388 #34 1.504 SERVICE_URL_FRONTEND: 'https://efatoura.duckdns.org',
+2026-Jan-19 17:31:39.478388 #34 1.504 JWT_EXPIRY: '3600',
+2026-Jan-19 17:31:39.478388 #34 1.504 PRODUCTION_DOMAIN: 'efatoura.duckdns.org',
+2026-Jan-19 17:31:39.478388 #34 1.504 SMTP_SECURE: 'false',
+2026-Jan-19 17:31:39.478388 #34 1.504 POSTGRES_PASSWORD: 'DsUX2s8HTx+FbVXBFYVSwPRWx6nGp+0Cpsa5Pdzug44=',
+2026-Jan-19 17:31:39.478388 #34 1.504 PATH: './node_modules/.bin:/app/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+2026-Jan-19 17:31:39.478388 #34 1.504 CORS_ORIGIN: 'https://efatoura.duckdns.org',
+2026-Jan-19 17:31:39.478388 #34 1.504 SERVICE_FQDN_BACKEND: 'efatoura.duckdns.org',
+2026-Jan-19 17:31:39.478388 #34 1.504 POSTGRES_USER: 'postgres',
+2026-Jan-19 17:31:39.478388 #34 1.504 SITE_URL: 'https://efatoura.duckdns.org',
+2026-Jan-19 17:31:39.478388 #34 1.504 VITE_API_BASE_URL: 'https://efatoura.duckdns.org/api',
+2026-Jan-19 17:31:39.478388 #34 1.504 SERVICE_FQDN_FRONTEND: 'efatoura.duckdns.org',
+2026-Jan-19 17:31:39.478388 #34 1.504 SMTP_FROM: '<REDACTED>',
+2026-Jan-19 17:31:39.478388 #34 1.504 JWT_SECRET: 'jU918zwPEfoef52XXONJusWMkTVgK0MIT9FZPpXHULM=',
+2026-Jan-19 17:31:39.478388 #34 1.504 COOLIFY_URL: '',
+2026-Jan-19 17:31:39.478388 #34 1.504 PWD: '/app/packages/frontend',
+2026-Jan-19 17:31:39.478388 #34 1.504 GEMINI_API_KEY=<REDACTED>,
+2026-Jan-19 17:31:39.478388 #34 1.504 POSTGRES_DB: 'teif_prod',
+2026-Jan-19 17:31:39.478388 #34 1.504 SMTP_PASSWORD: 'Compta2025++',
+2026-Jan-19 17:31:39.478388 #34 1.504 SMTP_HOST: 'ssl0.ovh.net',
+2026-Jan-19 17:31:39.478388 #34 1.504 NODE_ENV: 'development',
+2026-Jan-19 17:31:39.478388 #34 1.504 SMTP_USER: '<REDACTED>',
+2026-Jan-19 17:31:39.478388 #34 1.504 COREPACK_ENABLE_DOWNLOAD_PROMPT: '1',
+2026-Jan-19 17:31:39.478388 #34 1.504 COREPACK_ROOT: '/usr/local/lib/node_modules/corepack',
+2026-Jan-19 17:31:39.478388 #34 1.504 npm_command: 'exec',
+2026-Jan-19 17:31:39.478388 #34 1.504 PNPM_PACKAGE_NAME: '@teif/frontend',
+2026-Jan-19 17:31:39.478388 #34 1.504 npm_config_user_agent: 'pnpm/9.0.0 npm/? node/v20.20.0 linux x64',
+2026-Jan-19 17:31:39.478388 #34 1.504 DEBUG: 'vite:*'
+2026-Jan-19 17:31:39.478388 #34 1.504 }
+2026-Jan-19 17:31:39.478388 #34 1.514 2026-01-19T17:31:39.372Z vite:env loading env files: [
+2026-Jan-19 17:31:39.478388 #34 1.514 '/app/packages/frontend/.env',
+2026-Jan-19 17:31:39.478388 #34 1.514 '/app/packages/frontend/.env.local',
+2026-Jan-19 17:31:39.478388 #34 1.514 '/app/packages/frontend/.env.production',
+2026-Jan-19 17:31:39.478388 #34 1.514 '/app/packages/frontend/.env.production.local'
+2026-Jan-19 17:31:39.478388 #34 1.514 ]
+2026-Jan-19 17:31:39.478388 #34 1.514 2026-01-19T17:31:39.373Z vite:env env files loaded in 0.69ms
+2026-Jan-19 17:31:39.478388 #34 1.514 2026-01-19T17:31:39.373Z vite:env using resolved env: { VITE_API_BASE_URL: 'https://efatoura.duckdns.org/api' }
+2026-Jan-19 17:31:39.478388 #34 1.572 2026-01-19T17:31:39.431Z vite:config using resolved config: {
+2026-Jan-19 17:31:39.478388 #34 1.572 build: {
+2026-Jan-19 17:31:39.478388 #34 1.572 target: [ 'es2020', 'edge88', 'firefox78', 'chrome87', 'safari14' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 polyfillModulePreload: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 modulePreload: { polyfill: true },
+2026-Jan-19 17:31:39.478388 #34 1.572 outDir: 'dist',
+2026-Jan-19 17:31:39.478388 #34 1.572 assetsDir: 'assets',
+2026-Jan-19 17:31:39.478388 #34 1.572 assetsInlineLimit: 4096,
+2026-Jan-19 17:31:39.478388 #34 1.572 sourcemap: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 terserOptions: {},
+2026-Jan-19 17:31:39.478388 #34 1.572 rollupOptions: { onwarn: [Function: onwarn] },
+2026-Jan-19 17:31:39.478388 #34 1.572 commonjsOptions: { include: [ /node_modules/ ], extensions: [ '.js', '.cjs' ] },
+2026-Jan-19 17:31:39.478388 #34 1.572 dynamicImportVarsOptions: { warnOnError: true, exclude: [ /node_modules/ ] },
+2026-Jan-19 17:31:39.478388 #34 1.572 write: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 emptyOutDir: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 copyPublicDir: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 manifest: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 lib: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 ssrManifest: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 ssrEmitAssets: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 reportCompressedSize: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 chunkSizeWarningLimit: 500,
+2026-Jan-19 17:31:39.478388 #34 1.572 watch: null,
+2026-Jan-19 17:31:39.478388 #34 1.572 cssCodeSplit: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 minify: 'esbuild',
+2026-Jan-19 17:31:39.478388 #34 1.572 ssr: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 emitAssets: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 createEnvironment: [Function: createEnvironment],
+2026-Jan-19 17:31:39.478388 #34 1.572 cssTarget: [ 'es2020', 'edge88', 'firefox78', 'chrome87', 'safari14' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 cssMinify: true
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 server: {
+2026-Jan-19 17:31:39.478388 #34 1.572 port: 5173,
+2026-Jan-19 17:31:39.478388 #34 1.572 strictPort: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 host: '0.0.0.0',
+2026-Jan-19 17:31:39.478388 #34 1.572 allowedHosts: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 https: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 open: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 proxy: {
+2026-Jan-19 17:31:39.478388 #34 1.572 '/api': {
+2026-Jan-19 17:31:39.478388 #34 1.572 target: 'https://efatoura.duckdns.org/api',
+2026-Jan-19 17:31:39.478388 #34 1.572 changeOrigin: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 rewrite: [Function: rewrite]
+2026-Jan-19 17:31:39.478388 #34 1.572 }
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 cors: {
+2026-Jan-19 17:31:39.478388 #34 1.572 origin: /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 headers: {},
+2026-Jan-19 17:31:39.478388 #34 1.572 warmup: { clientFiles: [], ssrFiles: [] },
+2026-Jan-19 17:31:39.478388 #34 1.572 middlewareMode: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 fs: {
+2026-Jan-19 17:31:39.478388 #34 1.572 strict: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 deny: [ '.env', '.env.*', '*.{crt,pem}', '**/.git/**' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 allow: [ '/app' ]
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 preTransformRequests: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 perEnvironmentStartEndDuringDev: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 sourcemapIgnoreList: [Function: isInNodeModules$1]
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 plugins: [
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:build-metadata',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:watch-package-data',
+2026-Jan-19 17:31:39.478388 #34 1.572 'alias',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:react-babel',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:react-refresh',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:modulepreload-polyfill',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:resolve',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:html-inline-proxy',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:css',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:esbuild',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:json',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:wasm-helper',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:worker',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:asset',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:react-virtual-preamble',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:wasm-fallback',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:define',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:css-post',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:build-html',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:worker-import-meta-url',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:asset-import-meta-url',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:force-systemjs-wrap-complete',
+2026-Jan-19 17:31:39.478388 #34 1.572 'commonjs',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:data-uri',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:rollup-options-plugins',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:dynamic-import-vars',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:import-glob',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:build-import-analysis',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:esbuild-transpile',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:terser',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:manifest',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:ssr-manifest',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:reporter',
+2026-Jan-19 17:31:39.478388 #34 1.572 'vite:load-fallback'
+2026-Jan-19 17:31:39.478388 #34 1.572 ],
+2026-Jan-19 17:31:39.478388 #34 1.572 define: {
+2026-Jan-19 17:31:39.478388 #34 1.572 'process.env.API_KEY': '"AIzaSyCrgAzYDINx3q35yrRJO8OXCKIx4BmHYSg"',
+2026-Jan-19 17:31:39.478388 #34 1.572 'process.env.GEMINI_API_KEY': '"AIzaSyCrgAzYDINx3q35yrRJO8OXCKIx4BmHYSg"'
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 resolve: {
+2026-Jan-19 17:31:39.478388 #34 1.572 externalConditions: [ 'node' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 extensions: [
+2026-Jan-19 17:31:39.478388 #34 1.572 '.mjs', '.js',
+2026-Jan-19 17:31:39.478388 #34 1.572 '.mts', '.ts',
+2026-Jan-19 17:31:39.478388 #34 1.572 '.jsx', '.tsx',
+2026-Jan-19 17:31:39.478388 #34 1.572 '.json'
+2026-Jan-19 17:31:39.478388 #34 1.572 ],
+2026-Jan-19 17:31:39.478388 #34 1.572 dedupe: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 noExternal: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 external: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 preserveSymlinks: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 alias: [
+2026-Jan-19 17:31:39.478388 #34 1.572 { find: '@', replacement: '/app/packages/frontend/src' },
+2026-Jan-19 17:31:39.478388 #34 1.572 { find: '@teif/shared', replacement: '/app/packages/shared/src' },
+2026-Jan-19 17:31:39.478388 #34 1.572 {
+2026-Jan-19 17:31:39.478388 #34 1.572 find: /^\/?@vite\/env/,
+2026-Jan-19 17:31:39.478388 #34 1.572 replacement: '/@fs/app/node_modules/vite/dist/client/env.mjs'
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 {
+2026-Jan-19 17:31:39.478388 #34 1.572 find: /^\/?@vite\/client/,
+2026-Jan-19 17:31:39.478388 #34 1.572 replacement: '/@fs/app/node_modules/vite/dist/client/client.mjs'
+2026-Jan-19 17:31:39.478388 #34 1.572 }
+2026-Jan-19 17:31:39.478388 #34 1.572 ],
+2026-Jan-19 17:31:39.478388 #34 1.572 mainFields: [ 'browser', 'module', 'jsnext:main', 'jsnext' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 conditions: [ 'module', 'browser', 'development|production' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 builtins: []
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 esbuild: { jsxDev: true, jsx: 'automatic', jsxImportSource: undefined },
+2026-Jan-19 17:31:39.478388 #34 1.572 optimizeDeps: {
+2026-Jan-19 17:31:39.478388 #34 1.572 include: [
+2026-Jan-19 17:31:39.478388 #34 1.572 'react',
+2026-Jan-19 17:31:39.478388 #34 1.572 'react-dom',
+2026-Jan-19 17:31:39.478388 #34 1.572 'react/jsx-dev-runtime',
+2026-Jan-19 17:31:39.478388 #34 1.572 'react/jsx-runtime'
+2026-Jan-19 17:31:39.478388 #34 1.572 ],
+2026-Jan-19 17:31:39.478388 #34 1.572 exclude: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 needsInterop: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 extensions: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 disabled: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 holdUntilCrawlEnd: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 force: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 noDiscovery: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 esbuildOptions: { preserveSymlinks: false, jsx: 'automatic' }
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 environments: {
+2026-Jan-19 17:31:39.478388 #34 1.572 client: {
+2026-Jan-19 17:31:39.478388 #34 1.572 define: {
+2026-Jan-19 17:31:39.478388 #34 1.572 'process.env.API_KEY': '"AIzaSyCrgAzYDINx3q35yrRJO8OXCKIx4BmHYSg"',
+2026-Jan-19 17:31:39.478388 #34 1.572 'process.env.GEMINI_API_KEY': '"AIzaSyCrgAzYDINx3q35yrRJO8OXCKIx4BmHYSg"'
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 resolve: {
+2026-Jan-19 17:31:39.478388 #34 1.572 externalConditions: [ 'node' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 extensions: [
+2026-Jan-19 17:31:39.478388 #34 1.572 '.mjs', '.js',
+2026-Jan-19 17:31:39.478388 #34 1.572 '.mts', '.ts',
+2026-Jan-19 17:31:39.478388 #34 1.572 '.jsx', '.tsx',
+2026-Jan-19 17:31:39.478388 #34 1.572 '.json'
+2026-Jan-19 17:31:39.478388 #34 1.572 ],
+2026-Jan-19 17:31:39.478388 #34 1.572 dedupe: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 noExternal: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 external: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 preserveSymlinks: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 alias: [
+2026-Jan-19 17:31:39.478388 #34 1.572 { find: '@', replacement: '/app/packages/frontend/src' },
+2026-Jan-19 17:31:39.478388 #34 1.572 {
+2026-Jan-19 17:31:39.478388 #34 1.572 find: '@teif/shared',
+2026-Jan-19 17:31:39.478388 #34 1.572 replacement: '/app/packages/shared/src'
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 {
+2026-Jan-19 17:31:39.478388 #34 1.572 find: /^\/?@vite\/env/,
+2026-Jan-19 17:31:39.478388 #34 1.572 replacement: '/@fs/app/node_modules/vite/dist/client/env.mjs'
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 {
+2026-Jan-19 17:31:39.478388 #34 1.572 find: /^\/?@vite\/client/,
+2026-Jan-19 17:31:39.478388 #34 1.572 replacement: '/@fs/app/node_modules/vite/dist/client/client.mjs'
+2026-Jan-19 17:31:39.478388 #34 1.572 }
+2026-Jan-19 17:31:39.478388 #34 1.572 ],
+2026-Jan-19 17:31:39.478388 #34 1.572 mainFields: [ 'browser', 'module', 'jsnext:main', 'jsnext' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 conditions: [ 'module', 'browser', 'development|production' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 builtins: []
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 keepProcessEnv: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 consumer: 'client',
+2026-Jan-19 17:31:39.478388 #34 1.572 optimizeDeps: {
+2026-Jan-19 17:31:39.478388 #34 1.572 include: [
+2026-Jan-19 17:31:39.478388 #34 1.572 'react',
+2026-Jan-19 17:31:39.478388 #34 1.572 'react-dom',
+2026-Jan-19 17:31:39.478388 #34 1.572 'react/jsx-dev-runtime',
+2026-Jan-19 17:31:39.478388 #34 1.572 'react/jsx-runtime'
+2026-Jan-19 17:31:39.478388 #34 1.572 ],
+2026-Jan-19 17:31:39.478388 #34 1.572 exclude: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 needsInterop: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 extensions: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 disabled: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 holdUntilCrawlEnd: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 force: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 noDiscovery: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 esbuildOptions: { preserveSymlinks: false, jsx: 'automatic' }
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 dev: {
+2026-Jan-19 17:31:39.478388 #34 1.572 warmup: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 sourcemap: { js: true },
+2026-Jan-19 17:31:39.478388 #34 1.572 sourcemapIgnoreList: [Function: isInNodeModules$1],
+2026-Jan-19 17:31:39.478388 #34 1.572 preTransformRequests: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 createEnvironment: [Function: defaultCreateClientDevEnvironment],
+2026-Jan-19 17:31:39.478388 #34 1.572 recoverable: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 moduleRunnerTransform: false
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 build: {
+2026-Jan-19 17:31:39.478388 #34 1.572 target: [ 'es2020', 'edge88', 'firefox78', 'chrome87', 'safari14' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 polyfillModulePreload: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 modulePreload: { polyfill: true },
+2026-Jan-19 17:31:39.478388 #34 1.572 outDir: 'dist',
+2026-Jan-19 17:31:39.478388 #34 1.572 assetsDir: 'assets',
+2026-Jan-19 17:31:39.478388 #34 1.572 assetsInlineLimit: 4096,
+2026-Jan-19 17:31:39.478388 #34 1.572 sourcemap: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 terserOptions: {},
+2026-Jan-19 17:31:39.478388 #34 1.572 rollupOptions: { onwarn: [Function: onwarn] },
+2026-Jan-19 17:31:39.478388 #34 1.572 commonjsOptions: { include: [ /node_modules/ ], extensions: [ '.js', '.cjs' ] },
+2026-Jan-19 17:31:39.478388 #34 1.572 dynamicImportVarsOptions: { warnOnError: true, exclude: [ /node_modules/ ] },
+2026-Jan-19 17:31:39.478388 #34 1.572 write: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 emptyOutDir: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 copyPublicDir: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 manifest: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 lib: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 ssrManifest: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 ssrEmitAssets: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 reportCompressedSize: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 chunkSizeWarningLimit: 500,
+2026-Jan-19 17:31:39.478388 #34 1.572 watch: null,
+2026-Jan-19 17:31:39.478388 #34 1.572 cssCodeSplit: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 minify: 'esbuild',
+2026-Jan-19 17:31:39.478388 #34 1.572 ssr: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 emitAssets: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 createEnvironment: [Function: createEnvironment],
+2026-Jan-19 17:31:39.478388 #34 1.572 cssTarget: [ 'es2020', 'edge88', 'firefox78', 'chrome87', 'safari14' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 cssMinify: true
+2026-Jan-19 17:31:39.478388 #34 1.572 }
+2026-Jan-19 17:31:39.478388 #34 1.572 }
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 configFile: '/app/packages/frontend/vite.config.ts',
+2026-Jan-19 17:31:39.478388 #34 1.572 configFileDependencies: [ '/app/packages/frontend/vite.config.ts' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 inlineConfig: {
+2026-Jan-19 17:31:39.478388 #34 1.572 root: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 base: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 mode: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 configFile: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 configLoader: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 logLevel: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 clearScreen: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 build: {}
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 root: '/app/packages/frontend',
+2026-Jan-19 17:31:39.478388 #34 1.572 base: '/',
+2026-Jan-19 17:31:39.478388 #34 1.572 decodedBase: '/',
+2026-Jan-19 17:31:39.478388 #34 1.572 rawBase: '/',
+2026-Jan-19 17:31:39.478388 #34 1.572 publicDir: '/app/packages/frontend/public',
+2026-Jan-19 17:31:39.478388 #34 1.572 cacheDir: '/app/packages/frontend/node_modules/.vite',
+2026-Jan-19 17:31:39.478388 #34 1.572 command: 'build',
+2026-Jan-19 17:31:39.478388 #34 1.572 mode: 'production',
+2026-Jan-19 17:31:39.478388 #34 1.572 isWorker: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 mainConfig: null,
+2026-Jan-19 17:31:39.478388 #34 1.572 bundleChain: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 isProduction: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 css: {
+2026-Jan-19 17:31:39.478388 #34 1.572 transformer: 'postcss',
+2026-Jan-19 17:31:39.478388 #34 1.572 preprocessorMaxWorkers: 0,
+2026-Jan-19 17:31:39.478388 #34 1.572 devSourcemap: false
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 json: { namedExports: true, stringify: 'auto' },
+2026-Jan-19 17:31:39.478388 #34 1.572 builder: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 preview: {
+2026-Jan-19 17:31:39.478388 #34 1.572 port: 4173,
+2026-Jan-19 17:31:39.478388 #34 1.572 strictPort: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 host: '0.0.0.0',
+2026-Jan-19 17:31:39.478388 #34 1.572 allowedHosts: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 https: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 open: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 proxy: {
+2026-Jan-19 17:31:39.478388 #34 1.572 '/api': {
+2026-Jan-19 17:31:39.478388 #34 1.572 target: 'https://efatoura.duckdns.org/api',
+2026-Jan-19 17:31:39.478388 #34 1.572 changeOrigin: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 rewrite: [Function: rewrite]
+2026-Jan-19 17:31:39.478388 #34 1.572 }
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 cors: {
+2026-Jan-19 17:31:39.478388 #34 1.572 origin: /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 headers: {}
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 envDir: '/app/packages/frontend',
+2026-Jan-19 17:31:39.478388 #34 1.572 env: {
+2026-Jan-19 17:31:39.478388 #34 1.572 VITE_API_BASE_URL: 'https://efatoura.duckdns.org/api',
+2026-Jan-19 17:31:39.478388 #34 1.572 BASE_URL: '/',
+2026-Jan-19 17:31:39.478388 #34 1.572 MODE: 'production',
+2026-Jan-19 17:31:39.478388 #34 1.572 DEV: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 PROD: false
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 assetsInclude: [Function: assetsInclude],
+2026-Jan-19 17:31:39.478388 #34 1.572 logger: {
+2026-Jan-19 17:31:39.478388 #34 1.572 hasWarned: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 info: [Function: info],
+2026-Jan-19 17:31:39.478388 #34 1.572 warn: [Function: warn],
+2026-Jan-19 17:31:39.478388 #34 1.572 warnOnce: [Function: warnOnce],
+2026-Jan-19 17:31:39.478388 #34 1.572 error: [Function: error],
+2026-Jan-19 17:31:39.478388 #34 1.572 clearScreen: [Function: clearScreen],
+2026-Jan-19 17:31:39.478388 #34 1.572 hasErrorLogged: [Function: hasErrorLogged]
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 packageCache: Map(1) {
+2026-Jan-19 17:31:39.478388 #34 1.572 'fnpd_/app/packages/frontend' => {
+2026-Jan-19 17:31:39.478388 #34 1.572 dir: '/app/packages/frontend',
+2026-Jan-19 17:31:39.478388 #34 1.572 data: {
+2026-Jan-19 17:31:39.478388 #34 1.572 name: '@teif/frontend',
+2026-Jan-19 17:31:39.478388 #34 1.572 private: true,
+2026-Jan-19 17:31:39.478388 #34 1.572 version: '0.0.0',
+2026-Jan-19 17:31:39.478388 #34 1.572 type: 'module',
+2026-Jan-19 17:31:39.478388 #34 1.572 scripts: {
+2026-Jan-19 17:31:39.478388 #34 1.572 dev: 'vite',
+2026-Jan-19 17:31:39.478388 #34 1.572 build: 'vite build',
+2026-Jan-19 17:31:39.478388 #34 1.572 preview: 'vite preview',
+2026-Jan-19 17:31:39.478388 #34 1.572 test: 'vitest',
+2026-Jan-19 17:31:39.478388 #34 1.572 'test:ui': 'vitest --ui',
+2026-Jan-19 17:31:39.478388 #34 1.572 'test:coverage': 'vitest --coverage',
+2026-Jan-19 17:31:39.478388 #34 1.572 'test:e2e': 'playwright test',
+2026-Jan-19 17:31:39.478388 #34 1.572 'test:e2e:ui': 'playwright test --ui',
+2026-Jan-19 17:31:39.478388 #34 1.572 'test:all': 'npm run test && npm run test:e2e',
+2026-Jan-19 17:31:39.478388 #34 1.572 typecheck: 'tsc --noEmit'
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 dependencies: {
+2026-Jan-19 17:31:39.478388 #34 1.572 '@google/genai': '^1.35.0',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@radix-ui/react-label': '^2.1.8',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@radix-ui/react-select': '^2.2.6',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@radix-ui/react-slot': '^1.2.4',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@tanstack/react-query': '^5',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@tanstack/react-query-devtools': '^5',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@teif/shared': 'workspace:*',
+2026-Jan-19 17:31:39.478388 #34 1.572 axios: '^1',
+2026-Jan-19 17:31:39.478388 #34 1.572 'date-fns': '^3',
+2026-Jan-19 17:31:39.478388 #34 1.572 hono: '^4.4.0',
+2026-Jan-19 17:31:39.478388 #34 1.572 react: '^19.2.3',
+2026-Jan-19 17:31:39.478388 #34 1.572 'react-dom': '^19.2.3',
+2026-Jan-19 17:31:39.478388 #34 1.572 'react-hot-toast': '^2',
+2026-Jan-19 17:31:39.478388 #34 1.572 'react-router-dom': '^6',
+2026-Jan-19 17:31:39.478388 #34 1.572 'shadcn-ui': '^0.9.5',
+2026-Jan-19 17:31:39.478388 #34 1.572 zod: '^3'
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 devDependencies: {
+2026-Jan-19 17:31:39.478388 #34 1.572 '@playwright/test': '^1.57.0',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@tailwindcss/postcss': '^4.1.18',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@testing-library/dom': '^10.4.1',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@testing-library/jest-dom': '^6.9.1',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@testing-library/react': '^16.3.1',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@testing-library/user-event': '^14.6.1',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@types/node': '^22.14.0',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@types/react': '^19',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@types/react-dom': '^19',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@vitejs/plugin-react': '^5.0.0',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@vitest/coverage-v8': '^3.2.4',
+2026-Jan-19 17:31:39.478388 #34 1.572 '@vitest/ui': '^3.2.4',
+2026-Jan-19 17:31:39.478388 #34 1.572 autoprefixer: '^10.4.23',
+2026-Jan-19 17:31:39.478388 #34 1.572 'axe-core': '^4.11.1',
+2026-Jan-19 17:31:39.478388 #34 1.572 c8: '^10.1.3',
+2026-Jan-19 17:31:39.478388 #34 1.572 'class-variance-authority': '^0.7.1',
+2026-Jan-19 17:31:39.478388 #34 1.572 clsx: '^2.1.1',
+2026-Jan-19 17:31:39.478388 #34 1.572 jsdom: '^27.0.1',
+2026-Jan-19 17:31:39.478388 #34 1.572 lighthouse: '^13.0.1',
+2026-Jan-19 17:31:39.478388 #34 1.572 'lucide-react': '^0.562.0',
+2026-Jan-19 17:31:39.478388 #34 1.572 playwright: '^1.57.0',
+2026-Jan-19 17:31:39.478388 #34 1.572 postcss: '^8.5.6',
+2026-Jan-19 17:31:39.478388 #34 1.572 'tailwind-merge': '^3.4.0',
+2026-Jan-19 17:31:39.478388 #34 1.572 tailwindcss: '^4.1.18',
+2026-Jan-19 17:31:39.478388 #34 1.572 typescript: '~5.8.2',
+2026-Jan-19 17:31:39.478388 #34 1.572 vite: '^6.2.0',
+2026-Jan-19 17:31:39.478388 #34 1.572 vitest: '^3.2.4'
+2026-Jan-19 17:31:39.478388 #34 1.572 }
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 hasSideEffects: [Function: hasSideEffects],
+2026-Jan-19 17:31:39.478388 #34 1.572 setResolvedCache: [Function: setResolvedCache],
+2026-Jan-19 17:31:39.478388 #34 1.572 getResolvedCache: [Function: getResolvedCache]
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 set: [Function (anonymous)]
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 worker: { format: 'iife', plugins: '() => plugins', rollupOptions: {} },
+2026-Jan-19 17:31:39.478388 #34 1.572 appType: 'spa',
+2026-Jan-19 17:31:39.478388 #34 1.572 experimental: { importGlobRestoreExtension: false, hmrPartialAccept: false },
+2026-Jan-19 17:31:39.478388 #34 1.572 future: undefined,
+2026-Jan-19 17:31:39.478388 #34 1.572 ssr: {
+2026-Jan-19 17:31:39.478388 #34 1.572 target: 'node',
+2026-Jan-19 17:31:39.478388 #34 1.572 optimizeDeps: { esbuildOptions: { preserveSymlinks: false } },
+2026-Jan-19 17:31:39.478388 #34 1.572 resolve: { conditions: undefined, externalConditions: undefined }
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 dev: {
+2026-Jan-19 17:31:39.478388 #34 1.572 warmup: [],
+2026-Jan-19 17:31:39.478388 #34 1.572 sourcemap: { js: true },
+2026-Jan-19 17:31:39.478388 #34 1.572 sourcemapIgnoreList: [Function: isInNodeModules$1],
+2026-Jan-19 17:31:39.478388 #34 1.572 preTransformRequests: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 createEnvironment: [Function: defaultCreateDevEnvironment],
+2026-Jan-19 17:31:39.478388 #34 1.572 recoverable: false,
+2026-Jan-19 17:31:39.478388 #34 1.572 moduleRunnerTransform: false
+2026-Jan-19 17:31:39.478388 #34 1.572 },
+2026-Jan-19 17:31:39.478388 #34 1.572 webSocketToken: 'T7B82qRlkBDy',
+2026-Jan-19 17:31:39.478388 #34 1.572 getSortedPlugins: [Function: getSortedPlugins],
+2026-Jan-19 17:31:39.478388 #34 1.572 getSortedPluginHooks: [Function: getSortedPluginHooks],
+2026-Jan-19 17:31:39.478388 #34 1.572 createResolver: [Function: createResolver],
+2026-Jan-19 17:31:39.478388 #34 1.572 fsDenyGlob: [Function: arrayMatcher],
+2026-Jan-19 17:31:39.478388 #34 1.572 safeModulePaths: Set(0) {},
+2026-Jan-19 17:31:39.478388 #34 1.572 additionalAllowedHosts: [ '0.0.0.0', '0.0.0.0' ],
+2026-Jan-19 17:31:39.478388 #34 1.572 [Symbol(vite:resolved-config)]: true
+2026-Jan-19 17:31:39.478388 #34 1.572 }
+2026-Jan-19 17:31:39.478388 #34 1.576 vite v6.4.1 building for production...
+2026-Jan-19 17:31:39.820825 #34 1.959 transforming...
+2026-Jan-19 17:31:40.126387 #34 2.265 2026-01-19T17:31:40.124Z vite:resolve 1.48ms tailwindcss -> /app/node_modules/tailwindcss/index.css
+2026-Jan-19 17:31:44.275404 #34 ...
+2026-Jan-19 17:31:44.275404
+2026-Jan-19 17:31:44.275404 #30 [backend builder 11/15] RUN pnpm install --frozen-lockfile
+2026-Jan-19 17:31:44.275404 #30 14.71 Progress: resolved 0, reused 0, downloaded 746, added 765
+2026-Jan-19 17:31:44.275404 #30 15.14 WARN Failed to create bin at /app/node_modules/.bin/supabase. ENOENT: no such file or directory, chmod '/app/node_modules/supabase/bin/supabase'
+2026-Jan-19 17:31:44.275404 #30 15.14 Progress: resolved 0, reused 0, downloaded 746, added 766, done
+2026-Jan-19 17:31:44.275404 #30 15.19 node_modules/@prisma/engines postinstall$ node scripts/postinstall.js
+2026-Jan-19 17:31:44.275404 #30 15.19 WARN Failed to create bin at /app/node_modules/supabase/node_modules/.bin/supabase. ENOENT: no such file or directory, chmod '/app/node_modules/supabase/bin/supabase'
+2026-Jan-19 17:31:44.275404 #30 15.21 node_modules/supabase postinstall$ node scripts/postinstall.js
+2026-Jan-19 17:31:44.275404 #30 15.23 node_modules/bcrypt install$ node-pre-gyp install --fallback-to-build
+2026-Jan-19 17:31:44.275404 #30 15.24 node_modules/esbuild postinstall$ node install.js
+2026-Jan-19 17:31:44.275404 #30 15.27 node_modules/puppeteer postinstall$ node install.mjs
+2026-Jan-19 17:31:44.275404 #30 15.38 node_modules/esbuild postinstall: Done
+2026-Jan-19 17:31:44.275404 #30 15.42 node_modules/bcrypt install: node-pre-gyp info it worked if it ends with ok
+2026-Jan-19 17:31:44.275404 #30 15.43 node_modules/bcrypt install: node-pre-gyp info using node-pre-gyp@1.0.11
+2026-Jan-19 17:31:44.275404 #30 15.43 node_modules/bcrypt install: node-pre-gyp info using node@20.20.0 | linux | x64
+2026-Jan-19 17:31:44.275404 #30 15.49 node_modules/supabase postinstall: Downloading https://github.com/supabase/cli/releases/download/v2.72.6/supabase_2.72.6_checksums.txt
+2026-Jan-19 17:31:44.275404 #30 15.59 node_modules/bcrypt install: node-pre-gyp info check checked for "/app/node_modules/bcrypt/lib/binding/napi-v3/bcrypt_lib.node" (not found)
+2026-Jan-19 17:31:44.275404 #30 15.60 node_modules/bcrypt install: node-pre-gyp http GET https://github.com/kelektiv/node.bcrypt.js/releases/download/v5.1.1/bcrypt_lib-v5.1.1-napi-v3-linux-x64-musl.tar.gz
+2026-Jan-19 17:31:44.275404 #30 15.63 node_modules/vite/node_modules/esbuild postinstall$ node install.js
+2026-Jan-19 17:31:44.275404 #30 15.68 node_modules/supabase postinstall: Downloading https://github.com/supabase/cli/releases/download/v2.72.6/supabase_linux_amd64.tar.gz
+2026-Jan-19 17:31:44.275404 #30 15.73 node_modules/puppeteer postinstall: **INFO** Skipping downloading browsers as instructed.
+2026-Jan-19 17:31:44.275404 #30 15.74 node_modules/puppeteer postinstall: Done
+2026-Jan-19 17:31:44.275404 #30 15.75 node_modules/bcrypt install: node-pre-gyp info install unpacking napi-v3/bcrypt_lib.node
+2026-Jan-19 17:31:44.275404 #30 15.76 node_modules/vite/node_modules/esbuild postinstall: Done
+2026-Jan-19 17:31:44.275404 #30 15.77 node_modules/bcrypt install: node-pre-gyp info extracted file count: 1
+2026-Jan-19 17:31:44.275404 #30 15.77 node_modules/bcrypt install: [bcrypt] Success: "/app/node_modules/bcrypt/lib/binding/napi-v3/bcrypt_lib.node" is installed via remote
+2026-Jan-19 17:31:44.275404 #30 15.77 node_modules/bcrypt install: node-pre-gyp info ok
+2026-Jan-19 17:31:44.275404 #30 15.78 node_modules/bcrypt install: Done
+2026-Jan-19 17:31:44.275404 #30 16.94 node_modules/@prisma/engines postinstall: Done
+2026-Jan-19 17:31:44.275404 #30 17.52 node_modules/supabase postinstall: Checksum verified.
+2026-Jan-19 17:31:44.275404 #30 17.53 node_modules/supabase postinstall: Installed Supabase CLI successfully
+2026-Jan-19 17:31:44.275404 #30 17.55 node_modules/supabase postinstall: Done
+2026-Jan-19 17:31:44.275404 #30 18.32 node_modules/prisma preinstall$ node scripts/preinstall-entry.js
+2026-Jan-19 17:31:44.275404 #30 18.41 node_modules/prisma preinstall: Done
+2026-Jan-19 17:31:44.275404 #30 18.58 node_modules/@prisma/client postinstall$ node scripts/postinstall.js
+2026-Jan-19 17:31:44.275404 #30 19.81 node_modules/@prisma/client postinstall: prisma:warn We could not find your Prisma schema in the default locations (see: https://pris.ly/d/prisma-schema-location).
+2026-Jan-19 17:31:44.275404 #30 19.81 node_modules/@prisma/client postinstall: If you have a Prisma schema file in a custom path, you will need to run
+2026-Jan-19 17:31:44.275404 #30 19.81 node_modules/@prisma/client postinstall: `prisma generate --schema=./path/to/your/schema.prisma` to generate Prisma Client.
+2026-Jan-19 17:31:44.275404 #30 19.81 node_modules/@prisma/client postinstall: If you do not have a Prisma schema file yet, you can ignore this message.
+2026-Jan-19 17:31:44.275404 #30 19.84 node_modules/@prisma/client postinstall: Done
+2026-Jan-19 17:31:44.314072 #30 20.33
+2026-Jan-19 17:31:44.510704 #30 20.52 Done in 20.1s
+2026-Jan-19 17:31:45.019263 #30 DONE 21.0s
+2026-Jan-19 17:31:45.019263
+2026-Jan-19 17:31:45.019263 #34 [frontend builder 14/15] RUN cd /app/packages/frontend && pnpm exec vite build --debug
+2026-Jan-19 17:31:45.172255 #34 ...
+2026-Jan-19 17:31:45.172255
+2026-Jan-19 17:31:45.172255 #35 [backend builder 12/15] COPY packages/backend packages/backend/
+2026-Jan-19 17:31:45.913122 #35 DONE 0.9s
+2026-Jan-19 17:31:45.913122
+2026-Jan-19 17:31:45.913122 #34 [frontend builder 14/15] RUN cd /app/packages/frontend && pnpm exec vite build --debug
+2026-Jan-19 17:31:46.105241 #34 ...
+2026-Jan-19 17:31:46.105241
+2026-Jan-19 17:31:46.105241 #36 [backend builder 13/15] COPY packages/shared packages/shared/
+2026-Jan-19 17:31:46.105241 #36 DONE 0.0s
+2026-Jan-19 17:31:46.105241
+2026-Jan-19 17:31:46.105241 #37 [backend builder 14/15] RUN pnpm --filter @teif/backend prisma generate
+2026-Jan-19 17:31:47.060036 #37 1.106 None of the selected packages has a "prisma" script
+2026-Jan-19 17:31:47.297760 #37 DONE 1.2s
+2026-Jan-19 17:31:47.297760
+2026-Jan-19 17:31:47.297760 #38 [backend builder 15/15] RUN { echo "=== BACKEND BUILD DIAGNOSTICS ===" && echo "PWD: $(pwd)" && echo "Node: $(node --version)" && echo "pnpm: $(pnpm --version)" && echo "" && echo "=== DIRECTORY ===" && ls -la packages/backend/ && echo "" && echo "=== PACKAGE.JSON ===" && cat packages/backend/package.json && echo "" && echo "=== WORKSPACE ===" && pnpm list --depth=0 && echo "" && echo "=== BUILDING ===" && pnpm --filter @teif/backend build; } 2>&1 | tee /tmp/backend-build.log
+2026-Jan-19 17:31:47.413782 #38 0.267 === BACKEND BUILD DIAGNOSTICS ===
+2026-Jan-19 17:31:47.413782 #38 0.267 PWD: /app
+2026-Jan-19 17:31:47.569586 #38 0.277 Node: v20.20.0
+2026-Jan-19 17:31:47.736009 #38 0.592 pnpm: 9.0.0
+2026-Jan-19 17:31:47.736009 #38 0.592
+2026-Jan-19 17:31:47.736009 #38 0.592 === DIRECTORY ===
+2026-Jan-19 17:31:47.891536 #38 0.594 total 44
+2026-Jan-19 17:31:47.891536 #38 0.598 drwxr-xr-x 1 root root 4096 Jan 19 17:30 .
+2026-Jan-19 17:31:47.891536 #38 0.598 drwxr-xr-x 1 root root 4096 Jan 19 17:31 ..
+2026-Jan-19 17:31:47.891536 #38 0.598 -rw-r--r-- 1 root root 1481 Jan 19 17:30 .env.example
+2026-Jan-19 17:31:47.891536 #38 0.598 -rw-r--r-- 1 root root 4288 Jan 19 17:31 Dockerfile
+2026-Jan-19 17:31:47.891536 #38 0.598 drwxr-xr-x 4 root root 4096 Jan 19 17:31 node_modules
+2026-Jan-19 17:31:47.891536 #38 0.598 -rw-r--r-- 1 root root 1081 Jan 19 17:30 package.json
+2026-Jan-19 17:31:47.891536 #38 0.598 drwxr-xr-x 4 root root 4096 Jan 19 17:30 prisma
+2026-Jan-19 17:31:47.891536 #38 0.598 drwxr-xr-x 10 root root 4096 Jan 19 17:30 src
+2026-Jan-19 17:31:47.891536 #38 0.598 -rw-r--r-- 1 root root 483 Jan 19 17:30 tsconfig.json
+2026-Jan-19 17:31:47.891536 #38 0.598
+2026-Jan-19 17:31:47.891536 #38 0.598 === PACKAGE.JSON ===
+2026-Jan-19 17:31:47.891536 #38 0.598 {
+2026-Jan-19 17:31:47.891536 #38 0.598 "name": "@teif/backend",
+2026-Jan-19 17:31:47.891536 #38 0.598 "version": "0.0.0",
+2026-Jan-19 17:31:47.891536 #38 0.598 "type": "module",
+2026-Jan-19 17:31:47.891536 #38 0.598 "scripts": {
+2026-Jan-19 17:31:47.891536 #38 0.598 "dev": "tsx src/index.ts",
+2026-Jan-19 17:31:47.891536 #38 0.598 "build": "tsc",
+2026-Jan-19 17:31:47.891536 #38 0.598 "start": "node dist/index.js",
+2026-Jan-19 17:31:47.891536 #38 0.598 "db:generate": "prisma generate",
+2026-Jan-19 17:31:47.891536 #38 0.598 "db:migrate": "prisma migrate dev",
+2026-Jan-19 17:31:47.891536 #38 0.598 "db:push": "prisma db push",
+2026-Jan-19 17:31:47.891536 #38 0.598 "db:studio": "prisma studio",
+2026-Jan-19 17:31:47.891536 #38 0.598 "db:seed": "tsx prisma/seed.ts",
+2026-Jan-19 17:31:47.891536 #38 0.598 "typecheck": "tsc --noEmit"
+2026-Jan-19 17:31:47.891536 #38 0.598 },
+2026-Jan-19 17:31:47.891536 #38 0.598 "dependencies": {
+2026-Jan-19 17:31:47.891536 #38 0.598 "@hono/node-server": "^1.12.0",
+2026-Jan-19 17:31:47.891536 #38 0.598 "@prisma/client": "^5.14.0",
+2026-Jan-19 17:31:47.891536 #38 0.598 "@supabase/supabase-js": "^2.43.0",
+2026-Jan-19 17:31:47.891536 #38 0.598 "@teif/shared": "workspace:*",
+2026-Jan-19 17:31:47.891536 #38 0.598 "bcrypt": "^5.1.1",
+2026-Jan-19 17:31:47.891536 #38 0.598 "hono": "^4.4.0",
+2026-Jan-19 17:31:47.891536 #38 0.598 "jsonwebtoken": "^9.0.2",
+2026-Jan-19 17:31:47.891536 #38 0.598 "nodemailer": "^6.9.13",
+2026-Jan-19 17:31:47.891536 #38 0.598 "puppeteer": "^23.10.0",
+2026-Jan-19 17:31:47.891536 #38 0.598 "qrcode": "^1.5.3",
+2026-Jan-19 17:31:47.891536 #38 0.598 "zod": "^3.25.76"
+2026-Jan-19 17:31:47.891536 #38 0.598 },
+2026-Jan-19 17:31:47.891536 #38 0.598 "devDependencies": {
+2026-Jan-19 17:31:47.891536 #38 0.598 "@hono/zod-validator": "^0.7.6",
+2026-Jan-19 17:31:47.891536 #38 0.598 "@types/bcrypt": "^5.0.2",
+2026-Jan-19 17:31:47.891536 #38 0.598 "@types/jsonwebtoken": "^9.0.6",
+2026-Jan-19 17:31:47.891536 #38 0.598 "@types/node": "^22.14.0",
+2026-Jan-19 17:31:47.891536 #38 0.598 "@types/nodemailer": "^6.4.14",
+2026-Jan-19 17:31:47.891536 #38 0.598 "@types/qrcode": "^1.5.5",
+2026-Jan-19 17:31:47.891536 #38 0.598 "prisma": "^5.14.0",
+2026-Jan-19 17:31:47.891536 #38 0.598 "tsx": "^4.11.0",
+2026-Jan-19 17:31:47.891536 #38 0.598 "typescript": "~5.8.2",
+2026-Jan-19 17:31:47.891536 #38 0.598 "zod-prisma-types": "^3.3.10"
+2026-Jan-19 17:31:47.891536 #38 0.598 }
+2026-Jan-19 17:31:47.891536 #38 0.598 }
+2026-Jan-19 17:31:47.891536 #38 0.598
+2026-Jan-19 17:31:47.891536 #38 0.598 === WORKSPACE ===
+2026-Jan-19 17:31:49.107696 #38 1.964 Legend: production dependency, optional only, dev only
+2026-Jan-19 17:31:49.107696 #38 1.964
+2026-Jan-19 17:31:49.107696 #38 1.964 teif-monorepo@0.0.0 /app (PRIVATE)
+2026-Jan-19 17:31:49.107696 #38 1.964
+2026-Jan-19 17:31:49.107696 #38 1.964 dependencies:
+2026-Jan-19 17:31:49.107696 #38 1.964 zod 4.3.5
+2026-Jan-19 17:31:49.107696 #38 1.964
+2026-Jan-19 17:31:49.107696 #38 1.964 devDependencies:
+2026-Jan-19 17:31:49.107696 #38 1.964 prettier 3.7.4
+2026-Jan-19 17:31:49.107696 #38 1.964 supabase 2.72.6
+2026-Jan-19 17:31:49.107696 #38 1.964 turbo 2.7.4
+2026-Jan-19 17:31:49.282453 #38 1.989
+2026-Jan-19 17:31:49.282453 #38 1.989 === BUILDING ===
+2026-Jan-19 17:31:49.861646 #38 2.719
+2026-Jan-19 17:31:49.861646 #38 2.719 > @teif/backend@0.0.0 build /app/packages/backend
+2026-Jan-19 17:31:49.861646 #38 2.719 > tsc
+2026-Jan-19 17:31:49.861646 #38 2.719
+2026-Jan-19 17:31:50.082741 #38 ...
+2026-Jan-19 17:31:50.082741
+2026-Jan-19 17:31:50.082741 #34 [frontend builder 14/15] RUN cd /app/packages/frontend && pnpm exec vite build --debug
+2026-Jan-19 17:31:50.082741 #34 11.09 ✓ 1827 modules transformed.
+2026-Jan-19 17:31:50.082741 #34 11.72 rendering chunks...
+2026-Jan-19 17:31:50.082741 #34 12.04 computing gzip size...
+2026-Jan-19 17:31:50.082741 #34 12.08 dist/index.html 1.09 kB │ gzip: 0.63 kB
+2026-Jan-19 17:31:50.082741 #34 12.08 dist/assets/index-Ca8EGux0.css 68.28 kB │ gzip: 9.85 kB
+2026-Jan-19 17:31:50.082741 #34 12.08 dist/assets/CDWEKZTF-Bg6inGql.js 230.10 kB │ gzip: 65.32 kB
+2026-Jan-19 17:31:50.082741 #34 12.08 dist/assets/index-ZMU8gSAr.js 885.38 kB │ gzip: 238.57 kB
+2026-Jan-19 17:31:50.082741 #34 12.08
+2026-Jan-19 17:31:50.082741 #34 12.08 (!) Some chunks are larger than 500 kB after minification. Consider:
+2026-Jan-19 17:31:50.082741 #34 12.08 - Using dynamic import() to code-split the application
+2026-Jan-19 17:31:50.082741 #34 12.08 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+2026-Jan-19 17:31:50.082741 #34 12.08 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+2026-Jan-19 17:31:50.082741 #34 12.08 ✓ built in 10.45s
+2026-Jan-19 17:31:50.082741 #34 DONE 12.2s
+2026-Jan-19 17:31:50.231912 #39 [frontend builder 15/15] RUN test -d /app/packages/frontend/dist || (echo "ERROR: dist folder not created"; ls -laR /app/packages/frontend/; exit 1)
+2026-Jan-19 17:31:50.339832 #39 DONE 0.3s
+2026-Jan-19 17:31:50.339832
+2026-Jan-19 17:31:50.339832 #38 [backend builder 15/15] RUN { echo "=== BACKEND BUILD DIAGNOSTICS ===" && echo "PWD: $(pwd)" && echo "Node: $(node --version)" && echo "pnpm: $(pnpm --version)" && echo "" && echo "=== DIRECTORY ===" && ls -la packages/backend/ && echo "" && echo "=== PACKAGE.JSON ===" && cat packages/backend/package.json && echo "" && echo "=== WORKSPACE ===" && pnpm list --depth=0 && echo "" && echo "=== BUILDING ===" && pnpm --filter @teif/backend build; } 2>&1 | tee /tmp/backend-build.log
+2026-Jan-19 17:31:50.591501 #38 ...
+2026-Jan-19 17:31:50.591501
+2026-Jan-19 17:31:50.591501 #40 [frontend stage-1 2/3] COPY --from=builder /app/packages/frontend/dist /usr/share/nginx/html
+2026-Jan-19 17:31:50.591501 #40 DONE 0.0s
+2026-Jan-19 17:31:50.591501
+2026-Jan-19 17:31:50.591501 #41 [frontend stage-1 3/3] COPY packages/frontend/nginx.conf /etc/nginx/conf.d/default.conf
+2026-Jan-19 17:31:50.591501 #41 DONE 0.0s
+2026-Jan-19 17:31:50.605411 #42 [frontend] exporting to image
+2026-Jan-19 17:31:50.605411 #42 exporting layers 0.2s done
+2026-Jan-19 17:31:50.745908 #42 exporting manifest sha256:19a0a76bab8606036795ec5abbcb082afdd5611499d34b19b68c1bc7713afb74 0.0s done
+2026-Jan-19 17:31:50.745908 #42 exporting config sha256:0adf35da8fd167eafe93fb4134a0563fcb9ebe2436810ad6c76c5718ba836089 done
+2026-Jan-19 17:31:50.745908 #42 exporting attestation manifest sha256:16e656ae0d192658d66f59cbc76e1ef54523f869af73b3a3a8576112665afbb0 0.0s done
+2026-Jan-19 17:31:50.745908 #42 exporting manifest list sha256:d438cb25fd9f6d4e6b39a6effdeca4ee269676e64bfa57d56ca11175b5c55266 done
+2026-Jan-19 17:31:50.745908 #42 naming to docker.io/library/teif-frontend:latest done
+2026-Jan-19 17:31:50.745908 #42 unpacking to docker.io/library/teif-frontend:latest 0.1s done
+2026-Jan-19 17:31:50.948400 #42 DONE 0.4s
+2026-Jan-19 17:31:50.948400
+2026-Jan-19 17:31:50.948400 #38 [backend builder 15/15] RUN { echo "=== BACKEND BUILD DIAGNOSTICS ===" && echo "PWD: $(pwd)" && echo "Node: $(node --version)" && echo "pnpm: $(pnpm --version)" && echo "" && echo "=== DIRECTORY ===" && ls -la packages/backend/ && echo "" && echo "=== PACKAGE.JSON ===" && cat packages/backend/package.json && echo "" && echo "=== WORKSPACE ===" && pnpm list --depth=0 && echo "" && echo "=== BUILDING ===" && pnpm --filter @teif/backend build; } 2>&1 | tee /tmp/backend-build.log
+2026-Jan-19 17:31:51.183936 #38 ...
+2026-Jan-19 17:31:51.183936
+2026-Jan-19 17:31:51.183936 #43 [frontend] resolving provenance for metadata file
+2026-Jan-19 17:31:51.183936 #43 DONE 0.0s
+2026-Jan-19 17:31:51.331849 #38 [backend builder 15/15] RUN { echo "=== BACKEND BUILD DIAGNOSTICS ===" && echo "PWD: $(pwd)" && echo "Node: $(node --version)" && echo "pnpm: $(pnpm --version)" && echo "" && echo "=== DIRECTORY ===" && ls -la packages/backend/ && echo "" && echo "=== PACKAGE.JSON ===" && cat packages/backend/package.json && echo "" && echo "=== WORKSPACE ===" && pnpm list --depth=0 && echo "" && echo "=== BUILDING ===" && pnpm --filter @teif/backend build; } 2>&1 | tee /tmp/backend-build.log
+2026-Jan-19 17:31:55.681268 #38 8.538 error TS5083: Cannot read file '/app/tsconfig.base.json'.
+2026-Jan-19 17:31:55.798529 #38 8.539 src/index.ts(71,29): error TS2339: Property 'PrismaClientKnownRequestError' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.539 src/index.ts(77,29): error TS2339: Property 'PrismaClientInitializationError' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.539 src/routes/auth.ts(20,8): error TS6305: Output file '/app/packages/shared/dist/index.d.ts' has not been built from source file '/app/packages/shared/src/index.ts'.
+2026-Jan-19 17:31:55.798529 #38 8.539 src/services/invoice-calculations.service.ts(1,57): error TS6305: Output file '/app/packages/shared/dist/utils/index.d.ts' has not been built from source file '/app/packages/shared/src/utils/index.ts'.
+2026-Jan-19 17:31:55.798529 #38 8.539 src/services/invoice.service.ts(489,14): error TS2339: Property 'sql' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.539 src/services/invoice.service.ts(490,14): error TS2339: Property 'sql' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.539 src/services/invoice.service.ts(491,14): error TS2339: Property 'sql' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.539 src/services/invoice.service.ts(501,35): error TS2339: Property 'sql' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.539 src/services/invoice.service.ts(506,35): error TS2339: Property 'sql' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.539 src/services/invoice.service.ts(512,16): error TS2339: Property 'sql' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.539 src/services/invoice.service.ts(517,16): error TS2339: Property 'sql' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.540 src/services/invoice.service.ts(524,16): error TS2339: Property 'sql' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.540 src/services/invoice.service.ts(529,16): error TS2339: Property 'sql' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.540 src/services/invoice.service.ts(534,32): error TS2339: Property 'sql' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.540 src/services/invoice.service.ts(534,51): error TS2339: Property 'join' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.540 src/services/partner.service.ts(2,30): error TS6305: Output file '/app/packages/shared/dist/types/index.d.ts' has not been built from source file '/app/packages/shared/src/types/index.ts'.
+2026-Jan-19 17:31:55.798529 #38 8.540 src/services/pdf.service.ts(11,38): error TS6305: Output file '/app/packages/shared/dist/types/index.d.ts' has not been built from source file '/app/packages/shared/src/types/index.ts'.
+2026-Jan-19 17:31:55.798529 #38 8.540 src/services/xmlGenerator.service.ts(1,33): error TS6305: Output file '/app/packages/shared/dist/utils/index.d.ts' has not been built from source file '/app/packages/shared/src/utils/index.ts'.
+2026-Jan-19 17:31:55.798529 #38 8.540 src/services/xmlGenerator.service.ts(2,29): error TS6305: Output file '/app/packages/shared/dist/types/index.d.ts' has not been built from source file '/app/packages/shared/src/types/index.ts'.
+2026-Jan-19 17:31:55.798529 #38 8.540 src/templates/invoice.template.ts(6,68): error TS6305: Output file '/app/packages/shared/dist/types/index.d.ts' has not been built from source file '/app/packages/shared/src/types/index.ts'.
+2026-Jan-19 17:31:55.798529 #38 8.540 src/utils/error-handler.ts(47,49): error TS2694: Namespace '"/app/node_modules/.prisma/client/default".Prisma' has no exported member 'PrismaClientKnownRequestError'.
+2026-Jan-19 17:31:55.798529 #38 8.541 src/utils/error-handler.ts(104,55): error TS2694: Namespace '"/app/node_modules/.prisma/client/default".Prisma' has no exported member 'PrismaClientInitializationError'.
+2026-Jan-19 17:31:55.798529 #38 8.541 src/utils/error-handler.ts(162,31): error TS2339: Property 'PrismaClientKnownRequestError' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.541 src/utils/error-handler.ts(166,31): error TS2339: Property 'PrismaClientInitializationError' does not exist on type 'typeof Prisma'.
+2026-Jan-19 17:31:55.798529 #38 8.581 /app/packages/backend:
+2026-Jan-19 17:31:55.798529 #38 8.581 ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL @teif/backend@0.0.0 build: `tsc`
+2026-Jan-19 17:31:55.798529 #38 8.581 Exit status 2
+2026-Jan-19 17:31:55.798529 #38 DONE 8.7s
+2026-Jan-19 17:31:57.067915 #44 [backend stage-1 5/10] COPY --from=builder /app/packages/backend/dist ./dist
+2026-Jan-19 17:31:57.252689 #44 DONE 0.0s
+2026-Jan-19 17:31:57.252689
+2026-Jan-19 17:31:57.252689 #45 [backend stage-1 6/10] COPY --from=builder /app/packages/backend/package.json ./
+2026-Jan-19 17:31:57.252689 #45 DONE 0.0s
+2026-Jan-19 17:31:57.252689
+2026-Jan-19 17:31:57.252689 #46 [backend stage-1 7/10] COPY --from=builder /app/packages/shared ./packages/shared
+2026-Jan-19 17:31:57.252689 #46 DONE 0.1s
+2026-Jan-19 17:32:05.895833 #47 [backend stage-1 8/10] COPY --from=builder /app/package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+2026-Jan-19 17:32:05.895833 #47 ERROR: failed to calculate checksum of ref 1kxng2r7n84q3igksz8appklh::oahe7ec2l26jmyctaf3kiztqf: "/pnpm-lock.yaml": not found
+2026-Jan-19 17:32:05.964769 ------
+2026-Jan-19 17:32:05.964769 > [backend stage-1 8/10] COPY --from=builder /app/package.json pnpm-lock.yaml pnpm-workspace.yaml ./:
+2026-Jan-19 17:32:05.964769 ------
+2026-Jan-19 17:32:05.979786 Dockerfile:146
+2026-Jan-19 17:32:05.979786
+2026-Jan-19 17:32:05.979786 --------------------
+2026-Jan-19 17:32:05.979786
+2026-Jan-19 17:32:05.979786 144 | COPY --from=builder /app/packages/backend/package.json ./
+2026-Jan-19 17:32:05.979786
+2026-Jan-19 17:32:05.979786 145 | COPY --from=builder /app/packages/shared ./packages/shared
+2026-Jan-19 17:32:05.979786
+2026-Jan-19 17:32:05.979786 146 | >>> COPY --from=builder /app/package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+2026-Jan-19 17:32:05.979786
+2026-Jan-19 17:32:05.979786 147 |
+2026-Jan-19 17:32:05.979786
+2026-Jan-19 17:32:05.979786 148 | # Copy only production node_modules (excluding devDependencies)
+2026-Jan-19 17:32:05.979786
+2026-Jan-19 17:32:05.979786 --------------------
+2026-Jan-19 17:32:05.979786
+2026-Jan-19 17:32:05.979786 target backend: failed to solve: failed to compute cache key: failed to calculate checksum of ref 1kxng2r7n84q3igksz8appklh::oahe7ec2l26jmyctaf3kiztqf: "/pnpm-lock.yaml": not found
+2026-Jan-19 17:32:05.993959 exit status 1
+2026-Jan-19 17:32:06.077919 ========================================
+2026-Jan-19 17:32:06.100889 Deployment failed: Command execution failed (exit code 1): docker exec xksk4gsco48s84okc8848kcw bash -c 'COOLIFY_BRANCH=production COOLIFY_RESOURCE_UUID=r8ko44c4ko088css8kcs48co docker compose --env-file /artifacts/build-time.env --project-name r8ko44c4ko088css8kcs48co --project-directory /artifacts/xksk4gsco48s84okc8848kcw -f /artifacts/xksk4gsco48s84okc8848kcw/docker-compose.prod.yml build --pull --no-cache --build-arg COOLIFY_URL --build-arg COOLIFY_FQDN --build-arg SERVICE_FQDN_BACKEND --build-arg SERVICE_FQDN_FRONTEND --build-arg SERVICE_URL_BACKEND --build-arg SERVICE_URL_FRONTEND --build-arg CORS_ORIGIN --build-arg DATABASE_URL --build-arg GEMINI_API_KEY --build-arg JWT_EXPIRY --build-arg JWT_SECRET --build-arg LOG_LEVEL --build-arg POSTGRES_DB --build-arg POSTGRES_PASSWORD --build-arg POSTGRES_USER --build-arg PRODUCTION_DOMAIN --build-arg SITE_URL --build-arg SMTP_FROM --build-arg SMTP_HOST --build-arg SMTP_PASSWORD --build-arg SMTP_PORT --build-arg SMTP_SECURE --build-arg SMTP_USER --build-arg VITE_API_BASE_URL --build-arg COOLIFY_BUILD_SECRETS_HASH=eddb4c11f0e7eec345b4b7970373c9883b1c90d8eb6cfc71c29a3b71a6bdbd14'
+2026-Jan-19 17:32:06.100889 Error: Dockerfile:146
+2026-Jan-19 17:32:06.100889
+2026-Jan-19 17:32:06.100889 --------------------
+2026-Jan-19 17:32:06.100889
+2026-Jan-19 17:32:06.100889 144 | COPY --from=builder /app/packages/backend/package.json ./
+2026-Jan-19 17:32:06.100889
+2026-Jan-19 17:32:06.100889 145 | COPY --from=builder /app/packages/shared ./packages/shared
+2026-Jan-19 17:32:06.100889
+2026-Jan-19 17:32:06.100889 146 | >>> COPY --from=builder /app/package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+2026-Jan-19 17:32:06.100889
+2026-Jan-19 17:32:06.100889 147 |
+2026-Jan-19 17:32:06.100889
+2026-Jan-19 17:32:06.100889 148 | # Copy only production node_modules (excluding devDependencies)
+2026-Jan-19 17:32:06.100889
+2026-Jan-19 17:32:06.100889 --------------------
+2026-Jan-19 17:32:06.100889
+2026-Jan-19 17:32:06.100889 target backend: failed to solve: failed to compute cache key: failed to calculate checksum of ref 1kxng2r7n84q3igksz8appklh::oahe7ec2l26jmyctaf3kiztqf: "/pnpm-lock.yaml": not found
+2026-Jan-19 17:32:06.100889
+2026-Jan-19 17:32:06.100889 exit status 1
+2026-Jan-19 17:32:06.120367 Error type: RuntimeException
+2026-Jan-19 17:32:06.139986 Error code: 0
+2026-Jan-19 17:32:06.158763 Location: /var/www/html/app/Traits/ExecuteRemoteCommand.php:243
+2026-Jan-19 17:32:06.179566 Stack trace (first 5 lines):
+2026-Jan-19 17:32:06.202229 #0 /var/www/html/app/Traits/ExecuteRemoteCommand.php(104): App\Jobs\ApplicationDeploymentJob->executeCommandWithProcess()
+2026-Jan-19 17:32:06.221715 #1 /var/www/html/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php(271): App\Jobs\ApplicationDeploymentJob->{closure:App\Traits\ExecuteRemoteCommand::execute_remote_command():71}()
+2026-Jan-19 17:32:06.241488 #2 /var/www/html/app/Traits/ExecuteRemoteCommand.php(71): Illuminate\Support\Collection->each()
+2026-Jan-19 17:32:06.263818 #3 /var/www/html/app/Jobs/ApplicationDeploymentJob.php(737): App\Jobs\ApplicationDeploymentJob->execute_remote_command()
+2026-Jan-19 17:32:06.283894 #4 /var/www/html/app/Jobs/ApplicationDeploymentJob.php(474): App\Jobs\ApplicationDeploymentJob->deploy_docker_compose_buildpack()
+2026-Jan-19 17:32:06.305468 ========================================
+2026-Jan-19 17:32:07.183811 Gracefully shutting down build container: xksk4gsco48s84okc8848kcw
+2026-Jan-19 17:32:07.545840 [CMD]: docker stop -t 30 xksk4gsco48s84okc8848kcw
+2026-Jan-19 17:32:07.545840 xksk4gsco48s84okc8848kcw
