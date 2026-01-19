@@ -296,22 +296,36 @@ echo -e "\n${BLUE}[Phase 9] Configuring Nginx Reverse Proxy...${NC}"
 # Stop nginx service completely
 echo "Stopping nginx service..."
 sudo systemctl stop nginx 2>/dev/null || true
-sleep 1
+sleep 2
 
-# Kill any remaining nginx processes
+# Kill any remaining nginx processes - multiple methods for robustness
 echo "Killing any remaining nginx processes..."
+sudo pkill -9 nginx 2>/dev/null || true
+sleep 1
 sudo pkill -9 -f "nginx" 2>/dev/null || true
 sleep 1
 
+# Try fuser as additional fallback to force port release
+echo "Forcing port 80 release..."
+sudo fuser -k 80/tcp 2>/dev/null || true
+sleep 2
+
 # Verify port 80 is free
-if sudo lsof -Pi :80 -sTCP:LISTEN -t >/dev/null 2>&1; then
-  echo -e "${RED}ERROR: Port 80 is still in use${NC}"
-  echo "Use this to see what's using port 80:"
-  echo "  sudo lsof -i :80"
-  echo ""
-  echo "To kill the process:"
-  echo "  sudo kill -9 <PID>"
-  exit 1
+PORT_CHECK=$(sudo lsof -Pi :80 -sTCP:LISTEN -t 2>/dev/null || echo "")
+if [ ! -z "$PORT_CHECK" ]; then
+  echo -e "${RED}ERROR: Port 80 is still in use by PID: $PORT_CHECK${NC}"
+  echo "Attempting aggressive kill..."
+  sudo kill -9 $PORT_CHECK 2>/dev/null || true
+  sleep 2
+  
+  # Final check
+  PORT_CHECK=$(sudo lsof -Pi :80 -sTCP:LISTEN -t 2>/dev/null || echo "")
+  if [ ! -z "$PORT_CHECK" ]; then
+    echo -e "${RED}CRITICAL: Cannot free port 80. Use:${NC}"
+    echo "  sudo lsof -i :80"
+    echo "  sudo kill -9 <PID>"
+    exit 1
+  fi
 fi
 
 echo "Port 80 is free, configuring Nginx..."
