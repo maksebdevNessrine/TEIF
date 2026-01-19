@@ -1,56 +1,31 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.hashPassword = hashPassword;
-exports.comparePassword = comparePassword;
-exports.generateAccessToken = generateAccessToken;
-exports.generateRefreshTokenJwt = generateRefreshTokenJwt;
-exports.verifyToken = verifyToken;
-exports.storeRefreshToken = storeRefreshToken;
-exports.validateRefreshToken = validateRefreshToken;
-exports.rotateRefreshToken = rotateRefreshToken;
-exports.signUpWithSupabase = signUpWithSupabase;
-exports.signInWithSupabase = signInWithSupabase;
-exports.signOutWithSupabase = signOutWithSupabase;
-exports.createUser = createUser;
-exports.findUserByEmail = findUserByEmail;
-exports.findUserById = findUserById;
-exports.loginUser = loginUser;
-exports.generateVerificationCode = generateVerificationCode;
-exports.sendVerificationEmail = sendVerificationEmail;
-exports.createUserWithVerification = createUserWithVerification;
-exports.verifyEmailCode = verifyEmailCode;
-exports.resendVerificationCode = resendVerificationCode;
-const bcrypt_1 = __importDefault(require("bcrypt"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const prisma_1 = require("../lib/prisma");
-const supabase_js_1 = require("@supabase/supabase-js");
-const nodemailer_1 = __importDefault(require("nodemailer"));
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { prisma } from '../lib/prisma';
+import { createClient } from '@supabase/supabase-js';
+import nodemailer from 'nodemailer';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '15m'); // Short-lived access token
 const REFRESH_TOKEN_EXPIRES_IN = '7d'; // Longer-lived refresh token
 // Initialize Supabase client
-const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL || '', process.env.SUPABASE_ANON_KEY || '');
+const supabase = createClient(process.env.SUPABASE_URL || '', process.env.SUPABASE_ANON_KEY || '');
 /**
  * Hash a password using bcrypt with 10 salt rounds
  */
-async function hashPassword(password) {
-    return await bcrypt_1.default.hash(password, 10);
+export async function hashPassword(password) {
+    return await bcrypt.hash(password, 10);
 }
 /**
  * Compare a plain password with a hashed password
  */
-async function comparePassword(password, hash) {
-    return await bcrypt_1.default.compare(password, hash);
+export async function comparePassword(password, hash) {
+    return await bcrypt.compare(password, hash);
 }
 /**
  * Generate a JWT access token with user payload (short-lived)
  */
-function generateAccessToken(userId, email) {
+export function generateAccessToken(userId, email) {
     const payload = { userId, email, type: 'access' };
-    return jsonwebtoken_1.default.sign(payload, JWT_SECRET, {
+    return jwt.sign(payload, JWT_SECRET, {
         expiresIn: JWT_EXPIRES_IN,
         algorithm: 'HS256',
     });
@@ -58,9 +33,9 @@ function generateAccessToken(userId, email) {
 /**
  * Generate a JWT refresh token (long-lived)
  */
-function generateRefreshTokenJwt(userId) {
+export function generateRefreshTokenJwt(userId) {
     const payload = { userId, type: 'refresh' };
-    return jsonwebtoken_1.default.sign(payload, JWT_SECRET, {
+    return jwt.sign(payload, JWT_SECRET, {
         expiresIn: REFRESH_TOKEN_EXPIRES_IN,
         algorithm: 'HS256',
     });
@@ -68,18 +43,18 @@ function generateRefreshTokenJwt(userId) {
 /**
  * Verify and decode a JWT token
  */
-function verifyToken(token) {
+export function verifyToken(token) {
     try {
-        const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET, {
+        const decoded = jwt.verify(token, JWT_SECRET, {
             algorithms: ['HS256'],
         });
         return { userId: decoded.userId, email: decoded.email, type: decoded.type };
     }
     catch (error) {
-        if (error instanceof jsonwebtoken_1.default.TokenExpiredError) {
+        if (error instanceof jwt.TokenExpiredError) {
             throw new Error('Token has expired');
         }
-        if (error instanceof jsonwebtoken_1.default.JsonWebTokenError) {
+        if (error instanceof jwt.JsonWebTokenError) {
             throw new Error('Invalid token');
         }
         throw new Error('Token verification failed');
@@ -88,10 +63,10 @@ function verifyToken(token) {
 /**
  * Store refresh token in database with hash
  */
-async function storeRefreshToken(userId, token) {
-    const tokenHash = await bcrypt_1.default.hash(token, 10);
+export async function storeRefreshToken(userId, token) {
+    const tokenHash = await bcrypt.hash(token, 10);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-    const storedToken = await prisma_1.prisma.refreshToken.create({
+    const storedToken = await prisma.refreshToken.create({
         data: {
             userId,
             tokenHash,
@@ -103,8 +78,8 @@ async function storeRefreshToken(userId, token) {
 /**
  * Validate a refresh token from the database
  */
-async function validateRefreshToken(userId, token) {
-    const storedTokens = await prisma_1.prisma.refreshToken.findMany({
+export async function validateRefreshToken(userId, token) {
+    const storedTokens = await prisma.refreshToken.findMany({
         where: {
             userId,
             revokedAt: null,
@@ -112,7 +87,7 @@ async function validateRefreshToken(userId, token) {
         },
     });
     for (const storedToken of storedTokens) {
-        const isValid = await bcrypt_1.default.compare(token, storedToken.tokenHash);
+        const isValid = await bcrypt.compare(token, storedToken.tokenHash);
         if (isValid) {
             return true;
         }
@@ -122,7 +97,7 @@ async function validateRefreshToken(userId, token) {
 /**
  * Rotate a refresh token (revoke old, issue new)
  */
-async function rotateRefreshToken(userId, oldToken) {
+export async function rotateRefreshToken(userId, oldToken) {
     // Verify old token is valid
     const isValid = await validateRefreshToken(userId, oldToken);
     if (!isValid) {
@@ -131,7 +106,7 @@ async function rotateRefreshToken(userId, oldToken) {
         throw error;
     }
     // Revoke all old tokens for this user
-    await prisma_1.prisma.refreshToken.updateMany({
+    await prisma.refreshToken.updateMany({
         where: { userId, revokedAt: null },
         data: { revokedAt: new Date() },
     });
@@ -143,7 +118,7 @@ async function rotateRefreshToken(userId, oldToken) {
 /**
  * Supabase Auth: Sign up new user
  */
-async function signUpWithSupabase(email, password, name) {
+export async function signUpWithSupabase(email, password, name) {
     try {
         const { data, error } = await supabase.auth.signUp({
             email: email.toLowerCase(),
@@ -161,7 +136,7 @@ async function signUpWithSupabase(email, password, name) {
             throw new Error('User creation failed');
         }
         // Create local user record
-        const localUser = await prisma_1.prisma.user.create({
+        const localUser = await prisma.user.create({
             data: {
                 id: data.user.id, // Use Supabase user ID
                 email: email.toLowerCase(),
@@ -178,7 +153,7 @@ async function signUpWithSupabase(email, password, name) {
 /**
  * Supabase Auth: Sign in with email and password
  */
-async function signInWithSupabase(email, password) {
+export async function signInWithSupabase(email, password) {
     try {
         const { data, error } = await supabase.auth.signInWithPassword({
             email: email.toLowerCase(),
@@ -193,7 +168,7 @@ async function signInWithSupabase(email, password) {
             throw new Error('Sign in failed');
         }
         // Get local user record
-        const user = await prisma_1.prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: { id: data.user.id },
             select: { id: true, email: true, name: true },
         });
@@ -211,7 +186,7 @@ async function signInWithSupabase(email, password) {
 /**
  * Supabase Auth: Sign out
  */
-async function signOutWithSupabase(accessToken) {
+export async function signOutWithSupabase(accessToken) {
     try {
         const { error } = await supabase.auth.signOut();
         if (error) {
@@ -225,10 +200,10 @@ async function signOutWithSupabase(accessToken) {
 /**
  * Create a new user in the database (Custom JWT fallback)
  */
-async function createUser(name, email, password) {
+export async function createUser(name, email, password) {
     try {
         // Check if user already exists
-        const existingUser = await prisma_1.prisma.user.findUnique({
+        const existingUser = await prisma.user.findUnique({
             where: { email: email.toLowerCase() },
         });
         if (existingUser) {
@@ -239,7 +214,7 @@ async function createUser(name, email, password) {
         // Hash password
         const passwordHash = await hashPassword(password);
         // Create user
-        const user = await prisma_1.prisma.user.create({
+        const user = await prisma.user.create({
             data: {
                 email: email.toLowerCase(),
                 name,
@@ -265,8 +240,8 @@ async function createUser(name, email, password) {
 /**
  * Find a user by email (includes passwordHash for login verification)
  */
-async function findUserByEmail(email) {
-    const user = await prisma_1.prisma.user.findUnique({
+export async function findUserByEmail(email) {
+    const user = await prisma.user.findUnique({
         where: { email: email.toLowerCase() },
         select: {
             id: true,
@@ -285,8 +260,8 @@ async function findUserByEmail(email) {
 /**
  * Find a user by ID (excludes passwordHash)
  */
-async function findUserById(id) {
-    const user = await prisma_1.prisma.user.findUnique({
+export async function findUserById(id) {
+    const user = await prisma.user.findUnique({
         where: { id },
         select: {
             id: true,
@@ -304,7 +279,7 @@ async function findUserById(id) {
 /**
  * Login user with email and password (local authentication)
  */
-async function loginUser(email, password) {
+export async function loginUser(email, password) {
     try {
         // Find user by email
         const user = await findUserByEmail(email);
@@ -337,16 +312,16 @@ async function loginUser(email, password) {
 /**
  * Generate a 6-digit verification code
  */
-function generateVerificationCode() {
+export function generateVerificationCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 /**
  * Send verification code to user's email via OVH SMTP
  */
-async function sendVerificationEmail(email, code, name) {
+export async function sendVerificationEmail(email, code, name) {
     try {
         // Create Nodemailer transporter for OVH SMTP
-        const transporter = nodemailer_1.default.createTransport({
+        const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST || 'ssl0.ovh.net',
             port: parseInt(process.env.SMTP_PORT || '587'),
             secure: process.env.SMTP_SECURE === 'true', // true for 465, false for 587
@@ -407,10 +382,10 @@ async function sendVerificationEmail(email, code, name) {
 /**
  * Create user with verification code and send email
  */
-async function createUserWithVerification(name, email, password) {
+export async function createUserWithVerification(name, email, password) {
     try {
         // Check if user already exists
-        const existingUser = await prisma_1.prisma.user.findUnique({
+        const existingUser = await prisma.user.findUnique({
             where: { email: email.toLowerCase() },
         });
         if (existingUser) {
@@ -424,7 +399,7 @@ async function createUserWithVerification(name, email, password) {
         // Hash password
         const passwordHash = await hashPassword(password);
         // Create user with verification code
-        const user = await prisma_1.prisma.user.create({
+        const user = await prisma.user.create({
             data: {
                 email: email.toLowerCase(),
                 name,
@@ -458,9 +433,9 @@ async function createUserWithVerification(name, email, password) {
 /**
  * Verify email with code
  */
-async function verifyEmailCode(email, code) {
+export async function verifyEmailCode(email, code) {
     try {
-        const user = await prisma_1.prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: { email: email.toLowerCase() },
             select: {
                 id: true,
@@ -495,7 +470,7 @@ async function verifyEmailCode(email, code) {
             throw error;
         }
         // Mark email as verified
-        const verifiedUser = await prisma_1.prisma.user.update({
+        const verifiedUser = await prisma.user.update({
             where: { id: user.id },
             data: {
                 emailVerified: true,
@@ -520,9 +495,9 @@ async function verifyEmailCode(email, code) {
 /**
  * Resend verification code
  */
-async function resendVerificationCode(email) {
+export async function resendVerificationCode(email) {
     try {
-        const user = await prisma_1.prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: { email: email.toLowerCase() },
             select: {
                 id: true,
@@ -545,7 +520,7 @@ async function resendVerificationCode(email) {
         const verificationCode = generateVerificationCode();
         const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
         // Update user with new code
-        await prisma_1.prisma.user.update({
+        await prisma.user.update({
             where: { id: user.id },
             data: {
                 verificationCode,

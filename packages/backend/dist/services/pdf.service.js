@@ -1,24 +1,12 @@
-"use strict";
 /**
  * PDF generation and caching service for invoices
  * Handles Puppeteer rendering, QR code generation, and Supabase storage
  */
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.pdfService = void 0;
-exports.generateInvoicePdf = generateInvoicePdf;
-exports.getOrGeneratePdf = getOrGeneratePdf;
-exports.invalidatePdfCache = invalidatePdfCache;
-exports.generatePdfWithRetry = generatePdfWithRetry;
-exports.getPdfServiceStats = getPdfServiceStats;
-exports.healthCheck = healthCheck;
-const qrcode_1 = __importDefault(require("qrcode"));
-const puppeteer_1 = require("../lib/puppeteer");
-const storage_1 = require("../lib/storage");
-const invoice_template_1 = require("../templates/invoice.template");
-const invoice_service_1 = require("./invoice.service");
+import QRCode from 'qrcode';
+import { puppeteerManager } from '../lib/puppeteer';
+import { storageService } from '../lib/storage';
+import { generateInvoiceHtml } from '../templates/invoice.template';
+import { getInvoiceById } from './invoice.service';
 /**
  * Generate QR code data URL for invoice
  */
@@ -31,7 +19,7 @@ async function generateQrCodeDataUrl(invoice) {
             new Date(invoice.invoiceDate).toISOString().split('T')[0],
             invoice.totalTTC.toFixed(3),
         ].join('|');
-        const dataUrl = await qrcode_1.default.toDataURL(qrContent, {
+        const dataUrl = await QRCode.toDataURL(qrContent, {
             width: 200,
             margin: 1,
             errorCorrectionLevel: 'H',
@@ -52,7 +40,7 @@ async function renderPdfFromHtml(html) {
     let page = null;
     try {
         const startTime = Date.now();
-        page = await puppeteer_1.puppeteerManager.getPage();
+        page = await puppeteerManager.getPage();
         await page.setContent(html, {
             waitUntil: 'networkidle0',
             timeout: 30000,
@@ -81,25 +69,25 @@ async function renderPdfFromHtml(html) {
     }
     finally {
         if (page) {
-            await puppeteer_1.puppeteerManager.releasePage(page);
+            await puppeteerManager.releasePage(page);
         }
     }
 }
 /**
  * Generate PDF for invoice without cache bypass
  */
-async function generateInvoicePdf(invoiceId, userId, language = 'fr') {
+export async function generateInvoicePdf(invoiceId, userId, language = 'fr') {
     try {
         console.log(`[PDF] Generating PDF for invoice ${invoiceId} (language: ${language})`);
         // Fetch invoice with all relations
-        const invoice = await (0, invoice_service_1.getInvoiceById)(userId, invoiceId);
+        const invoice = await getInvoiceById(userId, invoiceId);
         if (!invoice) {
             throw new Error(`Invoice ${invoiceId} not found`);
         }
         // Generate QR code
         const qrCodeDataUrl = await generateQrCodeDataUrl(invoice);
         // Generate HTML
-        const html = (0, invoice_template_1.generateInvoiceHtml)(invoice, language, qrCodeDataUrl);
+        const html = generateInvoiceHtml(invoice, language, qrCodeDataUrl);
         // Render PDF
         const buffer = await renderPdfFromHtml(html);
         console.log(`[PDF] Generated PDF buffer (${buffer.length} bytes)`);
@@ -113,14 +101,14 @@ async function generateInvoicePdf(invoiceId, userId, language = 'fr') {
 /**
  * Get or generate PDF with caching support
  */
-async function getOrGeneratePdf(invoiceId, userId, options = {}) {
+export async function getOrGeneratePdf(invoiceId, userId, options = {}) {
     const language = options.language || 'fr';
     const bypassCache = options.bypassCache || false;
     try {
         // Check cache unless bypassed
         if (!bypassCache) {
             console.log(`[PDF] Checking cache for ${invoiceId} (${language})`);
-            const cached = await storage_1.storageService.downloadPdf(invoiceId, userId, language);
+            const cached = await storageService.downloadPdf(invoiceId, userId, language);
             if (cached) {
                 return {
                     buffer: cached,
@@ -133,7 +121,7 @@ async function getOrGeneratePdf(invoiceId, userId, options = {}) {
         console.log(`[PDF] Cache miss or bypassed, generating new PDF`);
         const buffer = await generateInvoicePdf(invoiceId, userId, language);
         // Upload to cache
-        const uploadSuccess = await storage_1.storageService.uploadPdf(invoiceId, userId, language, buffer);
+        const uploadSuccess = await storageService.uploadPdf(invoiceId, userId, language, buffer);
         if (!uploadSuccess) {
             console.warn('[PDF] Warning: Failed to upload PDF to storage, returning generated PDF only');
         }
@@ -151,10 +139,10 @@ async function getOrGeneratePdf(invoiceId, userId, options = {}) {
 /**
  * Invalidate PDF cache for invoice (called on update)
  */
-async function invalidatePdfCache(invoiceId, userId) {
+export async function invalidatePdfCache(invoiceId, userId) {
     try {
         console.log(`[PDF] Invalidating cache for invoice ${invoiceId}`);
-        const success = await storage_1.storageService.deletePdf(invoiceId, userId);
+        const success = await storageService.deletePdf(invoiceId, userId);
         if (success) {
             console.log(`[PDF] Cache invalidated for invoice ${invoiceId}`);
         }
@@ -170,7 +158,7 @@ async function invalidatePdfCache(invoiceId, userId) {
 /**
  * Retry wrapper for PDF generation with fallback
  */
-async function generatePdfWithRetry(invoiceId, userId, language = 'fr', maxRetries = 1) {
+export async function generatePdfWithRetry(invoiceId, userId, language = 'fr', maxRetries = 1) {
     let lastError = null;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
@@ -191,17 +179,17 @@ async function generatePdfWithRetry(invoiceId, userId, language = 'fr', maxRetri
 /**
  * Get pool statistics for monitoring
  */
-function getPdfServiceStats() {
+export function getPdfServiceStats() {
     return {
-        puppeteer: puppeteer_1.puppeteerManager.getPoolStats(),
+        puppeteer: puppeteerManager.getPoolStats(),
     };
 }
 /**
  * Health check for PDF service
  */
-async function healthCheck() {
+export async function healthCheck() {
     try {
-        const isHealthy = await puppeteer_1.puppeteerManager.healthCheck();
+        const isHealthy = await puppeteerManager.healthCheck();
         console.log(`[PDF] Health check: ${isHealthy ? 'healthy' : 'unhealthy'}`);
         return isHealthy;
     }
@@ -210,7 +198,7 @@ async function healthCheck() {
         return false;
     }
 }
-exports.pdfService = {
+export const pdfService = {
     generateInvoicePdf,
     getOrGeneratePdf,
     invalidatePdfCache,

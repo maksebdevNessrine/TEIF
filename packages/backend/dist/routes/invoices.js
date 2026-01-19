@@ -1,4 +1,3 @@
-"use strict";
 /**
  * Invoice Routes - Using Hono RPC + Auto-Generated Zod Schemas
  *
@@ -8,18 +7,17 @@
  * 3. Global error handling (no try-catch needed)
  * 4. Fully typed RPC for frontend
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-const hono_1 = require("hono");
-const zod_validator_1 = require("@hono/zod-validator");
-const invoice_service_1 = require("../services/invoice.service");
-const pdf_service_1 = require("../services/pdf.service");
-const auth_1 = require("../middleware/auth");
-const invoice_dto_1 = require("../schemas/invoice-dto");
+import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
+import { invoiceService } from '../services/invoice.service';
+import { pdfService } from '../services/pdf.service';
+import { authMiddleware } from '../middleware/auth';
+import { InvoiceCreateApiSchema, InvoiceUpdateApiSchema } from '../schemas/invoice-dto';
 // Auto-generated schemas from Prisma (zod-prisma-types generator)
 // Actual validation happens at runtime via zValidator middleware
-const invoiceRoutes = new hono_1.Hono();
+const invoiceRoutes = new Hono();
 // Apply auth middleware to all invoice routes
-invoiceRoutes.use('*', auth_1.authMiddleware);
+invoiceRoutes.use('*', authMiddleware);
 /**
  * POST /api/invoices - Create a new invoice
  *
@@ -29,11 +27,11 @@ invoiceRoutes.use('*', auth_1.authMiddleware);
  *
  * Service layer converts to database format
  */
-invoiceRoutes.post('/', (0, zod_validator_1.zValidator)('json', invoice_dto_1.InvoiceCreateApiSchema), async (c) => {
+invoiceRoutes.post('/', zValidator('json', InvoiceCreateApiSchema), async (c) => {
     const user = c.get('user');
     const validatedData = c.req.valid('json');
     // Service handles conversion to Prisma format
-    const invoice = await invoice_service_1.invoiceService.createInvoice(user.userId, validatedData);
+    const invoice = await invoiceService.createInvoice(user.userId, validatedData);
     return c.json({ success: true, data: invoice }, 201);
 });
 /**
@@ -42,17 +40,17 @@ invoiceRoutes.post('/', (0, zod_validator_1.zValidator)('json', invoice_dto_1.In
 invoiceRoutes.get('/:id', async (c) => {
     const user = c.get('user');
     const invoiceId = c.req.param('id');
-    const invoice = await invoice_service_1.invoiceService.getInvoiceById(user.userId, invoiceId);
+    const invoice = await invoiceService.getInvoiceById(user.userId, invoiceId);
     return c.json({ success: true, data: invoice }, 200);
 });
 /**
  * PUT /api/invoices/:id - Update an invoice
  */
-invoiceRoutes.put('/:id', (0, zod_validator_1.zValidator)('json', invoice_dto_1.InvoiceUpdateApiSchema), async (c) => {
+invoiceRoutes.put('/:id', zValidator('json', InvoiceUpdateApiSchema), async (c) => {
     const user = c.get('user');
     const invoiceId = c.req.param('id');
     const validatedData = c.req.valid('json');
-    const invoice = await invoice_service_1.invoiceService.updateInvoice(user.userId, invoiceId, validatedData);
+    const invoice = await invoiceService.updateInvoice(user.userId, invoiceId, validatedData);
     return c.json({ success: true, data: invoice }, 200);
 });
 /**
@@ -61,7 +59,7 @@ invoiceRoutes.put('/:id', (0, zod_validator_1.zValidator)('json', invoice_dto_1.
 invoiceRoutes.delete('/:id', async (c) => {
     const user = c.get('user');
     const invoiceId = c.req.param('id');
-    await invoice_service_1.invoiceService.deleteInvoice(user.userId, invoiceId);
+    await invoiceService.deleteInvoice(user.userId, invoiceId);
     return c.json({ success: true, message: 'Invoice deleted' }, 200);
 });
 /**
@@ -82,7 +80,7 @@ invoiceRoutes.get('/', async (c) => {
         sortBy: c.req.query('sortBy'),
         sortOrder: c.req.query('sortOrder'),
     };
-    const result = await invoice_service_1.invoiceService.listInvoices(user.userId, queryParams);
+    const result = await invoiceService.listInvoices(user.userId, queryParams);
     return c.json({ success: true, data: result }, 200);
 });
 /**
@@ -96,10 +94,10 @@ invoiceRoutes.get('/:id/pdf', async (c) => {
     if (!['ar', 'fr', 'en'].includes(language)) {
         return c.json({ success: false, error: 'Invalid language' }, 400);
     }
-    const { buffer, fromCache } = await pdf_service_1.pdfService.getOrGeneratePdf(invoiceId, user.userId, { language });
+    const { buffer, fromCache } = await pdfService.getOrGeneratePdf(invoiceId, user.userId, { language });
     c.header('Content-Type', 'application/pdf');
     c.header('Content-Disposition', `inline; filename="invoice-${invoiceId}.pdf"`);
     c.header('X-PDF-Cache', fromCache ? 'hit' : 'miss');
     return c.body(buffer);
 });
-exports.default = invoiceRoutes;
+export default invoiceRoutes;

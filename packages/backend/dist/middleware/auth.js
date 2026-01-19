@@ -1,15 +1,11 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.authMiddleware = authMiddleware;
-exports.requireAuth = requireAuth;
-const cookie_1 = require("hono/cookie");
-const auth_service_1 = require("../services/auth.service");
+import { getCookie } from 'hono/cookie';
+import { verifyToken } from '../services/auth.service';
 /**
  * JWT authentication middleware
  * Extracts token from Authorization header or httpOnly cookie and validates it
  * Attaches user data to context if valid
  */
-async function authMiddleware(c, next) {
+export async function authMiddleware(c, next) {
     try {
         // Try to get token from Authorization header first (for API calls)
         let token = '';
@@ -26,13 +22,13 @@ async function authMiddleware(c, next) {
         }
         else {
             // Try to get token from httpOnly cookie (for browser requests)
-            token = (0, cookie_1.getCookie)(c, 'accessToken') || '';
+            token = getCookie(c, 'accessToken') || '';
         }
         if (!token) {
             return c.json({ error: 'Authentication required' }, 401);
         }
         // Verify token
-        const decoded = (0, auth_service_1.verifyToken)(token);
+        const decoded = verifyToken(token);
         // Attach user to context
         c.set('user', decoded);
         await next();
@@ -46,6 +42,6 @@ async function authMiddleware(c, next) {
  * Helper function to require authentication
  * Returns the middleware for use in protected routes
  */
-function requireAuth() {
+export function requireAuth() {
     return authMiddleware;
 }

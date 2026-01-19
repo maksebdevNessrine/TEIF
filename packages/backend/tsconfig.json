@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
+    "module": "ES2022",
     "lib": ["ES2022"],
     "moduleResolution": "bundler",
     "outDir": "./dist",
@@ -13,8 +13,8 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "paths": {
-      "@teif/shared": ["../shared/src"],
-      "@teif/shared/*": ["../shared/src/*"],
+      "@teif/shared": ["../shared/dist"],
+      "@teif/shared/*": ["../shared/dist/*"],
       "@teif/generated/zod": ["../prisma/generated/zod/index.ts"]
     }
   },
