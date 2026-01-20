@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { logger } from 'hono/logger';
@@ -80,10 +81,23 @@ app.onError((err, c) => {
 const port = Number(process.env.PORT) || 3000;
 async function startServer() {
     try {
-        // Connect to database
-        await connectDatabase();
-        // Start HTTP server
+        // Start HTTP server immediately (don't wait for DB)
         console.log(`🚀 Server starting on 0.0.0.0:${port}...`);
+        // Connect to database in background with retry
+        connectDatabase()
+            .catch(err => {
+            console.warn('⚠️ Initial database connection failed, will retry:', err.message);
+            // Retry every 5 seconds
+            setInterval(async () => {
+                try {
+                    await connectDatabase();
+                    console.log('✅ Database connected');
+                }
+                catch (retryErr) {
+                    console.warn('Database retry failed:', retryErr.message);
+                }
+            }, 5000);
+        });
         // serve() returns a promise that never resolves (keeps server alive)
         await serve({
             fetch: app.fetch,
@@ -104,6 +118,15 @@ process.on('SIGINT', async () => {
     console.log('\n🛑 Shutting down gracefully...');
     await disconnectDatabase();
     process.exit(0);
+});
+// Handle unhandled rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+// Handle uncaught exceptions  
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    // Don't exit - keep server running
 });
 process.on('SIGTERM', async () => {
     console.log('\n🛑 Shutting down gracefully...');

@@ -14,7 +14,8 @@ export async function connectDatabase() {
     }
     catch (error) {
         console.error('❌ Database connection failed:', error);
-        process.exit(1);
+        // Don't exit - let app continue and retry
+        throw error;
     }
 }
 export async function disconnectDatabase() {
