@@ -3,9 +3,12 @@
  * Retries until the /api/health endpoint responds
  */
 export async function waitForBackend(maxRetries = 60, delayMs = 500): Promise<void> {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+  const healthUrl = apiBaseUrl.replace(/\/api\/?$/, '') + '/api/health';
+  
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const response = await fetch('http://localhost:3000/api/health', {
+      const response = await fetch(healthUrl, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         mode: 'cors',
