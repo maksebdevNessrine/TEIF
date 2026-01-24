@@ -142,12 +142,34 @@ export function handleUnknownError(error) {
         return handlePrismaClientError(error);
     }
     if (error instanceof Error) {
+        // Extract custom status code from error object if set by service layer
+        const customStatusCode = error.statusCode;
+        const statusCode = customStatusCode && customStatusCode >= 400 && customStatusCode < 600
+            ? customStatusCode
+            : 500;
+        // Map status codes to appropriate error messages
+        let errorType = 'Application Error';
+        if (statusCode === 401) {
+            errorType = 'Unauthorized';
+        }
+        else if (statusCode === 403) {
+            errorType = 'Forbidden';
+        }
+        else if (statusCode === 404) {
+            errorType = 'Not Found';
+        }
+        else if (statusCode === 409) {
+            errorType = 'Conflict';
+        }
+        else if (statusCode >= 500) {
+            errorType = 'Server Error';
+        }
         return {
             success: false,
-            error: 'Application Error',
+            error: errorType,
             message: error.message,
-            code: 'UNKNOWN_ERROR',
-            statusCode: 500,
+            code: 'APPLICATION_ERROR',
+            statusCode,
         };
     }
     return {

@@ -110,22 +110,24 @@ export function validateInvoiceField(fieldPath: string, value: any, invoiceData:
     }
 
     if (field === 'street') {
-      if (!value || value.trim().length === 0) {
-        return { field: fieldPath, message: `${prefix} street address is required`, severity: 'error' };
-      }
-      const result = Validators.validateStreetAddress(value);
-      if (!result.isValid) {
-        return { field: fieldPath, message: result.error || `Invalid ${prefix.toLowerCase()} street address`, severity: 'error' };
+      // Street is optional per TEIF spec (minOccurs="0")
+      // Only validate format if provided
+      if (value && value.trim().length > 0) {
+        const result = Validators.validateStreetAddress(value);
+        if (!result.isValid) {
+          return { field: fieldPath, message: result.error || `Invalid ${prefix.toLowerCase()} street address`, severity: 'error' };
+        }
       }
     }
 
     if (field === 'city') {
-      if (!value || value.trim().length === 0) {
-        return { field: fieldPath, message: `${prefix} city is required`, severity: 'error' };
-      }
-      const result = Validators.validateCity(value);
-      if (!result.isValid) {
-        return { field: fieldPath, message: result.error || `Invalid ${prefix.toLowerCase()} city`, severity: 'error' };
+      // City is optional per TEIF spec (minOccurs="0")
+      // Only validate format if provided
+      if (value && value.trim().length > 0) {
+        const result = Validators.validateCity(value);
+        if (!result.isValid) {
+          return { field: fieldPath, message: result.error || `Invalid ${prefix.toLowerCase()} city`, severity: 'error' };
+        }
       }
     }
 

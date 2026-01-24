@@ -15,9 +15,9 @@ export declare const partnerSchema: z.ZodObject<{
     idType: z.ZodEnum<["I-01", "I-02", "I-03", "I-04"]>;
     idValue: z.ZodString;
     name: z.ZodString;
-    addressDescription: z.ZodString;
-    street: z.ZodString;
-    city: z.ZodString;
+    addressDescription: z.ZodOptional<z.ZodString>;
+    street: z.ZodOptional<z.ZodString>;
+    city: z.ZodOptional<z.ZodString>;
     postalCode: z.ZodString;
     country: z.ZodString;
     rc: z.ZodOptional<z.ZodString>;
@@ -29,11 +29,11 @@ export declare const partnerSchema: z.ZodObject<{
     idType: "I-01" | "I-02" | "I-03" | "I-04";
     idValue: string;
     name: string;
-    addressDescription: string;
-    street: string;
-    city: string;
     postalCode: string;
     country: string;
+    addressDescription?: string | undefined;
+    street?: string | undefined;
+    city?: string | undefined;
     rc?: string | undefined;
     capital?: string | undefined;
     phone?: string | undefined;
@@ -43,11 +43,11 @@ export declare const partnerSchema: z.ZodObject<{
     idType: "I-01" | "I-02" | "I-03" | "I-04";
     idValue: string;
     name: string;
-    addressDescription: string;
-    street: string;
-    city: string;
     postalCode: string;
     country: string;
+    addressDescription?: string | undefined;
+    street?: string | undefined;
+    city?: string | undefined;
     rc?: string | undefined;
     capital?: string | undefined;
     phone?: string | undefined;
@@ -63,19 +63,19 @@ export declare const allowanceChargeSchema: z.ZodObject<{
     basedOn: z.ZodOptional<z.ZodEnum<["line", "invoice"]>>;
     lineId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    amount: number;
     code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
     type: "allowance" | "charge";
     id: string;
     description: string;
+    amount: number;
     basedOn?: "line" | "invoice" | undefined;
     lineId?: string | undefined;
 }, {
-    amount: number;
     code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
     type: "allowance" | "charge";
     id: string;
     description: string;
+    amount: number;
     basedOn?: "line" | "invoice" | undefined;
     lineId?: string | undefined;
 }>;
@@ -99,19 +99,19 @@ export declare const invoiceLineSchema: z.ZodObject<{
         basedOn: z.ZodOptional<z.ZodEnum<["line", "invoice"]>>;
         lineId: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        amount: number;
         code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
         type: "allowance" | "charge";
         id: string;
         description: string;
+        amount: number;
         basedOn?: "line" | "invoice" | undefined;
         lineId?: string | undefined;
     }, {
-        amount: number;
         code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
         type: "allowance" | "charge";
         id: string;
         description: string;
+        amount: number;
         basedOn?: "line" | "invoice" | undefined;
         lineId?: string | undefined;
     }>, "many">>;
@@ -127,11 +127,11 @@ export declare const invoiceLineSchema: z.ZodObject<{
     fodec: boolean;
     exemptionReason?: string | undefined;
     allowances?: {
-        amount: number;
         code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
         type: "allowance" | "charge";
         id: string;
         description: string;
+        amount: number;
         basedOn?: "line" | "invoice" | undefined;
         lineId?: string | undefined;
     }[] | undefined;
@@ -147,11 +147,11 @@ export declare const invoiceLineSchema: z.ZodObject<{
     fodec: boolean;
     exemptionReason?: string | undefined;
     allowances?: {
-        amount: number;
         code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
         type: "allowance" | "charge";
         id: string;
         description: string;
+        amount: number;
         basedOn?: "line" | "invoice" | undefined;
         lineId?: string | undefined;
     }[] | undefined;
@@ -177,9 +177,9 @@ export declare const invoiceDataSchema: z.ZodObject<{
         idType: z.ZodEnum<["I-01", "I-02", "I-03", "I-04"]>;
         idValue: z.ZodString;
         name: z.ZodString;
-        addressDescription: z.ZodString;
-        street: z.ZodString;
-        city: z.ZodString;
+        addressDescription: z.ZodOptional<z.ZodString>;
+        street: z.ZodOptional<z.ZodString>;
+        city: z.ZodOptional<z.ZodString>;
         postalCode: z.ZodString;
         country: z.ZodString;
         rc: z.ZodOptional<z.ZodString>;
@@ -191,11 +191,11 @@ export declare const invoiceDataSchema: z.ZodObject<{
         idType: "I-01" | "I-02" | "I-03" | "I-04";
         idValue: string;
         name: string;
-        addressDescription: string;
-        street: string;
-        city: string;
         postalCode: string;
         country: string;
+        addressDescription?: string | undefined;
+        street?: string | undefined;
+        city?: string | undefined;
         rc?: string | undefined;
         capital?: string | undefined;
         phone?: string | undefined;
@@ -205,11 +205,11 @@ export declare const invoiceDataSchema: z.ZodObject<{
         idType: "I-01" | "I-02" | "I-03" | "I-04";
         idValue: string;
         name: string;
-        addressDescription: string;
-        street: string;
-        city: string;
         postalCode: string;
         country: string;
+        addressDescription?: string | undefined;
+        street?: string | undefined;
+        city?: string | undefined;
         rc?: string | undefined;
         capital?: string | undefined;
         phone?: string | undefined;
@@ -220,9 +220,9 @@ export declare const invoiceDataSchema: z.ZodObject<{
         idType: z.ZodEnum<["I-01", "I-02", "I-03", "I-04"]>;
         idValue: z.ZodString;
         name: z.ZodString;
-        addressDescription: z.ZodString;
-        street: z.ZodString;
-        city: z.ZodString;
+        addressDescription: z.ZodOptional<z.ZodString>;
+        street: z.ZodOptional<z.ZodString>;
+        city: z.ZodOptional<z.ZodString>;
         postalCode: z.ZodString;
         country: z.ZodString;
         rc: z.ZodOptional<z.ZodString>;
@@ -234,11 +234,11 @@ export declare const invoiceDataSchema: z.ZodObject<{
         idType: "I-01" | "I-02" | "I-03" | "I-04";
         idValue: string;
         name: string;
-        addressDescription: string;
-        street: string;
-        city: string;
         postalCode: string;
         country: string;
+        addressDescription?: string | undefined;
+        street?: string | undefined;
+        city?: string | undefined;
         rc?: string | undefined;
         capital?: string | undefined;
         phone?: string | undefined;
@@ -248,11 +248,11 @@ export declare const invoiceDataSchema: z.ZodObject<{
         idType: "I-01" | "I-02" | "I-03" | "I-04";
         idValue: string;
         name: string;
-        addressDescription: string;
-        street: string;
-        city: string;
         postalCode: string;
         country: string;
+        addressDescription?: string | undefined;
+        street?: string | undefined;
+        city?: string | undefined;
         rc?: string | undefined;
         capital?: string | undefined;
         phone?: string | undefined;
@@ -279,19 +279,19 @@ export declare const invoiceDataSchema: z.ZodObject<{
             basedOn: z.ZodOptional<z.ZodEnum<["line", "invoice"]>>;
             lineId: z.ZodOptional<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
-            amount: number;
             code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
             type: "allowance" | "charge";
             id: string;
             description: string;
+            amount: number;
             basedOn?: "line" | "invoice" | undefined;
             lineId?: string | undefined;
         }, {
-            amount: number;
             code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
             type: "allowance" | "charge";
             id: string;
             description: string;
+            amount: number;
             basedOn?: "line" | "invoice" | undefined;
             lineId?: string | undefined;
         }>, "many">>;
@@ -307,11 +307,11 @@ export declare const invoiceDataSchema: z.ZodObject<{
         fodec: boolean;
         exemptionReason?: string | undefined;
         allowances?: {
-            amount: number;
             code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
             type: "allowance" | "charge";
             id: string;
             description: string;
+            amount: number;
             basedOn?: "line" | "invoice" | undefined;
             lineId?: string | undefined;
         }[] | undefined;
@@ -327,11 +327,11 @@ export declare const invoiceDataSchema: z.ZodObject<{
         fodec: boolean;
         exemptionReason?: string | undefined;
         allowances?: {
-            amount: number;
             code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
             type: "allowance" | "charge";
             id: string;
             description: string;
+            amount: number;
             basedOn?: "line" | "invoice" | undefined;
             lineId?: string | undefined;
         }[] | undefined;
@@ -345,19 +345,19 @@ export declare const invoiceDataSchema: z.ZodObject<{
         basedOn: z.ZodOptional<z.ZodEnum<["line", "invoice"]>>;
         lineId: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        amount: number;
         code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
         type: "allowance" | "charge";
         id: string;
         description: string;
+        amount: number;
         basedOn?: "line" | "invoice" | undefined;
         lineId?: string | undefined;
     }, {
-        amount: number;
         code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
         type: "allowance" | "charge";
         id: string;
         description: string;
+        amount: number;
         basedOn?: "line" | "invoice" | undefined;
         lineId?: string | undefined;
     }>, "many">>;
@@ -388,8 +388,8 @@ export declare const invoiceDataSchema: z.ZodObject<{
     qrCodeEnabled: z.ZodOptional<z.ZodBoolean>;
     qrCodeContent: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    documentNumber: string;
     documentType: "I-11" | "I-12" | "I-13" | "I-14" | "I-15" | "I-16" | "I-30" | "I-31" | "I-32" | "I-33" | "I-34" | "I-50" | "I-51";
+    documentNumber: string;
     invoiceDate: string;
     operationNature: "OP-SUPPLY" | "OP-DELIVERY" | "OP-IMPORT" | "OP-EXPORT" | "OP-CASH" | "OP-RECEIPT";
     currency: string;
@@ -397,11 +397,11 @@ export declare const invoiceDataSchema: z.ZodObject<{
         idType: "I-01" | "I-02" | "I-03" | "I-04";
         idValue: string;
         name: string;
-        addressDescription: string;
-        street: string;
-        city: string;
         postalCode: string;
         country: string;
+        addressDescription?: string | undefined;
+        street?: string | undefined;
+        city?: string | undefined;
         rc?: string | undefined;
         capital?: string | undefined;
         phone?: string | undefined;
@@ -412,11 +412,11 @@ export declare const invoiceDataSchema: z.ZodObject<{
         idType: "I-01" | "I-02" | "I-03" | "I-04";
         idValue: string;
         name: string;
-        addressDescription: string;
-        street: string;
-        city: string;
         postalCode: string;
         country: string;
+        addressDescription?: string | undefined;
+        street?: string | undefined;
+        city?: string | undefined;
         rc?: string | undefined;
         capital?: string | undefined;
         phone?: string | undefined;
@@ -435,11 +435,11 @@ export declare const invoiceDataSchema: z.ZodObject<{
         fodec: boolean;
         exemptionReason?: string | undefined;
         allowances?: {
-            amount: number;
             code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
             type: "allowance" | "charge";
             id: string;
             description: string;
+            amount: number;
             basedOn?: "line" | "invoice" | undefined;
             lineId?: string | undefined;
         }[] | undefined;
@@ -449,11 +449,11 @@ export declare const invoiceDataSchema: z.ZodObject<{
     ttnReference: string;
     paymentMeans: "I-114" | "I-115" | "I-116" | "I-117" | "I-118" | "I-119" | "I-120" | "I-131";
     allowances?: {
-        amount: number;
         code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
         type: "allowance" | "charge";
         id: string;
         description: string;
+        amount: number;
         basedOn?: "line" | "invoice" | undefined;
         lineId?: string | undefined;
     }[] | undefined;
@@ -491,8 +491,8 @@ export declare const invoiceDataSchema: z.ZodObject<{
     qrCodeEnabled?: boolean | undefined;
     qrCodeContent?: string | undefined;
 }, {
-    documentNumber: string;
     documentType: "I-11" | "I-12" | "I-13" | "I-14" | "I-15" | "I-16" | "I-30" | "I-31" | "I-32" | "I-33" | "I-34" | "I-50" | "I-51";
+    documentNumber: string;
     invoiceDate: string;
     operationNature: "OP-SUPPLY" | "OP-DELIVERY" | "OP-IMPORT" | "OP-EXPORT" | "OP-CASH" | "OP-RECEIPT";
     currency: string;
@@ -500,11 +500,11 @@ export declare const invoiceDataSchema: z.ZodObject<{
         idType: "I-01" | "I-02" | "I-03" | "I-04";
         idValue: string;
         name: string;
-        addressDescription: string;
-        street: string;
-        city: string;
         postalCode: string;
         country: string;
+        addressDescription?: string | undefined;
+        street?: string | undefined;
+        city?: string | undefined;
         rc?: string | undefined;
         capital?: string | undefined;
         phone?: string | undefined;
@@ -515,11 +515,11 @@ export declare const invoiceDataSchema: z.ZodObject<{
         idType: "I-01" | "I-02" | "I-03" | "I-04";
         idValue: string;
         name: string;
-        addressDescription: string;
-        street: string;
-        city: string;
         postalCode: string;
         country: string;
+        addressDescription?: string | undefined;
+        street?: string | undefined;
+        city?: string | undefined;
         rc?: string | undefined;
         capital?: string | undefined;
         phone?: string | undefined;
@@ -538,22 +538,22 @@ export declare const invoiceDataSchema: z.ZodObject<{
         fodec: boolean;
         exemptionReason?: string | undefined;
         allowances?: {
-            amount: number;
             code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
             type: "allowance" | "charge";
             id: string;
             description: string;
+            amount: number;
             basedOn?: "line" | "invoice" | undefined;
             lineId?: string | undefined;
         }[] | undefined;
     }[];
     paymentMeans: "I-114" | "I-115" | "I-116" | "I-117" | "I-118" | "I-119" | "I-120" | "I-131";
     allowances?: {
-        amount: number;
         code: "I-151" | "I-152" | "I-153" | "I-154" | "I-155";
         type: "allowance" | "charge";
         id: string;
         description: string;
+        amount: number;
         basedOn?: "line" | "invoice" | undefined;
         lineId?: string | undefined;
     }[] | undefined;
@@ -609,7 +609,7 @@ export declare const invoiceListQuerySchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     limit: number;
-    sortBy: "date" | "amount" | "documentNumber";
+    sortBy: "amount" | "documentNumber" | "date";
     sortOrder: "asc" | "desc";
     status?: "" | "draft" | "finalized" | "sent" | "paid" | "cancelled" | "voided" | undefined;
     documentType?: "" | "I-11" | "I-12" | "I-13" | "I-14" | "I-15" | "I-16" | undefined;
@@ -628,7 +628,7 @@ export declare const invoiceListQuerySchema: z.ZodObject<{
     dateTo?: string | undefined;
     minAmount?: number | undefined;
     maxAmount?: number | undefined;
-    sortBy?: "date" | "amount" | "documentNumber" | undefined;
+    sortBy?: "amount" | "documentNumber" | "date" | undefined;
     sortOrder?: "asc" | "desc" | undefined;
 }>;
 export type InvoiceDataType = z.infer<typeof invoiceDataSchema>;

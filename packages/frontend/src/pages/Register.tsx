@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/services/i18n';
 import { registerSchema, type RegisterInput } from '@teif/shared';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
@@ -18,6 +20,8 @@ type RegisterFormData = z.infer<typeof registerWithConfirmSchema>;
 export function Register() {
   const navigate = useNavigate();
   const { register, needsEmailVerification } = useAuth();
+  const { language } = useLanguage();
+  const t = useTranslation(language);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<RegisterFormData>>({});
   const [formData, setFormData] = useState({
@@ -62,7 +66,7 @@ export function Register() {
         });
         setErrors(fieldErrors);
       } else {
-        toast.error('Registration failed. Please try again.');
+        toast.error(t('registrationFailed'));
       }
     } finally {
       setIsLoading(false);
@@ -80,7 +84,7 @@ export function Register() {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">TEIF Invoice</h1>
-          <p className="text-gray-400">Create your account</p>
+          <p className="text-gray-400">{t('createYourAccount')}</p>
         </div>
 
         {/* Form */}
@@ -88,7 +92,7 @@ export function Register() {
           {/* Name Field */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-              Full Name
+              {t('name')}
             </label>
             <input
               type="text"
@@ -108,7 +112,7 @@ export function Register() {
           {/* Email Field */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              Email Address
+              {t('emailAddress')}
             </label>
             <input
               type="email"
@@ -128,7 +132,7 @@ export function Register() {
           {/* Password Field */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Password
+              {t('password')}
             </label>
             <input
               type="password"
@@ -148,7 +152,7 @@ export function Register() {
           {/* Confirm Password Field */}
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-              Confirm Password
+              {t('confirmPassword')}
             </label>
             <input
               type="password"
@@ -173,15 +177,15 @@ export function Register() {
             disabled={isLoading}
             className="w-full px-4 py-2.5 text-white font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? 'Creating account...' : 'Create account'}
+            {isLoading ? t('creatingAccount') : t('createAccount')}
           </button>
         </form>
 
         {/* Login Link */}
         <p className="mt-6 text-center text-sm text-gray-400">
-          Already have an account?{' '}
+          {t('alreadyHaveAccount')}{' '}
           <Link to="/login" className="font-medium text-emerald-500 hover:text-emerald-400 transition-colors">
-            Sign in
+            {t('signIn')}
           </Link>
         </p>
       </div>

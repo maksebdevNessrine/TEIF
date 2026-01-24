@@ -13,7 +13,7 @@ import { hc } from 'hono/client';
 // Note: Types will be resolved at build time via tsconfig path alias
 // import type { AppType } from '@teif/backend';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 /**
  * Create strictly typed Hono client

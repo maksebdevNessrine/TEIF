@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useInvoices, useDeleteInvoice } from '@/hooks/useInvoices';
 import { InvoiceListSkeleton } from '@/components/SkeletonLoaders';
 import { ErrorMessage, NotFound } from '@/components/ErrorDisplay';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/services/i18n';
 import type { InvoiceData } from '@teif/shared/types';
 
 export function InvoiceList() {
@@ -10,6 +12,8 @@ export function InvoiceList() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const { language } = useLanguage();
+  const t = useTranslation(language);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Parse filters from URL
@@ -169,14 +173,14 @@ export function InvoiceList() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">Invoices</h1>
-            <p className="text-gray-400 mt-2">Loading your invoices...</p>
+            <h1 className="text-3xl font-bold text-white">{t('invoices')}</h1>
+            <p className="text-gray-400 mt-2">{t('loadingText')}</p>
           </div>
           <Link
             to="/invoices/new"
             className="px-4 py-2.5 text-white font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors"
           >
-            + Create New Invoice
+            + {t('newInvoice')}
           </Link>
         </div>
         <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
@@ -197,24 +201,24 @@ export function InvoiceList() {
             </tbody>
           </table>
         </div>
-      </div>
-    );
-  }
+        </div>
+      );
+    }
 
   if (error) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-white">Invoices</h1>
+          <h1 className="text-3xl font-bold text-white">{t('invoices')}</h1>
           <Link
             to="/invoices/new"
             className="px-4 py-2.5 text-white font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors"
           >
-            + Create New Invoice
+            + {t('newInvoice')}
           </Link>
         </div>
         <ErrorMessage 
-          message="Failed to load invoices"
+          message={t('failedToLoad')}
           onRetry={() => refetch()}
         />
       </div>
@@ -230,27 +234,26 @@ export function InvoiceList() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Invoices</h1>
-          <p className="text-gray-400 mt-2">{total} total invoices</p>
+            <h1 className="text-3xl font-bold text-white">{t('invoices')}</h1>
+            <p className="text-gray-400 mt-2">{total} {t('totalInvoices')}</p>
+          </div>
+          <Link
+            to="/invoices/new"
+            className="px-4 py-2 text-white font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors whitespace-nowrap flex items-center justify-center h-10"
+          >
+            + {t('newInvoice')}
+          </Link>
         </div>
-        <Link
-          to="/invoices/new"
-          className="px-4 py-2 text-white font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors whitespace-nowrap flex items-center justify-center h-10"
-        >
-          + Create New Invoice
-        </Link>
-      </div>
 
-      {/* Filters */}
       <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 space-y-4">
         {/* Main Filters Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <div>
-            <label htmlFor="search" className="block text-xs font-medium text-slate-400 mb-1">Search</label>
+            <label htmlFor="search" className="block text-xs font-medium text-slate-400 mb-1">{t('searchInvoices')}</label>
             <input
               id="search"
               type="text"
-              placeholder="Search invoices..."
+              placeholder={t('searchInvoices')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               disabled={isFetching}
@@ -260,7 +263,7 @@ export function InvoiceList() {
           </div>
 
           <div>
-            <label htmlFor="dateFrom" className="block text-xs font-medium text-slate-400 mb-1">From Date</label>
+            <label htmlFor="dateFrom" className="block text-xs font-medium text-slate-400 mb-1">{t('fromDate')}</label>
             <input
               id="dateFrom"
               type="date"
@@ -273,7 +276,7 @@ export function InvoiceList() {
           </div>
 
           <div>
-            <label htmlFor="dateTo" className="block text-xs font-medium text-slate-400 mb-1">To Date</label>
+            <label htmlFor="dateTo" className="block text-xs font-medium text-slate-400 mb-1">{t('toDate')}</label>
             <input
               id="dateTo"
               type="date"
@@ -286,7 +289,7 @@ export function InvoiceList() {
           </div>
 
           <div>
-            <label htmlFor="documentType" className="block text-xs font-medium text-slate-400 mb-1">Document Type</label>
+            <label htmlFor="documentType" className="block text-xs font-medium text-slate-400 mb-1">{t('documentType')}</label>
             <select
               id="documentType"
               value={filters.documentType}
@@ -295,7 +298,7 @@ export function InvoiceList() {
               className="w-full px-3 py-2 h-10 bg-slate-900 border border-slate-700 rounded text-white focus:outline-none focus:border-emerald-600 cursor-pointer disabled:opacity-50 transition-colors overflow-ellipsis"
               aria-label="Filter by document type"
             >
-              <option value="">All Types</option>
+              <option value="">{t('allTypes')}</option>
               <option value="I-11">I-11 (Invoice)</option>
               <option value="I-12">I-12 (Debit)</option>
               <option value="I-13">I-13 (Credit)</option>
@@ -308,18 +311,18 @@ export function InvoiceList() {
           onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
           className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
         >
-          {showAdvancedFilters ? '▼' : '▶'} Advanced Filters
+          {showAdvancedFilters ? '▼' : '▶'} {t('advancedFilters')}
         </button>
 
         {/* Advanced Filters */}
         {showAdvancedFilters && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pt-2 border-t border-slate-700">
             <div>
-              <label htmlFor="minAmount" className="block text-xs font-medium text-slate-400 mb-1">Min Amount</label>
+              <label htmlFor="minAmount" className="block text-xs font-medium text-slate-400 mb-1">{t('minAmount')}</label>
               <input
                 id="minAmount"
                 type="number"
-                placeholder="Min amount"
+                placeholder={t('minAmount')}
                 value={filters.minAmount ?? ''}
                 onChange={(e) => handleFilterChange('minAmount', e.target.value ? parseFloat(e.target.value) : '')}
                 disabled={isFetching}
@@ -329,11 +332,11 @@ export function InvoiceList() {
             </div>
 
             <div>
-              <label htmlFor="maxAmount" className="block text-xs font-medium text-slate-400 mb-1">Max Amount</label>
+              <label htmlFor="maxAmount" className="block text-xs font-medium text-slate-400 mb-1">{t('maxAmount')}</label>
               <input
                 id="maxAmount"
                 type="number"
-                placeholder="Max amount"
+                placeholder={t('maxAmount')}
                 value={filters.maxAmount ?? ''}
                 onChange={(e) => handleFilterChange('maxAmount', e.target.value ? parseFloat(e.target.value) : '')}
                 disabled={isFetching}
@@ -343,7 +346,7 @@ export function InvoiceList() {
             </div>
 
             <div>
-              <label htmlFor="status" className="block text-xs font-medium text-slate-400 mb-1">Status</label>
+              <label htmlFor="status" className="block text-xs font-medium text-slate-400 mb-1">{t('status')}</label>
               <select
                 id="status"
                 value={filters.status}
@@ -352,13 +355,13 @@ export function InvoiceList() {
                 className="w-full px-3 py-2 h-10 bg-slate-900 border border-slate-700 rounded text-white focus:outline-none focus:border-emerald-600 cursor-pointer disabled:opacity-50 transition-colors"
                 aria-label="Filter by status"
               >
-                <option value="">All Status</option>
-                <option value="draft">Draft</option>
-                <option value="finalized">Finalized</option>
-                <option value="sent">Sent</option>
-                <option value="paid">Paid</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="voided">Voided</option>
+                <option value="">{t('allStatus')}</option>
+                <option value="draft">{t('draft')}</option>
+                <option value="finalized">{t('submitted')}</option>
+                <option value="sent">{t('confirmed')}</option>
+                <option value="paid">{t('confirmed')}</option>
+                <option value="cancelled">{t('archived')}</option>
+                <option value="voided">{t('archived')}</option>
               </select>
             </div>
 
@@ -373,7 +376,7 @@ export function InvoiceList() {
           className="px-3 py-2 bg-slate-700 text-red-400 rounded hover:bg-slate-600 transition-colors text-sm font-medium"
           aria-label="Clear all filters"
         >
-          Clear All
+          {t('clearAll')}
         </button>
       )}
 
@@ -406,35 +409,35 @@ export function InvoiceList() {
       {/* Invoice List */}
       {invoices.length === 0 ? (
         <NotFound 
-          title="No Invoices Found"
-          message="Start by creating your first invoice"
+          title={t('noInvoicesFound')}
+          message={t('startByCreating')}
         />
       ) : (
         <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-900 border-b border-slate-700 text-xs font-medium text-slate-300 uppercase tracking-wider">
-                <th className="px-6 py-4 text-left">Document #</th>
-                <th className="px-6 py-4 text-left">Type</th>
+                <th className="px-6 py-4 text-left">{t('documentNumber')}</th>
+                <th className="px-6 py-4 text-left">{t('type')}</th>
                 <th className="px-6 py-4 text-left cursor-pointer hover:text-emerald-400 transition-colors group" onClick={() => handleSortChange('date')}>
                   <div className="flex items-center gap-1.5">
-                    Date
+                    {t('date')}
                     <span className={`inline-flex text-xs leading-none transition-opacity ${filters.sortBy === 'date' ? 'opacity-100 text-emerald-400' : 'opacity-40 group-hover:opacity-70'}`}>
                       {filters.sortBy === 'date' ? (filters.sortOrder === 'asc' ? '↑' : '↓') : '≡'}
                     </span>
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left">Supplier</th>
-                <th className="px-6 py-4 text-left">Buyer</th>
+                <th className="px-6 py-4 text-left">{t('supplier')}</th>
+                <th className="px-6 py-4 text-left">{t('buyer')}</th>
                 <th className="px-6 py-4 text-right cursor-pointer hover:text-emerald-400 transition-colors group" onClick={() => handleSortChange('amount')}>
                   <div className="flex items-center justify-end gap-1.5">
-                    <span>Amount</span>
+                    <span>{t('amount')}</span>
                     <span className={`inline-flex text-xs leading-none transition-opacity ${filters.sortBy === 'amount' ? 'opacity-100 text-emerald-400' : 'opacity-40 group-hover:opacity-70'}`}>
                       {filters.sortBy === 'amount' ? (filters.sortOrder === 'asc' ? '↑' : '↓') : '≡'}
                     </span>
                   </div>
                 </th>
-                <th className="px-6 py-4 text-center">Actions</th>
+                <th className="px-6 py-4 text-center">{t('actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
@@ -453,14 +456,14 @@ export function InvoiceList() {
                       to={`/invoices/${invoice.id}`}
                       className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
                     >
-                      View
+                      {t('view')}
                     </Link>
                     <button
-                      onClick={() => setConfirmDelete(invoice.id)}
+                      onClick={() => invoice.id && setConfirmDelete(invoice.id)}
                       disabled={isDeleting}
                       className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors disabled:opacity-50"
                     >
-                      Delete
+                      {t('delete')}
                     </button>
                   </td>
                 </tr>
@@ -478,17 +481,17 @@ export function InvoiceList() {
             disabled={filters.page === 1}
             className="px-4 py-2 bg-slate-700 text-white rounded disabled:opacity-50 transition-colors"
           >
-            ← Previous
+            ← {t('previous')}
           </button>
           <span className="text-slate-400">
-            Page {filters.page} of {totalPages}
+            {t('page')} {filters.page} {t('of')} {totalPages}
           </span>
           <button
             onClick={() => handleFilterChange('page', Math.min(totalPages, filters.page + 1))}
             disabled={filters.page === totalPages}
             className="px-4 py-2 bg-slate-700 text-white rounded disabled:opacity-50 transition-colors"
           >
-            Next →
+            {t('next')} →
           </button>
         </div>
       )}
@@ -497,22 +500,22 @@ export function InvoiceList() {
       {confirmDelete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 max-w-sm space-y-4">
-            <h2 className="text-lg font-bold text-white">Delete Invoice?</h2>
-            <p className="text-slate-400">This action cannot be undone.</p>
+            <h2 className="text-lg font-bold text-white">{t('deleteInvoice')}</h2>
+            <p className="text-slate-400">{t('deleteConfirmation')}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
                 disabled={isDeleting}
                 className="flex-1 px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 transition-colors disabled:opacity-50"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={() => handleDelete(confirmDelete)}
                 disabled={isDeleting}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
               >
-                {isDeleting ? 'Deleting...' : 'Delete'}
+                {isDeleting ? t('deleting') : t('delete')}
               </button>
             </div>
           </div>

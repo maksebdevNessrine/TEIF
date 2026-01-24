@@ -51,6 +51,7 @@ export interface InvoiceLine {
     allowances?: AllowanceCharge[];
 }
 export interface InvoiceData {
+    id?: string;
     documentType: DocTypeCode;
     documentNumber: string;
     invoiceDate: string;
@@ -123,6 +124,7 @@ export interface InvoiceResponse {
     operationNature: OperationNature;
     internalNotes?: string;
     externalNotes?: string;
+    ttnReference?: string;
     createdAt: string;
     updatedAt: string;
     deletedAt?: string;

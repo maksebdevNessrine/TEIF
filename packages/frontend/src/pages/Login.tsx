@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/services/i18n';
 import { loginSchema, type LoginInput } from '@teif/shared';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
@@ -11,6 +13,8 @@ export function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { language } = useLanguage();
+  const t = useTranslation(language);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<LoginFormData>>({});
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -35,7 +39,7 @@ export function Login() {
 
       // Call login
       await login(validated.email, validated.password);
-      toast.success('Login successful!');
+      toast.success(t('loginSuccessful'));
       navigate(from, { replace: true });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -46,7 +50,7 @@ export function Login() {
         });
         setErrors(fieldErrors);
       } else {
-        toast.error('Login failed. Please try again.');
+        toast.error(t('loginFailed'));
       }
     } finally {
       setIsLoading(false);
@@ -64,7 +68,7 @@ export function Login() {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">TEIF Invoice</h1>
-          <p className="text-gray-400">Sign in to your account</p>
+          <p className="text-gray-400">{t('signInToAccount')}</p>
         </div>
 
         {/* Form */}
@@ -72,7 +76,7 @@ export function Login() {
           {/* Email Field */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              Email Address
+              {t('emailAddress')}
             </label>
             <input
               type="email"
@@ -92,7 +96,7 @@ export function Login() {
           {/* Password Field */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Password
+              {t('password')}
             </label>
             <input
               type="password"
@@ -115,15 +119,15 @@ export function Login() {
             disabled={isLoading}
             className="w-full px-4 py-2.5 text-white font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? 'Signing in...' : 'Sign in'}
+            {isLoading ? t('signingIn') : t('signIn')}
           </button>
         </form>
 
         {/* Register Link */}
         <p className="mt-6 text-center text-sm text-gray-400">
-          Don't have an account?{' '}
+          {t('dontHaveAccount')}{' '}
           <Link to="/register" className="font-medium text-emerald-500 hover:text-emerald-400 transition-colors">
-            Sign up
+            {t('signUp')}
           </Link>
         </p>
       </div>

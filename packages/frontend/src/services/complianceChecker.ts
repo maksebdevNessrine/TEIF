@@ -45,8 +45,9 @@ export const checkInvoiceCompliance = (data: InvoiceData): ComplianceReport => {
     issues.push({ level: 'error', code: 'E008', message: `Invalid supplier ${data.supplier.idType} format`, field: 'supplier.idValue' });
   }
 
-  if (!data.supplier.street?.trim()) {
-    issues.push({ level: 'error', code: 'E009', message: 'Supplier street address is required', field: 'supplier.street' });
+  // Street is optional per TEIF spec (minOccurs="0"), only validate if provided
+  if (data.supplier.street && !Validators.validateStreetAddress(data.supplier.street).isValid) {
+    issues.push({ level: 'warning', code: 'W010', message: 'Supplier street address format may be invalid (max 100 characters)', field: 'supplier.street' });
   }
 
   if (!data.supplier.city?.trim()) {
@@ -72,8 +73,9 @@ export const checkInvoiceCompliance = (data: InvoiceData): ComplianceReport => {
     issues.push({ level: 'error', code: 'E015', message: `Invalid buyer ${data.buyer.idType} format`, field: 'buyer.idValue' });
   }
 
-  if (!data.buyer.street?.trim()) {
-    issues.push({ level: 'error', code: 'E016', message: 'Buyer street address is required', field: 'buyer.street' });
+  // Street is optional per TEIF spec (minOccurs="0"), only validate if provided
+  if (data.buyer.street && !Validators.validateStreetAddress(data.buyer.street).isValid) {
+    issues.push({ level: 'warning', code: 'W011', message: 'Buyer street address format may be invalid (max 100 characters)', field: 'buyer.street' });
   }
 
   if (!data.buyer.city?.trim()) {

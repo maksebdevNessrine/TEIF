@@ -8,16 +8,27 @@ import { storageService } from '../lib/storage';
 import { generateInvoiceHtml } from '../templates/invoice.template';
 import { getInvoiceById } from './invoice.service';
 /**
- * Generate QR code data URL for invoice
+ * Generate QR code data URL for invoice per TEIF 1.8.8 spec (I-88 ReferenceCEV)
+ * QR content format: SupplierTaxID|InvoiceNumber|InvoiceDate|SupplierName|BuyerTaxID|TotalTTC|TotalTVA|TTNReference
+ *
+ * @example
+ * QR content: "1234567A|INV-001|210124|TTN Company|9876543B|500.000|65.000|TTN-2025-001"
  */
 async function generateQrCodeDataUrl(invoice) {
     try {
-        // Format: invoice_id|document_number|date|total_ttc
+        // Per TEIF 1.8.8 spec: Format concatenated invoice data for QR encoding
+        const invoiceDateFormatted = invoice.invoiceDate
+            ? new Date(invoice.invoiceDate).toLocaleDateString('fr-TN', { year: '2-digit', month: '2-digit', day: '2-digit' })
+            : '';
         const qrContent = [
-            invoice.id,
-            invoice.documentNumber,
-            new Date(invoice.invoiceDate).toISOString().split('T')[0],
-            invoice.totalTTC.toFixed(3),
+            invoice.supplier?.idValue || 'N/A', // Supplier Tax ID
+            invoice.documentNumber || 'N/A', // Invoice Number
+            invoiceDateFormatted, // Invoice Date (ddMMyy format)
+            invoice.supplier?.name || 'N/A', // Supplier Name
+            invoice.buyer?.idValue || 'N/A', // Buyer Tax ID
+            invoice.totalTTC.toFixed(3), // Total TTC (3 decimals)
+            (invoice.totalTTC - invoice.totalHT - (invoice.stampDuty || 0)).toFixed(3), // Total TVA
+            invoice.ttnReference || `TTN-${invoice.id.substring(0, 8)}` // TTN Reference or generated
         ].join('|');
         const dataUrl = await QRCode.toDataURL(qrContent, {
             width: 200,
@@ -25,11 +36,22 @@ async function generateQrCodeDataUrl(invoice) {
             errorCorrectionLevel: 'H',
             type: 'image/png',
         });
-        console.log(`[PDF] QR code generated for invoice ${invoice.documentNumber}`);
+        // Log for observability per MERN Constitution §6.2
+        console.log(`[PDF] QR code generated for invoice ${invoice.documentNumber}`, {
+            invoiceId: invoice.id,
+            supplierTaxId: invoice.supplier?.idValue,
+            buyerTaxId: invoice.buyer?.idValue,
+            totalTTC: invoice.totalTTC,
+            ttnReference: invoice.ttnReference,
+            qrContentLength: qrContent.length
+        });
         return dataUrl;
     }
     catch (error) {
-        console.error('[PDF] Error generating QR code:', error);
+        console.error('[PDF] Error generating QR code:', error, {
+            invoiceId: invoice.id,
+            documentNumber: invoice.documentNumber
+        });
         return '';
     }
 }

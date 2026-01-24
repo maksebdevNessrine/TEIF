@@ -28,15 +28,28 @@ export const formatTtnDate = (dateStr) => {
  * @param data - Complete invoice data object
  * @param totalTtc - Total amount including tax (3 decimals)
  * @param totalTva - Total tax amount (3 decimals)
- * @returns QR code content string
+ * Generate QR code content per TEIF 1.8.8 spec (I-88 ReferenceCEV)
+ * Format: SupplierTaxID|InvoiceNumber|Date(ddMMyy)|SupplierName|BuyerTaxID|TotalTTC|TotalTVA|TTNReference
  *
  * @example
  * const qrString = generateQrString(invoiceData, 1230.456, 230.456);
- * // Returns: '1234567|INV-001|20240115|1230.456|230.456'
+ * // Returns: '1234567A|INV-001|210124|TTN Company|9876543B|1230.456|230.456|TTN-2025-001'
  */
 export const generateQrString = (data, totalTtc, totalTva) => {
-    const date = data.documentNumber ? data.invoiceDate.replace(/-/g, '') : '';
-    return `${data.supplier.idValue}|${data.documentNumber}|${date}|${totalTtc.toFixed(3)}|${totalTva.toFixed(3)}`;
+    // Format date as ddMMyy per TEIF spec
+    const invoiceDateFormatted = data.invoiceDate
+        ? new Date(data.invoiceDate).toLocaleDateString('fr-TN', { year: '2-digit', month: '2-digit', day: '2-digit' })
+        : '';
+    return [
+        data.supplier.idValue || 'N/A', // Supplier Tax ID
+        data.documentNumber || 'N/A', // Invoice Number
+        invoiceDateFormatted, // Invoice Date (ddMMyy format)
+        data.supplier.name || 'N/A', // Supplier Name
+        data.buyer.idValue || 'N/A', // Buyer Tax ID
+        totalTtc.toFixed(3), // Total TTC (3 decimals)
+        totalTva.toFixed(3), // Total TVA (3 decimals)
+        data.ttnReference || `TTN-${data.documentNumber}` // TTN Reference
+    ].join('|');
 };
 /**
  * Converts a number to French words, specifically formatted for Tunisian Dinars with 3 decimals

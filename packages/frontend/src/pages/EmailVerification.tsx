@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/services/i18n';
 import toast from 'react-hot-toast';
 
 export function EmailVerification() {
   const navigate = useNavigate();
   const { verifyEmail, resendCode, pendingEmail, needsEmailVerification } = useAuth();
+  const { language } = useLanguage();
+  const t = useTranslation(language);
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [canResend, setCanResend] = useState(false);
@@ -79,7 +83,7 @@ export function EmailVerification() {
     const fullCode = code.join('');
 
     if (fullCode.length !== 6) {
-      setError('Please enter all 6 digits');
+      setError(t('enterVerificationCode'));
       return;
     }
 
@@ -92,7 +96,7 @@ export function EmailVerification() {
       await verifyEmail(pendingEmail, fullCode);
       navigate('/invoices', { replace: true });
     } catch (err) {
-      const message = (err as Error).message || 'Verification failed';
+      const message = (err as Error).message || t('verificationFailed');
       setError(message);
       toast.error(message);
       setCode(['', '', '', '', '', '']);
@@ -111,7 +115,7 @@ export function EmailVerification() {
     } catch (err) {
       setCanResend(true);
       setResendCountdown(0);
-      toast.error('Failed to resend code');
+      toast.error(t('failedToResendCode'));
     }
   };
 
@@ -125,9 +129,9 @@ export function EmailVerification() {
               <span className="font-bold text-2xl text-slate-950">✓</span>
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Verify Email</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{t('verifyEmail')}</h1>
           <p className="text-gray-400">
-            We sent a 6-digit code to<br />
+            {t('verifyEmailSent')}<br />
             <span className="text-emerald-400 font-semibold">{pendingEmail}</span>
           </p>
         </div>
@@ -137,7 +141,7 @@ export function EmailVerification() {
           {/* Code Input */}
           <div>
             <label htmlFor="code-0" className="block text-sm font-medium text-gray-300 mb-4">
-              Verification Code
+              {t('enterVerificationCode')}
             </label>
             
             <div className="flex gap-2 justify-center mb-6">
@@ -179,12 +183,12 @@ export function EmailVerification() {
                 : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95'
             }`}
           >
-            {isLoading ? 'Verifying...' : 'Verify Email'}
+            {isLoading ? t('verifyingCode') : t('verifyEmail')}
           </button>
 
           {/* Resend Code */}
           <div className="text-center">
-            <p className="text-gray-400 text-sm">Didn't receive code?</p>
+            <p className="text-gray-400 text-sm">{t('didntReceiveCode')}</p>
             <button
               type="button"
               onClick={handleResend}
@@ -196,8 +200,8 @@ export function EmailVerification() {
               }`}
             >
               {resendCountdown > 0
-                ? `Resend in ${resendCountdown}s`
-                : 'Resend Code'}
+                ? `${t('resendCodeIn').replace('{count}', String(resendCountdown))}`
+                : t('resendCode')}
             </button>
           </div>
         </form>

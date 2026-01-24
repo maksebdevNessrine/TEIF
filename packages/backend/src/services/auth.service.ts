@@ -320,14 +320,8 @@ export async function findUserById(id: string) {
  */
 export async function loginUser(email: string, password: string) {
   try {
-    // Find user by email
+    // Find user by email (throws 'User not found' if not found)
     const user = await findUserByEmail(email);
-    
-    if (!user) {
-      const error = new Error('User not found');
-      (error as any).statusCode = 404;
-      throw error;
-    }
 
     console.log(`🔐 User found: ${user.email}, hash starts with: ${user.passwordHash.substring(0, 20)}...`);
 

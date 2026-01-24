@@ -5,11 +5,13 @@ import InvoiceForm from '@/components/InvoiceForm';
 import { InvoiceDetailSkeleton } from '@/components/SkeletonLoaders';
 import { ErrorMessage, NotFound } from '@/components/ErrorDisplay';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/services/i18n';
 import type { InvoiceData } from '@teif/shared/types';
 
 export function InvoiceDetail() {
   const { id } = useParams<{ id: string }>();
   const { language } = useLanguage();
+  const t = useTranslation(language);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<InvoiceData | null>(null);
 
@@ -58,9 +60,9 @@ export function InvoiceDetail() {
             to="/invoices"
             className="text-emerald-500 hover:text-emerald-400 transition-colors text-sm font-medium"
           >
-            ← Back to Invoices
+            ← {t('back')}
           </Link>
-          <h1 className="text-2xl font-bold text-white">Loading Invoice...</h1>
+          <h1 className="text-2xl font-bold text-white">{t('loading')}</h1>
         </div>
         <InvoiceDetailSkeleton />
       </div>
@@ -75,19 +77,19 @@ export function InvoiceDetail() {
             to="/invoices"
             className="text-emerald-500 hover:text-emerald-400 transition-colors text-sm font-medium"
           >
-            ← Back to Invoices
+            ← {t('back')}
           </Link>
-          <h1 className="text-2xl font-bold text-white">Invoice Detail</h1>
+          <h1 className="text-2xl font-bold text-white">{t('invoice')}</h1>
         </div>
         {error ? (
           <ErrorMessage 
-            message="Failed to load invoice"
+            message={t('failedToLoad')}
             onRetry={() => refetch()}
           />
         ) : (
           <NotFound 
-            title="Invoice Not Found"
-            message="The invoice you're looking for doesn't exist"
+            title={t('notFound')}
+            message={t('invoiceNotFound')}
           />
         )}
       </div>
@@ -103,16 +105,16 @@ export function InvoiceDetail() {
               to="/invoices"
               className="text-emerald-500 hover:text-emerald-400 transition-colors text-sm font-medium"
             >
-              ← Back to Invoices
+              ← {t('back')}
             </Link>
-            <h1 className="text-2xl font-bold text-white">Edit Invoice</h1>
+            <h1 className="text-2xl font-bold text-white">{t('edit')} {t('invoice')}</h1>
           </div>
           <button
             onClick={handleCancel}
             disabled={isUpdating}
             className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 disabled:opacity-50 transition-colors font-medium"
           >
-            Cancel
+            {t('cancel')}
           </button>
         </div>
         <InvoiceForm
@@ -134,10 +136,10 @@ export function InvoiceDetail() {
             to="/invoices"
             className="text-emerald-500 hover:text-emerald-400 transition-colors text-sm font-medium"
           >
-            ← Back to Invoices
+            ← {t('back')}
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-white">Invoice {invoice.documentNumber}</h1>
+            <h1 className="text-2xl font-bold text-white">{t('invoice')} {invoice.documentNumber}</h1>
             <p className="text-sm text-slate-400 mt-1">{invoice.documentType}</p>
           </div>
         </div>
@@ -147,13 +149,13 @@ export function InvoiceDetail() {
             disabled={isDownloading}
             className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 disabled:opacity-50 transition-colors font-medium"
           >
-            {isDownloading ? 'Downloading...' : 'Download PDF'}
+            {isDownloading ? t('downloading') : t('downloadPdf')}
           </button>
           <button
             onClick={handleEditClick}
             className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
           >
-            Edit
+            {t('edit')}
           </button>
         </div>
       </div>
@@ -162,22 +164,22 @@ export function InvoiceDetail() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Document Info */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-3">
-          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Document Details</h3>
+          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">{t('documentDetails')}</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-slate-400">Number:</span>
+              <span className="text-slate-400">{t('number')}:</span>
               <span className="font-mono text-emerald-400">{invoice.documentNumber}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Type:</span>
+              <span className="text-slate-400">{t('type')}:</span>
               <span>{invoice.documentType}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Date:</span>
+              <span className="text-slate-400">{t('date')}:</span>
               <span>{new Date(invoice.invoiceDate).toLocaleDateString()}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Currency:</span>
+              <span className="text-slate-400">{t('currency')}:</span>
               <span className="font-mono">{invoice.currency}</span>
             </div>
           </div>
@@ -185,31 +187,31 @@ export function InvoiceDetail() {
 
         {/* Supplier Info */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-3">
-          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Supplier</h3>
+          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">{t('supplier')}</h3>
           <div className="space-y-2 text-sm">
-            <div><span className="text-slate-400">Name:</span> {invoice.supplier?.name}</div>
-            <div><span className="text-slate-400">ID:</span> <span className="font-mono">{invoice.supplier?.idValue}</span></div>
-            <div><span className="text-slate-400">City:</span> {invoice.supplier?.city}</div>
+            <div><span className="text-slate-400">{t('name')}:</span> {invoice.supplier?.name}</div>
+            <div><span className="text-slate-400">{t('id')}:</span> <span className="font-mono">{invoice.supplier?.idValue}</span></div>
+            <div><span className="text-slate-400">{t('city')}:</span> {invoice.supplier?.city}</div>
           </div>
         </div>
 
         {/* Buyer Info */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-3">
-          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Buyer</h3>
+          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">{t('buyer')}</h3>
           <div className="space-y-2 text-sm">
-            <div><span className="text-slate-400">Name:</span> {invoice.buyer?.name}</div>
-            <div><span className="text-slate-400">ID:</span> <span className="font-mono">{invoice.buyer?.idValue}</span></div>
-            <div><span className="text-slate-400">City:</span> {invoice.buyer?.city}</div>
+            <div><span className="text-slate-400">{t('name')}:</span> {invoice.buyer?.name}</div>
+            <div><span className="text-slate-400">{t('id')}:</span> <span className="font-mono">{invoice.buyer?.idValue}</span></div>
+            <div><span className="text-slate-400">{t('city')}:</span> {invoice.buyer?.city}</div>
           </div>
         </div>
 
         {/* Payment Info */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-3">
-          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Payment</h3>
+          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">{t('payment')}</h3>
           <div className="space-y-2 text-sm">
-            <div><span className="text-slate-400">Method:</span> {invoice.paymentMeans}</div>
-            <div><span className="text-slate-400">Amount:</span> <span className="font-bold">{((invoice as any).totalAmount || 0).toFixed(3)} {invoice.currency}</span></div>
-            {invoice.dueDate && <div><span className="text-slate-400">Due Date:</span> {new Date(invoice.dueDate).toLocaleDateString()}</div>}
+            <div><span className="text-slate-400">{t('method')}:</span> {invoice.paymentMeans}</div>
+            <div><span className="text-slate-400">{t('amount')}:</span> <span className="font-bold">{((invoice as any).totalAmount || 0).toFixed(3)} {invoice.currency}</span></div>
+            {invoice.dueDate && <div><span className="text-slate-400">{t('dueDate')}:</span> {new Date(invoice.dueDate).toLocaleDateString()}</div>}
           </div>
         </div>
       </div>
@@ -218,16 +220,16 @@ export function InvoiceDetail() {
       {invoice.lines && invoice.lines.length > 0 && (
         <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
           <div className="p-4 border-b border-slate-700">
-            <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Line Items</h3>
+            <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">{t('lineItems')}</h3>
           </div>
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="bg-slate-900 border-b border-slate-700 text-xs text-slate-400">
-                <th className="px-4 py-3">Description</th>
-                <th className="px-4 py-3 text-center">Qty</th>
-                <th className="px-4 py-3 text-right">Unit Price</th>
-                <th className="px-4 py-3 text-right">Total HT</th>
-                <th className="px-4 py-3 text-center">Tax</th>
+                <th className="px-4 py-3">{t('description')}</th>
+                <th className="px-4 py-3 text-center">{t('qty')}</th>
+                <th className="px-4 py-3 text-right">{t('unitPrice')}</th>
+                <th className="px-4 py-3 text-right">{t('totalHt')}</th>
+                <th className="px-4 py-3 text-center">{t('tax')}</th>
               </tr>
             </thead>
             <tbody>

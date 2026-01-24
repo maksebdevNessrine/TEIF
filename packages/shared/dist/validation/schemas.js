@@ -60,9 +60,10 @@ export const partnerSchema = z.object({
     idType: idTypeSchema,
     idValue: z.string().min(1, 'ID value is required'),
     name: z.string().min(1, 'Partner name is required'),
-    addressDescription: z.string().min(1, 'Address description is required'),
-    street: z.string().min(1, 'Street is required'),
-    city: z.string().min(1, 'City is required'),
+    // Per TEIF 1.8.8 spec: AdressDescription, Street, City all optional (minOccurs="0")
+    addressDescription: z.string().optional(),
+    street: z.string().optional(), // I-162: Optional per TEIF XSD (minOccurs="0")
+    city: z.string().optional(), // Optional per TEIF spec
     postalCode: z.string().min(1, 'Postal code is required'),
     country: z.string().min(1, 'Country is required'),
     rc: z.string().optional(),

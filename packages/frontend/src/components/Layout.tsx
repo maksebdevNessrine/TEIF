@@ -1,12 +1,14 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/services/i18n';
 import type { Language } from '@teif/shared/types';
 
 export function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { language, setLanguage } = useLanguage();
+  const t = useTranslation(language);
 
   const handleLogout = async () => {
     await logout();
@@ -40,13 +42,13 @@ export function Layout() {
                   to="/invoices"
                   className="text-sm text-gray-300 hover:text-emerald-400 transition-colors"
                 >
-                  Dashboard
+                  {t('dashboard')}
                 </Link>
                 <Link
                   to="/invoices/new"
                   className="flex items-center justify-center text-sm text-gray-300 hover:text-emerald-400 transition-colors"
                 >
-                  New Invoice
+                  {t('newInvoice')}
                 </Link>
               </nav>
 
@@ -74,7 +76,7 @@ export function Layout() {
                   onClick={handleLogout}
                   className="px-3 py-1.5 text-sm font-medium text-slate-950 bg-emerald-500 hover:bg-emerald-600 rounded transition-colors"
                 >
-                  Logout
+                  {t('logout')}
                 </button>
               </div>
             </div>

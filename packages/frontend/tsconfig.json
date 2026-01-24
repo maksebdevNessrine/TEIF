@@ -13,7 +13,8 @@
       "@/services/*": ["./src/services/*"],
       "@/lib/*": ["./src/lib/*"],
       "@/pages/*": ["./src/pages/*"],
-      "@/contexts/*": ["./src/contexts/*"]
+      "@/contexts/*": ["./src/contexts/*"],
+      "@/hooks/*": ["./src/hooks/*"]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true

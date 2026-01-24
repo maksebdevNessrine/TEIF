@@ -89,6 +89,7 @@ export interface InvoiceLine {
 }
 
 export interface InvoiceData {
+  id?: string; // Optional ID for existing invoices
   documentType: DocTypeCode;
   documentNumber: string;
   invoiceDate: string;
@@ -170,6 +171,7 @@ export interface InvoiceResponse {
   operationNature: OperationNature;
   internalNotes?: string;
   externalNotes?: string;
+  ttnReference?: string; // TTN reference for QR code (I-88)
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
