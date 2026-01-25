@@ -132,6 +132,18 @@ export async function getInvoicePdf(id: string, language: 'ar' | 'fr' | 'en' = '
   return await res.blob();
 }
 
+export async function getInvoiceXml(id: string) {
+  const res = await typedClient.api.invoices[':id'].xml.$get({
+    param: { id },
+  });
+  
+  if (!res.ok) {
+    throw new Error('Failed to download XML');
+  }
+  
+  return await res.blob();
+}
+
 /**
  * Auth Operations
  * Fully typed authentication endpoints via RPC
@@ -144,7 +156,13 @@ export async function loginUser(email: string, password: string) {
   
   if (!res.ok) {
     const error = await res.json();
-    throw new Error(error.message || 'Failed to login');
+    // Create proper error object with response info for error handler
+    const err = new Error(error.message || 'Failed to login');
+    (err as any).response = {
+      status: res.status,
+      data: error,
+    };
+    throw err;
   }
   
   const result = await res.json();

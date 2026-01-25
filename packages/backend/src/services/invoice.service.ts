@@ -59,7 +59,7 @@ export async function createInvoice(
       linesWithTotals,
       validatedData.globalDiscount || 0,
       validatedData.stampDuty || 0,
-      validatedData.ircRate
+      validatedData.ircRate || undefined
     );
 
     // Generate XML content (cast DTO to InvoiceData format)
@@ -278,7 +278,7 @@ export async function updateInvoice(
       linesWithTotals,
       validatedData.globalDiscount || 0,
       validatedData.stampDuty || 0,
-      validatedData.ircRate
+      validatedData.ircRate || undefined
     );
 
     // Generate XML content (cast DTO to InvoiceData format)
@@ -301,6 +301,10 @@ export async function updateInvoice(
         ...(validatedData.orderReference !== undefined && { orderReference: validatedData.orderReference }),
         ...(validatedData.operationNature !== undefined && { operationNature: validatedData.operationNature || '' }),
         ...(validatedData.currency && { metadata: { currency: validatedData.currency } }),
+        // Always recalculate and update totals when lines/discounts/taxes change
+        totalHT: invoiceTotals.totalHT,
+        totalTVA: invoiceTotals.totalTVA,
+        totalTTC: invoiceTotals.totalTTC,
       },
       include: {
         supplier: true,

@@ -12,6 +12,7 @@ import {
   updateInvoice,
   deleteInvoice,
   getInvoicePdf,
+  getInvoiceXml,
 } from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import type { InvoiceData } from '@teif/shared/types';
@@ -189,6 +190,34 @@ export function useDownloadPdf() {
     },
     onError: (error: any) => {
       const message = error.message || 'Failed to download PDF';
+      toast.error(message);
+    },
+  });
+}
+
+/**
+ * Hook to download invoice as XML
+ *
+ * @example
+ * const { mutate, isPending } = useDownloadXml();
+ * mutate({ id: '123' });
+ */
+export function useDownloadXml() {
+  return useMutation({
+    mutationFn: ({ id }: { id: string }) =>
+      getInvoiceXml(id),
+    onSuccess: (blob, variables) => {
+      // Create a download link
+      const url = window.URL.createObjectURL(blob as Blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice-${variables.id}.xml`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('XML downloaded successfully');
+    },
+    onError: (error: any) => {
+      const message = error.message || 'Failed to download XML';
       toast.error(message);
     },
   });

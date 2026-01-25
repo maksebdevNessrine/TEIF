@@ -13,13 +13,13 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <LanguageProvider>
+        <LanguageProvider>
+          <AuthProvider>
             <Toaster position="top-right" />
             <RouterProvider router={router} future={{ v7_startTransition: true }} />
             <ReactQueryDevtools initialIsOpen={false} />
-          </LanguageProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </LanguageProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

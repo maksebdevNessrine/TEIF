@@ -166,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /**
    * Login with email and password
-   * Uses Supabase Auth SDK on backend
+   * Comprehensive error handling
    */
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -175,12 +175,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(userData);
       setIsAuthenticated(true);
+      setNeedsEmailVerification(false);
+      setPendingEmail(null);
+      
       toast.success(`Welcome back, ${userData.name}!`);
     } catch (error) {
       const errorMessage = (error as any)?.message || 'Login failed';
-      toast.error(errorMessage);
+      // Don't show toast here - let the component handle it for better error display
       setUser(null);
       setIsAuthenticated(false);
+      // Re-throw so component can handle with detailed error parsing
       throw error;
     } finally {
       setIsLoading(false);

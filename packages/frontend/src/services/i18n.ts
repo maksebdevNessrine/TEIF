@@ -143,6 +143,24 @@ export const translations = {
     registrationFailed: 'فشل التسجيل. حاول مرة أخرى.',
     verificationFailed: 'فشل التحقق. حاول مرة أخرى.',
     failedToResendCode: 'فشل إعادة إرسال الرمز',
+    // Error Messages - Authentication
+    err_invalid_email: 'يرجى إدخال عنوان بريد إلكتروني صحيح',
+    err_invalid_password: 'كلمة المرور غير صحيحة',
+    err_invalid_credentials: 'عنوان البريد الإلكتروني أو كلمة المرور غير صحيحة',
+    err_user_not_found: 'لم يتم العثور على حساب. يرجى التحقق من بريدك الإلكتروني أو إنشاء حساب جديد',
+    err_email_exists: 'هذا البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول أو استخدام بريد آخر',
+    err_account_locked: 'تم قفل الحساب مؤقتاً بسبب محاولات فاشلة عديدة. حاول لاحقاً',
+    err_account_disabled: 'تم تعطيل هذا الحساب. يرجى الاتصال بالدعم',
+    err_email_not_verified: 'لم يتم التحقق من بريدك الإلكتروني. تحقق من صندوق بريدك للحصول على رمز التحقق',
+    err_invalid_verification_code: 'رمز التحقق غير صحيح',
+    err_verification_code_expired: 'انتهت صلاحية رمز التحقق. اطلب واحداً جديداً',
+    err_too_many_login_attempts: 'محاولات دخول كثيرة جداً. حاول بعد {retryAfter} دقيقة',
+    err_too_many_requests: 'طلبات كثيرة جداً. يرجى إبطاء السرعة',
+    err_token_expired: 'انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى',
+    err_network_error: 'فشل الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت وحاول مرة أخرى',
+    err_server_error: 'حدث خطأ غير متوقع. يرجى محاولة لاحقاً',
+    err_password_too_weak: 'كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل مع أحرف كبيرة وصغيرة وأرقام',
+    err_password_mismatch: 'كلمات المرور غير متطابقة',
     // Layout
     dashboard: 'لوحة التحكم',
     newInvoice: 'فاتورة جديدة',
@@ -170,7 +188,6 @@ export const translations = {
     generating: 'جاري الإنشاء...',
     generated: 'تم الإنشاء',
     failed: 'فشل',
-    invoice: 'فاتورة',
     // Status labels
     draft: 'مسودة',
     submitted: 'مرسلة',
@@ -234,10 +251,18 @@ export const translations = {
     id: 'المعرف',
     unitPrice: 'سعر الوحدة',
     totalHt: 'المجموع بدون ضريبة',
+    totalTVA: 'إجمالي الضريبة',
+    totalTTC: 'الإجمالي مع الضريبة',
     taxRate: 'معدل الضريبة',
     lineItems: 'تفاصيل البنود',
     downloadPdf: 'تحميل PDF',
+    downloadXml: 'تحميل XML',
     downloading: 'جاري التحميل...',
+    loading: 'جاري التحميل',
+    invoice: 'الفاتورة',
+    edit: 'تعديل',
+    back: 'رجوع',
+    cancel: 'إلغاء',
     // Invoice List Page
     searchInvoices: 'البحث في الفواتير...',
     fromDate: 'من التاريخ',
@@ -314,6 +339,36 @@ export const translations = {
     taxTotal: 'Total TVA (I-177)',
     stampDuty: 'Droit de Timbre (I-178)',
     totalTtc: 'Net à Payer TTC (I-180)',
+    amountLetters: 'Montant en toutes lettres',
+    amountLettersLabel: 'Arrêté de Facture (I-180 Description)',
+    business: 'Professionnel / Entreprise',
+    person: 'Particulier',
+    copy: 'Copier',
+    copied: 'Copié !',
+    download: 'Télécharger XML',
+    minify: 'Minifier',
+    currencyLabel: 'Devise',
+    invoiceDates: 'Dates de Facture',
+    documentDetails: 'Détails du Document',
+    number: 'Numéro',
+    type: 'Type',
+    date: 'Date',
+    currency: 'Devise',
+    method: 'Mode',
+    id: 'Identifiant',
+    lineItems: 'Lignes de Facturation',
+    downloadPdf: 'Télécharger PDF',
+    downloadXml: 'Télécharger XML',
+    downloading: 'Téléchargement...',
+    loading: 'Chargement...',
+    invoice: 'Facture',
+    edit: 'Modifier',
+    back: 'Retour',
+    cancel: 'Annuler',
+    totalHt: 'Total HT',
+    totalTVA: 'Total TVA',
+    totalTTC: 'Total TTC',
+    dueDate: "Date d'échéance",
     amountLetters: 'Montant en toutes lettres',
     amountLettersLabel: 'Arrêté de Facture (I-180 Description)',
     business: 'Professionnel / Entreprise',
@@ -399,6 +454,24 @@ export const translations = {
     registrationFailed: 'L\'inscription a échoué. Veuillez réessayer.',
     verificationFailed: 'La vérification a échouée. Veuillez réessayer.',
     failedToResendCode: 'L\'envoi du code a échoué',
+    // Error Messages - Authentication
+    err_invalid_email: 'Veuillez entrer une adresse e-mail valide',
+    err_invalid_password: 'Le mot de passe est invalide',
+    err_invalid_credentials: 'L\'adresse e-mail ou le mot de passe est incorrect',
+    err_user_not_found: 'Compte non trouvé. Veuillez vérifier votre e-mail ou créer un compte',
+    err_email_exists: 'Cet e-mail est déjà enregistré. Veuillez vous connecter ou utiliser un autre e-mail',
+    err_account_locked: 'Le compte est temporairement verrouillé suite à plusieurs tentatives échouées. Réessayez plus tard',
+    err_account_disabled: 'Ce compte est désactivé. Veuillez contacter le support',
+    err_email_not_verified: 'Votre e-mail n\'est pas vérifié. Consultez votre boîte de réception pour le code de vérification',
+    err_invalid_verification_code: 'Le code de vérification est incorrect',
+    err_verification_code_expired: 'Le code de vérification a expiré. Demandez un nouveau code',
+    err_too_many_login_attempts: 'Trop de tentatives de connexion. Réessayez dans {retryAfter} minutes',
+    err_too_many_requests: 'Trop de requêtes. Veuillez ralentir',
+    err_token_expired: 'Votre session a expiré. Veuillez vous reconnecter',
+    err_network_error: 'La connexion au serveur a échoué. Vérifiez votre connexion Internet et réessayez',
+    err_server_error: 'Une erreur inattendue s\'est produite. Veuillez réessayer plus tard',
+    err_password_too_weak: 'Le mot de passe doit contenir au moins 8 caractères avec des majuscules, des minuscules et des chiffres',
+    err_password_mismatch: 'Les mots de passe ne correspondent pas',
     // Layout
     dashboard: 'Tableau de bord',
     newInvoice: 'Nouvelle Facture',
@@ -426,7 +499,6 @@ export const translations = {
     generating: 'Génération...',
     generated: 'Généré',
     failed: 'Échoué',
-    invoice: 'Facture',
     // Status labels
     draft: 'Brouillon',
     submitted: 'Soumise',
@@ -493,6 +565,7 @@ export const translations = {
     taxRate: 'Taux de taxe',
     lineItems: 'Détails des articles',
     downloadPdf: 'Télécharger PDF',
+    downloadXml: 'Télécharger XML',
     downloading: 'Téléchargement en cours...',
     // Invoice List Page
     searchInvoices: 'Rechercher les factures...',
@@ -551,6 +624,24 @@ export const translations = {
     registrationFailed: 'Registration failed. Please try again.',
     verificationFailed: 'Verification failed. Please try again.',
     failedToResendCode: 'Failed to resend code',
+    // Error Messages - Authentication
+    err_invalid_email: 'Please enter a valid email address',
+    err_invalid_password: 'The password is invalid',
+    err_invalid_credentials: 'Email or password is incorrect',
+    err_user_not_found: 'Account not found. Please check your email or sign up',
+    err_email_exists: 'This email is already registered. Please login or use a different email',
+    err_account_locked: 'Account temporarily locked due to too many failed attempts. Try again later',
+    err_account_disabled: 'This account is disabled. Please contact support',
+    err_email_not_verified: 'Your email is not verified. Check your inbox for verification code',
+    err_invalid_verification_code: 'Verification code is incorrect',
+    err_verification_code_expired: 'Verification code has expired. Request a new one',
+    err_too_many_login_attempts: 'Too many login attempts. Try again in {retryAfter} minutes',
+    err_too_many_requests: 'Too many requests. Please slow down',
+    err_token_expired: 'Your session has expired. Please login again',
+    err_network_error: 'Network connection failed. Check your internet and try again',
+    err_server_error: 'An unexpected error occurred. Please try again later',
+    err_password_too_weak: 'Password must be at least 8 characters with uppercase, lowercase, and numbers',
+    err_password_mismatch: 'Passwords do not match',
     // Layout
     dashboard: 'Dashboard',
     newInvoice: 'New Invoice',
@@ -639,14 +730,29 @@ export const translations = {
     type: 'Type',
     date: 'Date',
     currency: 'Currency',
+    supplier: 'Supplier',
+    buyer: 'Buyer',
+    name: 'Name',
     id: 'ID',
+    city: 'City',
     method: 'Method',
     unitPrice: 'Unit Price',
     totalHt: 'Total HT',
     taxRate: 'Tax Rate',
+    tax: 'Tax',
+    totalTVA: 'Total Tax',
+    totalTTC: 'Total Due',
     lineItems: 'Line Items',
     downloadPdf: 'Download PDF',
+    downloadXml: 'Download XML',
     downloading: 'Downloading...',
+    payment: 'Payment',
+    description: 'Description',
+    qty: 'Quantity',
+    loading: 'Loading...',
+    edit: 'Edit',
+    back: 'Back',
+    cancel: 'Cancel',
     // Invoice List Page
     searchInvoices: 'Search invoices...',
     fromDate: 'From',
@@ -672,3 +778,96 @@ export const translations = {
 export const useTranslation = (lang: Language) => {
   return (key: keyof typeof translations['ar']) => (translations[lang] as any)[key] || key;
 };
+
+// Document Types translations (TEIF I-codes)
+export const documentTypeTranslations = {
+  ar: {
+    'I-11': 'فاتورة',
+    'I-12': 'فاتورة إشعار دائن',
+    'I-13': 'ملخص الشرف',
+    'I-14': 'تفصيل عروض الأسعار (مشروع عام)',
+    'I-15': 'فاتورة التصدير',
+    'I-16': 'أمر الشراء',
+    'I-30': 'وثيقة التسليم',
+    'I-31': 'وثيقة الاستقبال',
+    'I-32': 'وثيقة الإرجاع',
+    'I-33': 'كشف الحساب',
+    'I-34': 'أمر الدفع',
+    'I-50': 'ملخص النفقات',
+    'I-51': 'شهادة الخدمة'
+  },
+  fr: {
+    'I-11': 'Facture',
+    'I-12': "Facture d'avoir",
+    'I-13': "Note d'honoraire",
+    'I-14': "Décompte (marché public)",
+    'I-15': "Facture Export",
+    'I-16': "Bon de commande",
+    'I-30': 'Bon de délivrance',
+    'I-31': 'Bon de réception',
+    'I-32': 'Bon de retour',
+    'I-33': 'Bulletin de versement',
+    'I-34': 'Ordre de paiement',
+    'I-50': 'Note de frais',
+    'I-51': 'Attestation de service'
+  },
+  en: {
+    'I-11': 'Invoice',
+    'I-12': 'Credit Note',
+    'I-13': 'Service Statement',
+    'I-14': 'Quotation (Public Works)',
+    'I-15': 'Export Invoice',
+    'I-16': 'Purchase Order',
+    'I-30': 'Delivery Note',
+    'I-31': 'Receipt Note',
+    'I-32': 'Return Note',
+    'I-33': 'Payment Statement',
+    'I-34': 'Payment Order',
+    'I-50': 'Expense Report',
+    'I-51': 'Service Attestation'
+  }
+};
+
+// Payment Means translations (TEIF I-codes)
+export const paymentMeansTranslations = {
+  ar: {
+    'I-114': 'تحويل بنكي',
+    'I-115': 'البريد',
+    'I-116': 'نقدا',
+    'I-117': 'شيك',
+    'I-118': 'بطاقة ائتمان',
+    'I-119': 'دفع إلكتروني',
+    'I-120': 'أخرى',
+    'I-131': 'مقاصة'
+  },
+  fr: {
+    'I-114': 'Virement bancaire',
+    'I-115': 'Courrier postal',
+    'I-116': 'Espèce',
+    'I-117': 'Chèque',
+    'I-118': 'Carte de crédit',
+    'I-119': 'Paiement électronique',
+    'I-120': 'Autre',
+    'I-131': 'Compensation'
+  },
+  en: {
+    'I-114': 'Bank Transfer',
+    'I-115': 'Postal Mail',
+    'I-116': 'Cash',
+    'I-117': 'Check',
+    'I-118': 'Credit Card',
+    'I-119': 'Electronic Payment',
+    'I-120': 'Other',
+    'I-131': 'Clearing'
+  }
+};
+
+// Helper functions to get translated values
+export const getDocumentTypeLabel = (code: string, language: Language): string => {
+  return (documentTypeTranslations[language] as any)?.[code] || code;
+};
+
+export const getPaymentMeansLabel = (code: string, language: Language): string => {
+  return (paymentMeansTranslations[language] as any)?.[code] || code;
+};
+

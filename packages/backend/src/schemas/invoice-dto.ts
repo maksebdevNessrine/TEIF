@@ -16,18 +16,18 @@ export const InvoiceCreateApiSchema = z.object({
   documentType: z.string(),
   documentNumber: z.string().default(''),
   invoiceNumber: z.string().optional(),
-  orderReference: z.string().optional(),
+  orderReference: z.string().nullable().optional(),
   currency: z.string().optional(),
   paymentMeans: z.string().default(''),
 
   // Operational fields
   operationNature: z.string().default(''),
-  ttnReference: z.string().optional(),
+  ttnReference: z.string().nullable().optional(),
 
   // Financial fields
   globalDiscount: z.number().default(0),
   stampDuty: z.number().default(0),
-  ircRate: z.number().optional(),
+  ircRate: z.number().nullable().optional(),
 
   // Date fields: transform Date objects to ISO strings
   invoiceDate: z.any().transform((val) => {
@@ -93,7 +93,7 @@ export const InvoiceCreateApiSchema = z.object({
       fodec: z.boolean().optional(),
       itemCode: z.string().optional(),
       unit: z.string().optional(),
-      exemptionReason: z.string().optional(),
+      exemptionReason: z.string().nullable().optional(),
       allowances: z.array(z.object({
         type: z.string(),
         code: z.string().optional(),

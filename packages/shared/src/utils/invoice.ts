@@ -133,22 +133,22 @@ const renderPartner = (partner: Partner, role: string) => {
   return `
       <PartnerDetails functionCode="${role}">
         <Nad>
-          <PartnerIdentifier type="${partner.idType}">${partner.idValue}</PartnerIdentifier>
-          <PartnerName nameType="Qualification">${partner.name}</PartnerName>
+          <PartnerIdentifier type="${partner.idType}">${escapeXml(partner.idValue)}</PartnerIdentifier>
+          <PartnerName nameType="Qualification">${escapeXml(partner.name)}</PartnerName>
           <PartnerAdresses lang="fr">
-            <AdressDescription>${partner.addressDescription || ''}</AdressDescription>
-            <Street>${partner.street || ''}</Street>
-            <CityName>${partner.city || ''}</CityName>
-            <PostalCode>${partner.postalCode || ''}</PostalCode>
-            <Country codeList="ISO_3166-1">${partner.country}</Country>
+            <AdressDescription>${escapeXml(partner.addressDescription || '')}</AdressDescription>
+            <Street>${escapeXml(partner.street || '')}</Street>
+            <CityName>${escapeXml(partner.city || '')}</CityName>
+            <PostalCode>${escapeXml(partner.postalCode || '')}</PostalCode>
+            <Country codeList="ISO_3166-1">${escapeXml(partner.country)}</Country>
           </PartnerAdresses>
         </Nad>
-        ${isBusiness && partner.rc ? `<RffSection><Reference refID="I-815">${partner.rc}</Reference></RffSection>` : ''}
-        ${isBusiness && partner.capital ? `<RffSection><Reference refID="I-816">${partner.capital}</Reference></RffSection>` : ''}
+        ${isBusiness && partner.rc ? `<RffSection><Reference refID="I-815">${escapeXml(partner.rc)}</Reference></RffSection>` : ''}
+        ${isBusiness && partner.capital ? `<RffSection><Reference refID="I-816">${escapeXml(partner.capital)}</Reference></RffSection>` : ''}
         <CtaSection>
-          <Contact functionCode="I-94"><ContactName>${partner.name}</ContactName></Contact>
-          ${partner.phone ? `<Communication><ComMeansType>I-101</ComMeansType><ComAdress>${partner.phone}</ComAdress></Communication>` : ''}
-          ${partner.email ? `<Communication><ComMeansType>I-103</ComMeansType><ComAdress>${partner.email}</ComAdress></Communication>` : ''}
+          <Contact functionCode="I-94"><ContactName>${escapeXml(partner.name)}</ContactName></Contact>
+          ${partner.phone ? `<Communication><ComMeansType>I-101</ComMeansType><ComAdress>${escapeXml(partner.phone)}</ComAdress></Communication>` : ''}
+          ${partner.email ? `<Communication><ComMeansType>I-103</ComMeansType><ComAdress>${escapeXml(partner.email)}</ComAdress></Communication>` : ''}
         </CtaSection>
       </PartnerDetails>`;
 };
@@ -166,6 +166,23 @@ const renderPartner = (partner: Partner, role: string) => {
  * const xml = generateTeifXml(invoiceData);
  * const minified = generateTeifXml(invoiceData, true);
  */
+
+/**
+ * Escape special XML characters in text content
+ * Prevents XML parsing errors from unescaped characters
+ * @param text - Text to escape
+ * @returns XML-safe text
+ */
+const escapeXml = (text: string | undefined): string => {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+};
+
 export const generateTeifXml = (data: InvoiceData, minify: boolean = false): string => {
   const lineDetails = data.lines.map(line => {
     const grossHt = line.quantity * line.unitPrice;
@@ -213,8 +230,8 @@ export const generateTeifXml = (data: InvoiceData, minify: boolean = false): str
       <Lin>
         <ItemIdentifier>${index + 1}</ItemIdentifier>
         <LinImd lang="fr">
-          <ItemCode>${l.itemCode}</ItemCode>
-          <ItemDescription>${l.description}</ItemDescription>
+          <ItemCode>${escapeXml(l.itemCode)}</ItemCode>
+          <ItemDescription>${escapeXml(l.description)}</ItemDescription>
         </LinImd>
         <LinQty>
           <Quantity measurementUnit="${l.unit}">${l.quantity.toFixed(3)}</Quantity>
@@ -222,7 +239,7 @@ export const generateTeifXml = (data: InvoiceData, minify: boolean = false): str
         <LinTax>
           <TaxTypeName code="I-1602">TVA</TaxTypeName>
           <TaxDetails><TaxRate>${(l.taxRate * 100).toFixed(1)}</TaxRate></TaxDetails>
-          ${l.taxRate === 0 && l.exemptionReason ? `<TaxExemptionReference>${l.exemptionReason}</TaxExemptionReference>` : ''}
+          ${l.taxRate === 0 && l.exemptionReason ? `<TaxExemptionReference>${escapeXml(l.exemptionReason)}</TaxExemptionReference>` : ''}
         </LinTax>
         ${l.fodec ? `<LinTax><TaxTypeName code="I-162">FODEC</TaxTypeName><TaxDetails><TaxRate>1.0</TaxRate></TaxDetails></LinTax>` : ''}
         <LinMoa>
@@ -234,13 +251,13 @@ export const generateTeifXml = (data: InvoiceData, minify: boolean = false): str
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <TEIF controlingAgency="TTN" version="1.8.8">
   <InvoiceHeader>
-    <MessageSenderIdentifier type="${data.supplier.idType}">${data.supplier.idValue}</MessageSenderIdentifier>
-    <MessageRecieverIdentifier type="${data.buyer.idType}">${data.buyer.idValue}</MessageRecieverIdentifier>
+    <MessageSenderIdentifier type="${data.supplier.idType}">${escapeXml(data.supplier.idValue)}</MessageSenderIdentifier>
+    <MessageRecieverIdentifier type="${data.buyer.idType}">${escapeXml(data.buyer.idValue)}</MessageRecieverIdentifier>
   </InvoiceHeader>
   <InvoiceBody>
     <Bgm>
-      <DocumentIdentifier>${data.documentNumber}</DocumentIdentifier>
-      <DocumentType code="${data.documentType}">${DOCUMENT_TYPES[data.documentType]}</DocumentType>
+      <DocumentIdentifier>${escapeXml(data.documentNumber)}</DocumentIdentifier>
+      <DocumentType code="${data.documentType}">${escapeXml(DOCUMENT_TYPES[data.documentType])}</DocumentType>
     </Bgm>
     <Dtm>
       <DateText format="ddMMyy" functionCode="I-31">${formatTtnDate(data.invoiceDate)}</DateText>
@@ -260,67 +277,67 @@ export const generateTeifXml = (data: InvoiceData, minify: boolean = false): str
       <PytSectionDetails>
         <Pyt>
           <PaymentTearmsTypeCode>${data.paymentMeans}</PaymentTearmsTypeCode>
-          <PaymentTearmsDescription>${PAYMENT_MEANS[data.paymentMeans]}</PaymentTearmsDescription>
+          <PaymentTearmsDescription>${escapeXml(PAYMENT_MEANS[data.paymentMeans])}</PaymentTearmsDescription>
         </Pyt>
         ${data.bankRib && data.paymentMeans === 'I-114' ? `
         <PytFii functionCode="I-141">
           <AccountHolder>
-            <AccountNumber>${data.bankRib}</AccountNumber>
-            <OwnerIdentifier>${data.bankAccountOwner || ''}</OwnerIdentifier>
+            <AccountNumber>${escapeXml(data.bankRib)}</AccountNumber>
+            <OwnerIdentifier>${escapeXml(data.bankAccountOwner || '')}</OwnerIdentifier>
           </AccountHolder>
           <InstitutionIdentification nameCode="${data.bankCode || ''}">
             ${data.bankCode ? `<InstitutionIdentifier>${data.bankCode}</InstitutionIdentifier>` : ''}
-            <InstitutionName>${data.bankName || 'BANK'}</InstitutionName>
+            <InstitutionName>${escapeXml(data.bankName || 'BANK')}</InstitutionName>
           </InstitutionIdentification>
         </PytFii>` : ''}
         ${data.postalAccountNumber && data.paymentMeans === 'I-115' ? `
         <PytFii functionCode="I-141">
           <AccountHolder>
-            <AccountNumber>${data.postalAccountNumber}</AccountNumber>
-            <OwnerIdentifier>${data.postalAccountOwner || ''}</OwnerIdentifier>
+            <AccountNumber>${escapeXml(data.postalAccountNumber)}</AccountNumber>
+            <OwnerIdentifier>${escapeXml(data.postalAccountOwner || '')}</OwnerIdentifier>
           </AccountHolder>
           <InstitutionIdentification nameCode="${data.postalBranchCode || '0000'}">
             <BranchIdentifier>${data.postalBranchCode || '0000'}</BranchIdentifier>
-            <InstitutionName>${data.postalServiceName || 'La Poste'}</InstitutionName>
+            <InstitutionName>${escapeXml(data.postalServiceName || 'La Poste')}</InstitutionName>
           </InstitutionIdentification>
         </PytFii>` : ''}
         ${data.checkNumber && data.paymentMeans === 'I-117' ? `
         <PytFii functionCode="I-142">
-          <CheckReference>${data.checkNumber}</CheckReference>
+            <CheckReference>${escapeXml(data.checkNumber)}</CheckReference>
         </PytFii>` : ''}
         ${data.cardReference && data.paymentMeans === 'I-118' ? `
         <PytFii functionCode="I-143">
           <CardIdentification>
-            <CardType>${data.cardType || 'VISA'}</CardType>
-            <CardNumber>${data.cardLast4 || ''}</CardNumber>
-            <AuthorizationCode>${data.cardReference}</AuthorizationCode>
+            <CardType>${escapeXml(data.cardType || 'VISA')}</CardType>
+            <CardNumber>${escapeXml(data.cardLast4 || '')}</CardNumber>
+            <AuthorizationCode>${escapeXml(data.cardReference)}</AuthorizationCode>
           </CardIdentification>
         </PytFii>` : ''}
         ${data.ePaymentTransactionId && data.paymentMeans === 'I-119' ? `
         <PytFii functionCode="I-144">
           <EPaymentReference>
-            <Gateway>${data.ePaymentGateway || 'ELECTRONIC'}</Gateway>
-            <TransactionId>${data.ePaymentTransactionId}</TransactionId>
+            <Gateway>${escapeXml(data.ePaymentGateway || 'ELECTRONIC')}</Gateway>
+            <TransactionId>${escapeXml(data.ePaymentTransactionId)}</TransactionId>
           </EPaymentReference>
         </PytFii>` : ''}
         ${data.otherPaymentReference && data.paymentMeans === 'I-120' ? `
         <PytFii functionCode="I-145">
           <OtherPaymentReference>
-            <Description>${data.otherPaymentDescription || 'Other'}</Description>
-            <Reference>${data.otherPaymentReference}</Reference>
+            <Description>${escapeXml(data.otherPaymentDescription || 'Other')}</Description>
+            <Reference>${escapeXml(data.otherPaymentReference)}</Reference>
           </OtherPaymentReference>
         </PytFii>` : ''}
       </PytSectionDetails>
     </PytSection>
     <RffSection>
-      ${data.orderReference ? `<Reference refID="I-81">${data.orderReference}</Reference>` : ''}
-      ${data.contractReference ? `<Reference refID="I-82">${data.contractReference}</Reference>` : ''}
-      ${data.deliveryNoteReference ? `<Reference refID="I-83">${data.deliveryNoteReference}</Reference>` : ''}
+      ${data.orderReference ? `<Reference refID="I-81">${escapeXml(data.orderReference)}</Reference>` : ''}
+      ${data.contractReference ? `<Reference refID="I-82">${escapeXml(data.contractReference)}</Reference>` : ''}
+      ${data.deliveryNoteReference ? `<Reference refID="I-83">${escapeXml(data.deliveryNoteReference)}</Reference>` : ''}
     </RffSection>
     <LinSection>${linesXml}</LinSection>
     ${globalAllowanceAmount > 0 || invoiceLevelAllowances.length > 0 ? `<InvoiceAlc>
       ${globalAllowanceAmount > 0 ? `<Alc><AlcDetails><AllowanceChargeCode>I-153</AllowanceChargeCode><AllowanceChargeReasonCode>Discount</AllowanceChargeReasonCode></AlcDetails><AlcMonetaryAmount currencyCodeList="ISO_4217"><Moa amountTypeCode="I-176" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${globalAllowanceAmount.toFixed(3)}</Amount></Moa></AlcMonetaryAmount></Alc>` : ''}
-      ${invoiceLevelAllowances.map(alc => `<Alc><AlcDetails><AllowanceChargeCode>${alc.code}</AllowanceChargeCode><AllowanceChargeReasonCode>${alc.description}</AllowanceChargeReasonCode></AlcDetails><AlcMonetaryAmount currencyCodeList="ISO_4217"><Moa amountTypeCode="${alc.type === 'allowance' ? 'I-176' : 'I-174'}" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${alc.amount.toFixed(3)}</Amount></Moa></AlcMonetaryAmount></Alc>`).join('')}
+      ${invoiceLevelAllowances.map(alc => `<Alc><AlcDetails><AllowanceChargeCode>${alc.code}</AllowanceChargeCode><AllowanceChargeReasonCode>${escapeXml(alc.description)}</AllowanceChargeReasonCode></AlcDetails><AlcMonetaryAmount currencyCodeList="ISO_4217"><Moa amountTypeCode="${alc.type === 'allowance' ? 'I-176' : 'I-174'}" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${alc.amount.toFixed(3)}</Amount></Moa></AlcMonetaryAmount></Alc>`).join('')}
     </InvoiceAlc>` : ''}
     <InvoiceMoa>
       <AmountDetails><Moa amountTypeCode="I-176" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${totalNetHt.toFixed(3)}</Amount></Moa></AmountDetails>
@@ -332,14 +349,14 @@ export const generateTeifXml = (data: InvoiceData, minify: boolean = false): str
       ${totalIrc > 0 ? `<InvoiceTaxDetails><Tax><TaxTypeName code="I-1604">IRC Withholding</TaxTypeName><TaxDetails><TaxRate>${(data.ircRate || 0).toFixed(1)}</TaxRate></TaxDetails></Tax><AmountDetails><Moa amountTypeCode="I-178" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${totalIrc.toFixed(3)}</Amount></Moa></AmountDetails></InvoiceTaxDetails>` : ''}
       ${Object.entries(taxSummaries).map(([rate, s]) => `
       <InvoiceTaxDetails>
-        <Tax><TaxTypeName code="I-1602">TVA</TaxTypeName><TaxDetails><TaxRate>${(parseFloat(rate) * 100).toFixed(1)}</TaxRate></TaxDetails>${parseFloat(rate) === 0 && s.justification ? `<TaxExemptionReference>${s.justification}</TaxExemptionReference>` : ''}</Tax>
+        <Tax><TaxTypeName code="I-1602">TVA</TaxTypeName><TaxDetails><TaxRate>${(parseFloat(rate) * 100).toFixed(1)}</TaxRate></TaxDetails>${parseFloat(rate) === 0 && s.justification ? `<TaxExemptionReference>${escapeXml(s.justification)}</TaxExemptionReference>` : ''}</Tax>
         <AmountDetails><Moa amountTypeCode="I-177" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${s.base.toFixed(3)}</Amount></Moa></AmountDetails>
         <AmountDetails><Moa amountTypeCode="I-178" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${s.amount.toFixed(3)}</Amount></Moa></AmountDetails>
       </InvoiceTaxDetails>`).join('')}
     </InvoiceTax>
   </InvoiceBody>
   <RefTtnVal>
-    <ReferenceTTN refID="I-88">${data.ttnReference}</ReferenceTTN>
+    <ReferenceTTN refID="I-88">${escapeXml(data.ttnReference)}</ReferenceTTN>
     ${data.qrCodeEnabled && totalTtc > 0 ? (() => {
       const qrString = generateQrString(data, totalTtc, totalTva);
       const qrBase64 = btoa(qrString);

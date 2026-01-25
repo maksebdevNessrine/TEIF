@@ -94,7 +94,7 @@ export function EmailVerification() {
       if (!pendingEmail) throw new Error('No email found');
       
       await verifyEmail(pendingEmail, fullCode);
-      navigate('/invoices', { replace: true });
+      navigate('/login', { replace: true });
     } catch (err) {
       const message = (err as Error).message || t('verificationFailed');
       setError(message);

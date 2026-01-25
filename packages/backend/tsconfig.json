@@ -13,8 +13,8 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "paths": {
-      "@teif/shared": ["../shared/dist"],
-      "@teif/shared/*": ["../shared/dist/*"],
+      "@teif/shared": ["../shared/src"],
+      "@teif/shared/*": ["../shared/src/*"],
       "@teif/generated/zod": ["../prisma/generated/zod/index.ts"]
     }
   },

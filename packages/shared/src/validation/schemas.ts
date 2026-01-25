@@ -123,7 +123,7 @@ export const invoiceLineSchema = z.object({
   discountRate: z.number().min(0).max(1, 'Discount rate must be between 0 and 1 (e.g., 0.1 for 10%)'),
   taxRate: z.number().min(0).max(1, 'Tax rate must be between 0 and 1 (e.g., 0.19 for 19% VAT)'),
   fodec: z.boolean(),
-  exemptionReason: z.string().optional(),
+  exemptionReason: z.string().nullable().optional(),
   allowances: z.array(allowanceChargeSchema).optional()
 });
 
@@ -143,7 +143,7 @@ export const invoiceDataSchema = z.object({
   otherDate: z.string().optional(),
   periodStart: z.string().optional(),
   periodEnd: z.string().optional(),
-  orderReference: z.string().optional(),
+  orderReference: z.string().nullable().optional(),
   contractReference: z.string().optional(),
   deliveryNoteReference: z.string().optional(),
   operationNature: operationNatureSchema,
@@ -154,7 +154,7 @@ export const invoiceDataSchema = z.object({
   allowances: z.array(allowanceChargeSchema).optional(),
   globalDiscount: z.number().nonnegative('Global discount must be non-negative').default(0),
   stampDuty: z.number().nonnegative('Stamp duty must be non-negative').default(0),
-  ttnReference: z.string().default(''),
+  ttnReference: z.string().nullable().optional(),
   paymentMeans: paymentMeansCodeSchema,
   // Wire Transfer (I-114) fields
   bankName: z.string().optional(),
@@ -180,7 +180,7 @@ export const invoiceDataSchema = z.object({
   otherPaymentReference: z.string().optional(),
   // General fields
   amountDescriptionOverride: z.string().optional(),
-  ircRate: z.number().min(0).max(0.1, 'IRC rate must be between 0 and 0.1 (e.g., 0.01 for 1%)').optional(),
+  ircRate: z.number().min(0).max(0.1, 'IRC rate must be between 0 and 0.1 (e.g., 0.01 for 1%)').nullable().optional(),
   ircAmount: z.number().nonnegative('IRC amount must be non-negative').optional(),
   ircExemptionReason: z.string().optional(),
   qrCodeEnabled: z.boolean().optional(),

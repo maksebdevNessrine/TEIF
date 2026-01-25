@@ -5,6 +5,7 @@ import { InvoiceListSkeleton } from '@/components/SkeletonLoaders';
 import { ErrorMessage, NotFound } from '@/components/ErrorDisplay';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTranslation } from '@/services/i18n';
+import { getTextAlignClass } from '@/utils/rtl';
 import type { InvoiceData } from '@teif/shared/types';
 
 export function InvoiceList() {
@@ -414,23 +415,23 @@ export function InvoiceList() {
         />
       ) : (
         <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
-          <table className="w-full text-left">
+          <table className="w-full">
             <thead>
               <tr className="bg-slate-900 border-b border-slate-700 text-xs font-medium text-slate-300 uppercase tracking-wider">
-                <th className="px-6 py-4 text-left">{t('documentNumber')}</th>
-                <th className="px-6 py-4 text-left">{t('type')}</th>
-                <th className="px-6 py-4 text-left cursor-pointer hover:text-emerald-400 transition-colors group" onClick={() => handleSortChange('date')}>
-                  <div className="flex items-center gap-1.5">
+                <th className={`px-6 py-4 ${getTextAlignClass(language, 'text-right', 'text-left')}`}>{t('documentNumber')}</th>
+                <th className={`px-6 py-4 ${getTextAlignClass(language, 'text-right', 'text-left')}`}>{t('type')}</th>
+                <th className={`px-6 py-4 cursor-pointer hover:text-emerald-400 transition-colors group ${getTextAlignClass(language, 'text-right', 'text-left')}`} onClick={() => handleSortChange('date')}>
+                  <div className={`flex items-center gap-1.5 ${language === 'ar' ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
                     {t('date')}
                     <span className={`inline-flex text-xs leading-none transition-opacity ${filters.sortBy === 'date' ? 'opacity-100 text-emerald-400' : 'opacity-40 group-hover:opacity-70'}`}>
                       {filters.sortBy === 'date' ? (filters.sortOrder === 'asc' ? '↑' : '↓') : '≡'}
                     </span>
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left">{t('supplier')}</th>
-                <th className="px-6 py-4 text-left">{t('buyer')}</th>
-                <th className="px-6 py-4 text-right cursor-pointer hover:text-emerald-400 transition-colors group" onClick={() => handleSortChange('amount')}>
-                  <div className="flex items-center justify-end gap-1.5">
+                <th className={`px-6 py-4 ${getTextAlignClass(language, 'text-right', 'text-left')}`}>{t('supplier')}</th>
+                <th className={`px-6 py-4 ${getTextAlignClass(language, 'text-right', 'text-left')}`}>{t('buyer')}</th>
+                <th className={`px-6 py-4 cursor-pointer hover:text-emerald-400 transition-colors group ${getTextAlignClass(language, 'text-left', 'text-right')}`} onClick={() => handleSortChange('amount')}>
+                  <div className={`flex items-center gap-1.5 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-end'}`}>
                     <span>{t('amount')}</span>
                     <span className={`inline-flex text-xs leading-none transition-opacity ${filters.sortBy === 'amount' ? 'opacity-100 text-emerald-400' : 'opacity-40 group-hover:opacity-70'}`}>
                       {filters.sortBy === 'amount' ? (filters.sortOrder === 'asc' ? '↑' : '↓') : '≡'}
@@ -443,13 +444,13 @@ export function InvoiceList() {
             <tbody className="divide-y divide-slate-700">
               {invoices.map((invoice: InvoiceData) => (
                 <tr key={invoice.id} className="hover:bg-slate-700/30 transition-colors">
-                  <td className="px-6 py-4 font-mono text-sm text-emerald-400">{invoice.documentNumber}</td>
-                  <td className="px-6 py-4 text-sm">{invoice.documentType}</td>
-                  <td className="px-6 py-4 text-sm text-slate-400">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 text-sm">{invoice.supplier?.name || 'N/A'}</td>
-                  <td className="px-6 py-4 text-sm">{invoice.buyer?.name || 'N/A'}</td>
-                  <td className="px-6 py-4 text-sm text-right font-medium text-white">
-                    {((invoice as any).totalAmount || 0).toFixed(3)} {invoice.currency}
+                  <td className={`px-6 py-4 font-mono text-sm text-emerald-400 ${getTextAlignClass(language, 'text-right', 'text-left')}`}>{invoice.documentNumber}</td>
+                  <td className={`px-6 py-4 text-sm ${getTextAlignClass(language, 'text-right', 'text-left')}`}>{invoice.documentType}</td>
+                  <td className={`px-6 py-4 text-sm text-slate-400 ${getTextAlignClass(language, 'text-right', 'text-left')}`}>{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
+                  <td className={`px-6 py-4 text-sm ${getTextAlignClass(language, 'text-right', 'text-left')}`}>{invoice.supplier?.name || 'N/A'}</td>
+                  <td className={`px-6 py-4 text-sm ${getTextAlignClass(language, 'text-right', 'text-left')}`}>{invoice.buyer?.name || 'N/A'}</td>
+                  <td className={`px-6 py-4 text-sm font-medium text-white ${getTextAlignClass(language, 'text-left', 'text-right')}`}>
+                    {((invoice as any).totalTTC || 0).toFixed(3)} {invoice.currency}
                   </td>
                   <td className="px-6 py-4 text-center flex gap-2 justify-center">
                     <Link

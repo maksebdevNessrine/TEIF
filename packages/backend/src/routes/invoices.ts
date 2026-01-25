@@ -58,6 +58,13 @@ invoiceRoutes.get('/:id', async (c: Context) => {
 
   const invoice = await invoiceService.getInvoiceById(user.userId, invoiceId);
 
+  console.log('📦 API Response for invoice', invoiceId, {
+    supplierId: invoice.supplierId,
+    supplierName: invoice.supplier?.name,
+    buyerId: invoice.buyerId,
+    buyerName: invoice.buyer?.name,
+  });
+
   return c.json({ success: true, data: invoice }, 200);
 });
 
@@ -145,6 +152,21 @@ invoiceRoutes.get('/:id/pdf', async (c: Context) => {
   c.header('X-PDF-Cache', fromCache ? 'hit' : 'miss');
 
   return c.body(buffer as any);
+});
+
+/**
+ * GET /api/invoices/:id/xml - Get invoice as XML
+ */
+invoiceRoutes.get('/:id/xml', async (c: Context) => {
+  const user = c.get('user') as any;
+  const invoiceId = c.req.param('id');
+
+  const invoice = await invoiceService.getInvoiceById(user.userId, invoiceId);
+
+  c.header('Content-Type', 'application/xml; charset=utf-8');
+  c.header('Content-Disposition', `attachment; filename="invoice-${invoiceId}.xml"`);
+
+  return c.body(invoice.xmlContent);
 });
 
 export default invoiceRoutes;
