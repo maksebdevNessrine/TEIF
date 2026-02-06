@@ -19,18 +19,18 @@ import { AllowanceChargeListRelationFilterSchema } from './AllowanceChargeListRe
 
 export const InvoiceWhereUniqueInputSchema: z.ZodType<Prisma.InvoiceWhereUniqueInput> = z.union([
   z.object({
-    id: z.string().cuid(),
+    id: z.cuid(),
     documentNumber: z.string(),
   }),
   z.object({
-    id: z.string().cuid(),
+    id: z.cuid(),
   }),
   z.object({
     documentNumber: z.string(),
   }),
 ])
 .and(z.object({
-  id: z.string().cuid().optional(),
+  id: z.cuid().optional(),
   documentNumber: z.string().optional(),
   AND: z.union([ z.lazy(() => InvoiceWhereInputSchema), z.lazy(() => InvoiceWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => InvoiceWhereInputSchema).array().optional(),
@@ -79,6 +79,7 @@ export const InvoiceWhereUniqueInputSchema: z.ZodType<Prisma.InvoiceWhereUniqueI
   qrCodeEnabled: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
   qrCodeContent: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
   amountDescriptionOverride: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  amountLanguage: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   xmlContent: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   status: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   totalHT: z.union([ z.lazy(() => FloatFilterSchema), z.number() ]).optional(),

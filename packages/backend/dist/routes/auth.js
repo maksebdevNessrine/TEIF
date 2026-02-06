@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { registerSchema, loginSchema } from '@teif/shared';
 import * as authService from '../services/auth.service';
 import { requireAuth } from '../middleware/auth';
+import { AuthError, authErrors } from '../utils/auth-errors';
 const authRoutes = new Hono();
 /**
  * POST /api/auth/register
@@ -54,39 +55,100 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
  * POST /api/auth/login
  * Login with email and password (local authentication)
  *
- * Middleware validates request body against loginSchema
- * Global error handler catches validation/service errors
+ * Comprehensive error handling:
+ * - Invalid credentials
+ * - User not found
+ * - Account locked/disabled
+ * - Rate limiting
+ * - Token generation failures
  */
 authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
-    const validatedData = c.req.valid('json');
-    const { email, password } = validatedData;
-    // Sign in locally
-    const user = await authService.loginUser(email, password);
-    // Generate local JWT access token (short-lived)
-    const accessToken = authService.generateAccessToken(user.id, user.email);
-    // Generate and store refresh token
-    const refreshToken = authService.generateRefreshTokenJwt(user.id);
-    await authService.storeRefreshToken(user.id, refreshToken);
-    // Set access token as httpOnly cookie (short-lived, for API requests)
-    setCookie(c, 'accessToken', accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'Strict',
-        maxAge: 15 * 60, // 15 minutes
-    });
-    // Set refresh token as httpOnly cookie (long-lived, for token refresh)
-    setCookie(c, 'refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'Strict',
-        maxAge: 7 * 24 * 60 * 60, // 7 days
-    });
-    // Return response
-    const response = {
-        user,
-        token: accessToken,
-    };
-    return c.json({ success: true, data: response }, 200);
+    try {
+        const validatedData = c.req.valid('json');
+        const { email, password } = validatedData;
+        // Validate email format (extra validation)
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throw authErrors.invalidEmail();
+        }
+        // Sign in locally
+        let user;
+        try {
+            user = await authService.loginUser(email, password);
+        }
+        catch (error) {
+            // Handle specific auth service errors
+            if (error.code === 'USER_NOT_FOUND' || error.message === 'User not found') {
+                // Don't reveal whether email exists (security best practice)
+                throw authErrors.invalidCredentials();
+            }
+            if (error.message === 'Invalid credentials' || error.message === 'Invalid password') {
+                throw authErrors.invalidCredentials();
+            }
+            if (error.code === 'ACCOUNT_LOCKED') {
+                throw authErrors.accountLocked(error.retryAfter);
+            }
+            if (error.code === 'ACCOUNT_DISABLED') {
+                throw authErrors.accountDisabled();
+            }
+            // Re-throw as is if already an AuthError
+            if (error instanceof AuthError)
+                throw error;
+            // Unknown error from service
+            throw authErrors.internalError();
+        }
+        // Generate local JWT access token (short-lived)
+        let accessToken;
+        try {
+            accessToken = authService.generateAccessToken(user.id, user.email);
+        }
+        catch (error) {
+            console.error('Access token generation failed:', error);
+            throw authErrors.tokenGenerationFailed();
+        }
+        // Generate and store refresh token
+        let refreshToken;
+        try {
+            refreshToken = authService.generateRefreshTokenJwt(user.id);
+            await authService.storeRefreshToken(user.id, refreshToken);
+        }
+        catch (error) {
+            console.error('Refresh token generation failed:', error);
+            throw authErrors.tokenGenerationFailed();
+        }
+        // Set access token as httpOnly cookie (short-lived, for API requests)
+        setCookie(c, 'accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+            maxAge: 15 * 60, // 15 minutes
+        });
+        // Set refresh token as httpOnly cookie (long-lived, for token refresh)
+        setCookie(c, 'refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+            maxAge: 7 * 24 * 60 * 60, // 7 days
+        });
+        // Return success response
+        const response = {
+            user,
+            token: accessToken,
+        };
+        return c.json({ success: true, data: response }, 200);
+    }
+    catch (error) {
+        // Handle AuthError instances
+        if (error instanceof AuthError) {
+            const response = error.toResponse();
+            return c.json(response, error.statusCode);
+        }
+        // Handle unexpected errors
+        console.error('Unexpected login error:', error);
+        const unknownError = authErrors.unknownError(error?.message);
+        const response = unknownError.toResponse();
+        return c.json(response, 500);
+    }
 });
 /**
  * POST /api/auth/refresh

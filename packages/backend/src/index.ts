@@ -5,10 +5,36 @@ import { logger } from 'hono/logger';
 import { ZodError } from 'zod';
 import { Prisma } from '@prisma/client';
 import { corsMiddleware } from './middleware/cors';
+import { signatureSecurityHeaders, signatureAuditLog } from './middleware/signatureSecurity';
 import { connectDatabase, disconnectDatabase } from './lib/prisma';
+import { validateEnv, checkSignatureSecurityRequirements } from './config/env';
 import { handleZodError, handlePrismaError, handlePrismaClientError, handleUnknownError, sendErrorResponse } from './utils/error-handler';
 import authRoutes from './routes/auth';
 import invoiceRoutes from './routes/invoices';
+import signatureRoutes from './routes/signature';
+
+// Validate environment variables at startup
+try {
+  validateEnv();
+  console.log('✅ Environment variables validated');
+  
+  // Check signature security requirements
+  const { warnings, errors: securityErrors } = checkSignatureSecurityRequirements();
+  
+  if (securityErrors.length > 0) {
+    console.error('❌ Signature security requirements not met:');
+    securityErrors.forEach(err => console.error(`   - ${err}`));
+    process.exit(1);
+  }
+  
+  if (warnings.length > 0) {
+    console.warn('⚠️ Signature security warnings:');
+    warnings.forEach(warn => console.warn(`   - ${warn}`));
+  }
+} catch (error) {
+  console.error('❌ Environment validation failed:', error instanceof Error ? error.message : error);
+  process.exit(1);
+}
 
 const app = new Hono();
 
@@ -54,6 +80,11 @@ app.route('/api/auth', authRoutes);
 
 // Mount invoice routes
 app.route('/api/invoices', invoiceRoutes);
+
+// Mount signature routes with security headers and audit logging
+app.use('/api/signature/*', signatureSecurityHeaders);
+app.use('/api/signature/*', signatureAuditLog);
+app.route('/api/signature', signatureRoutes);
 
 // 404 handler
 app.notFound((c) => {

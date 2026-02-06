@@ -2,6 +2,7 @@
  * Invoice HTML template generator for PDF rendering
  * Supports TEIF compliance with multi-language support (FR, EN, AR)
  */
+import { amountToWords } from '@teif/shared/utils';
 const translations = {
     fr: {
         invoice: 'Facture',
@@ -262,36 +263,12 @@ export function generateInvoiceHtml(invoice, language, qrCodeDataUrl) {
         description: invoice.otherPaymentDescription,
     };
     const paymentDetailsValue = buildPaymentDetails();
-    // Calculate totals by tax rate
-    const taxBreakdown = new Map();
-    let totalHT = 0;
-    let totalTax = 0;
-    let totalFodec = 0;
-    invoice.lines.forEach((line) => {
-        const lineHT = (line.quantity * line.unitPrice) / (1 + line.taxRate / 100);
-        const lineTax = (line.quantity * line.unitPrice) - lineHT;
-        const lineFodec = line.fodec ? lineHT * 0.01 : 0; // FODEC typically 1%
-        totalHT += lineHT;
-        totalTax += lineTax;
-        totalFodec += lineFodec;
-        const existing = taxBreakdown.get(line.taxRate) || { ht: 0, tax: 0 };
-        existing.ht += lineHT;
-        existing.tax += lineTax;
-        taxBreakdown.set(line.taxRate, existing);
-    });
-    // Apply invoice-level allowances/charges
-    let totalAfterAllowances = totalHT;
-    invoice.allowances.forEach((alc) => {
-        if (alc.type === 'charge') {
-            totalAfterAllowances += alc.amount;
-        }
-        else {
-            totalAfterAllowances -= alc.amount;
-        }
-    });
-    const stampDuty = invoice.stampDuty || 0;
-    const ircWithheld = invoice.ircAmount || 0;
-    const calculatedTotal = totalAfterAllowances + totalTax + totalFodec + stampDuty - ircWithheld;
+    // Use ONLY stored totals from invoice record - NO CALCULATIONS
+    const displayTotalHT = invoice.totalHT;
+    const displayTotalTax = invoice.totalTVA;
+    const displayTotalTTC = invoice.totalTTC;
+    const displayStampDuty = invoice.stampDuty || 0;
+    const displayIrcWithheld = invoice.ircAmount || 0;
     return `
 <!DOCTYPE html>
 <html dir="${dir}" lang="${language}">
@@ -684,9 +661,9 @@ export function generateInvoiceHtml(invoice, language, qrCodeDataUrl) {
               <td class="number">${line.unit || ''}</td>
               <td class="currencyValue">${formatCurrency(line.unitPrice, currency)}</td>
               <td class="number">${line.discountRate?.toFixed(2) || '0.00'}%</td>
-              <td class="number">${line.taxRate.toFixed(2)}%</td>
+              <td class="number">${(line.taxRate * 100).toFixed(2)}%</td>
               <td class="number">${line.fodec ? 'X' : ''}</td>
-              <td class="currencyValue">${formatCurrency(line.quantity * line.unitPrice, currency)}</td>
+              <td class="currencyValue">${formatCurrency(line.lineAmount, currency)}</td>
             </tr>
           `)
         .join('')}
@@ -717,43 +694,31 @@ export function generateInvoiceHtml(invoice, language, qrCodeDataUrl) {
       <div class="totals-box">
         <div class="total-row">
           <div class="total-label">${t('totalHT', language)}</div>
-          <div class="total-amount">${formatCurrency(totalAfterAllowances, currency)}</div>
+          <div class="total-amount">${formatCurrency(displayTotalHT, currency)}</div>
         </div>
-        ${Array.from(taxBreakdown.entries())
-        .map(([rate, { ht, tax }]) => `
-          <div class="total-row">
-            <div class="total-label">${t('totalTVA', language)} ${rate.toFixed(2)}%</div>
-            <div class="total-amount">${formatCurrency(tax, currency)}</div>
-          </div>
-        `)
-        .join('')}
-        ${totalFodec > 0
-        ? `
-          <div class="total-row">
-            <div class="total-label">FODEC</div>
-            <div class="total-amount">${formatCurrency(totalFodec, currency)}</div>
-          </div>
-        `
-        : ''}
-        ${stampDuty > 0
+        <div class="total-row">
+          <div class="total-label">${t('totalTVA', language)}</div>
+          <div class="total-amount">${formatCurrency(displayTotalTax, currency)}</div>
+        </div>
+        ${displayStampDuty > 0
         ? `
           <div class="total-row">
             <div class="total-label">${t('stampDuty', language)}</div>
-            <div class="total-amount">${formatCurrency(stampDuty, currency)}</div>
+            <div class="total-amount">${formatCurrency(displayStampDuty, currency)}</div>
           </div>
         `
         : ''}
-        ${ircWithheld > 0
+        ${displayIrcWithheld > 0
         ? `
           <div class="total-row">
             <div class="total-label">${t('irc', language)}</div>
-            <div class="total-amount">-${formatCurrency(ircWithheld, currency)}</div>
+            <div class="total-amount">-${formatCurrency(displayIrcWithheld, currency)}</div>
           </div>
         `
         : ''}
         <div class="total-row grand-total">
           <div class="total-label">${t('totalTTC', language)}</div>
-          <div class="total-amount">${formatCurrency(calculatedTotal, currency)}</div>
+          <div class="total-amount">${formatCurrency(displayTotalTTC, currency)}</div>
         </div>
       </div>
     </div>
@@ -761,7 +726,7 @@ export function generateInvoiceHtml(invoice, language, qrCodeDataUrl) {
     <!-- Amount in Words -->
     <div class="amount-in-words">
       <div class="amount-label">${t('amountInWords', language)}:</div>
-      <div class="amount-text">${numberToWordsFr(calculatedTotal)} ${currency || 'TND'}</div>
+      <div class="amount-text">${amountToWords(displayTotalTTC, invoice.amountLanguage || 'fr')} ${currency || 'TND'}</div>
     </div>
 
     <!-- Payment Details -->

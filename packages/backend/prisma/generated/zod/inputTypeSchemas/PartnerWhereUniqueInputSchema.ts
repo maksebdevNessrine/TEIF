@@ -10,18 +10,18 @@ import { InvoiceListRelationFilterSchema } from './InvoiceListRelationFilterSche
 
 export const PartnerWhereUniqueInputSchema: z.ZodType<Prisma.PartnerWhereUniqueInput> = z.union([
   z.object({
-    id: z.string().cuid(),
+    id: z.cuid(),
     idType_idValue: z.lazy(() => PartnerIdTypeIdValueCompoundUniqueInputSchema),
   }),
   z.object({
-    id: z.string().cuid(),
+    id: z.cuid(),
   }),
   z.object({
     idType_idValue: z.lazy(() => PartnerIdTypeIdValueCompoundUniqueInputSchema),
   }),
 ])
 .and(z.object({
-  id: z.string().cuid().optional(),
+  id: z.cuid().optional(),
   idType_idValue: z.lazy(() => PartnerIdTypeIdValueCompoundUniqueInputSchema).optional(),
   AND: z.union([ z.lazy(() => PartnerWhereInputSchema), z.lazy(() => PartnerWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => PartnerWhereInputSchema).array().optional(),

@@ -21,6 +21,7 @@ interface InvoiceWithRelations extends Omit<InvoiceResponse, 'documentNumber' | 
     internalNotes?: string;
     contractReference?: string;
     orderReference?: string;
+    amountLanguage?: 'fr' | 'ar' | 'en';
     bankName?: string;
     bankCode?: string;
     bankRib?: string;

@@ -12,10 +12,10 @@ import { InvoiceLineNullableRelationFilterSchema } from './InvoiceLineNullableRe
 import { InvoiceLineWhereInputSchema } from './InvoiceLineWhereInputSchema';
 
 export const AllowanceChargeWhereUniqueInputSchema: z.ZodType<Prisma.AllowanceChargeWhereUniqueInput> = z.object({
-  id: z.string().cuid(),
+  id: z.cuid(),
 })
 .and(z.object({
-  id: z.string().cuid().optional(),
+  id: z.cuid().optional(),
   AND: z.union([ z.lazy(() => AllowanceChargeWhereInputSchema), z.lazy(() => AllowanceChargeWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => AllowanceChargeWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => AllowanceChargeWhereInputSchema), z.lazy(() => AllowanceChargeWhereInputSchema).array() ]).optional(),

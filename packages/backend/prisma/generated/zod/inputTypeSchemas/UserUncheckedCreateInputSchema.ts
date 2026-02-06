@@ -3,9 +3,10 @@ import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { InvoiceUncheckedCreateNestedManyWithoutUserInputSchema } from './InvoiceUncheckedCreateNestedManyWithoutUserInputSchema';
 import { RefreshTokenUncheckedCreateNestedManyWithoutUserInputSchema } from './RefreshTokenUncheckedCreateNestedManyWithoutUserInputSchema';
+import { UserSignatureUncheckedCreateNestedOneWithoutUserInputSchema } from './UserSignatureUncheckedCreateNestedOneWithoutUserInputSchema';
 
 export const UserUncheckedCreateInputSchema: z.ZodType<Prisma.UserUncheckedCreateInput> = z.object({
-  id: z.string().cuid().optional(),
+  id: z.cuid().optional(),
   email: z.string(),
   name: z.string(),
   passwordHash: z.string(),
@@ -16,6 +17,7 @@ export const UserUncheckedCreateInputSchema: z.ZodType<Prisma.UserUncheckedCreat
   updatedAt: z.coerce.date().optional(),
   invoices: z.lazy(() => InvoiceUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   refreshTokens: z.lazy(() => RefreshTokenUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  signature: z.lazy(() => UserSignatureUncheckedCreateNestedOneWithoutUserInputSchema).optional(),
 }).strict();
 
 export default UserUncheckedCreateInputSchema;

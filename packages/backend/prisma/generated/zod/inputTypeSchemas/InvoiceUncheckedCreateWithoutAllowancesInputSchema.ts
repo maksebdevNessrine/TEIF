@@ -6,7 +6,7 @@ import { InputJsonValueSchema } from './InputJsonValueSchema';
 import { InvoiceLineUncheckedCreateNestedManyWithoutInvoiceInputSchema } from './InvoiceLineUncheckedCreateNestedManyWithoutInvoiceInputSchema';
 
 export const InvoiceUncheckedCreateWithoutAllowancesInputSchema: z.ZodType<Prisma.InvoiceUncheckedCreateWithoutAllowancesInput> = z.object({
-  id: z.string().cuid().optional(),
+  id: z.cuid().optional(),
   documentType: z.string(),
   documentNumber: z.string(),
   invoiceDate: z.coerce.date(),
@@ -52,6 +52,7 @@ export const InvoiceUncheckedCreateWithoutAllowancesInputSchema: z.ZodType<Prism
   qrCodeEnabled: z.boolean().optional(),
   qrCodeContent: z.string().optional().nullable(),
   amountDescriptionOverride: z.string().optional().nullable(),
+  amountLanguage: z.string().optional(),
   xmlContent: z.string(),
   status: z.string().optional(),
   totalHT: z.number().optional(),

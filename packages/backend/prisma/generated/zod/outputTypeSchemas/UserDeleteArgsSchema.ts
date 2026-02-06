@@ -4,6 +4,7 @@ import { UserIncludeSchema } from '../inputTypeSchemas/UserIncludeSchema'
 import { UserWhereUniqueInputSchema } from '../inputTypeSchemas/UserWhereUniqueInputSchema'
 import { InvoiceFindManyArgsSchema } from "../outputTypeSchemas/InvoiceFindManyArgsSchema"
 import { RefreshTokenFindManyArgsSchema } from "../outputTypeSchemas/RefreshTokenFindManyArgsSchema"
+import { UserSignatureArgsSchema } from "../outputTypeSchemas/UserSignatureArgsSchema"
 import { UserCountOutputTypeArgsSchema } from "../outputTypeSchemas/UserCountOutputTypeArgsSchema"
 // Select schema needs to be in file to prevent circular imports
 //------------------------------------------------------
@@ -20,6 +21,7 @@ export const UserSelectSchema: z.ZodType<Prisma.UserSelect> = z.object({
   updatedAt: z.boolean().optional(),
   invoices: z.union([z.boolean(),z.lazy(() => InvoiceFindManyArgsSchema)]).optional(),
   refreshTokens: z.union([z.boolean(),z.lazy(() => RefreshTokenFindManyArgsSchema)]).optional(),
+  signature: z.union([z.boolean(),z.lazy(() => UserSignatureArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => UserCountOutputTypeArgsSchema)]).optional(),
 }).strict()
 

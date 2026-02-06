@@ -4,6 +4,7 @@
  */
 
 import type { InvoiceResponse, InvoiceLine, AllowanceCharge } from '@teif/shared/types';
+import { amountToWords } from '@teif/shared/utils';
 
 type Language = 'ar' | 'fr' | 'en';
 
@@ -24,6 +25,7 @@ interface InvoiceWithRelations extends Omit<InvoiceResponse, 'documentNumber' | 
   internalNotes?: string;
   contractReference?: string;
   orderReference?: string; // alias for internalNotes
+  amountLanguage?: 'fr' | 'ar' | 'en'; // Language for amount in words
   // Payment details (from individual fields)
   bankName?: string;
   bankCode?: string;
@@ -304,6 +306,7 @@ export function generateInvoiceHtml(
   language: Language,
   qrCodeDataUrl: string
 ): string {
+  console.log('[PDF] generateInvoiceHtml: language param =', language, 'invoice.amountLanguage =', invoice.amountLanguage);
   const isRTL = language === 'ar';
   const dir = isRTL ? 'rtl' : 'ltr';
   const textAlign = isRTL ? 'right' : 'left';
@@ -733,7 +736,7 @@ export function generateInvoiceHtml(
               <td class="number">${line.discountRate?.toFixed(2) || '0.00'}%</td>
               <td class="number">${(line.taxRate * 100).toFixed(2)}%</td>
               <td class="number">${line.fodec ? 'X' : ''}</td>
-              <td class="currencyValue">${formatCurrency(line.lineAmount, currency)}</td>
+              <td class="currencyValue">${formatCurrency((line as any).lineAmount, currency)}</td>
             </tr>
           `
             )
@@ -802,7 +805,7 @@ export function generateInvoiceHtml(
     <!-- Amount in Words -->
     <div class="amount-in-words">
       <div class="amount-label">${t('amountInWords', language)}:</div>
-      <div class="amount-text">${numberToWordsFr(displayTotalTTC)} ${currency || 'TND'}</div>
+      <div class="amount-text">${amountToWords(displayTotalTTC, invoice.amountLanguage as any || 'fr')} ${currency || 'TND'}</div>
     </div>
 
     <!-- Payment Details -->

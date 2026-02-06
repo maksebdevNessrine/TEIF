@@ -34,6 +34,7 @@ export const typedClient = client as any;
  */
 
 export async function createInvoice(data: any) {
+  console.log('[API-CLIENT] createInvoice: sending data with amountLanguage =', data.amountLanguage);
   const res = await typedClient.api.invoices.$post({ json: data });
   
   if (!res.ok) {
@@ -42,6 +43,7 @@ export async function createInvoice(data: any) {
   }
   
   const result = await res.json();
+  console.log('[API-CLIENT] createInvoice response: amountLanguage =', result.data?.amountLanguage);
   return result.data;
 }
 
@@ -58,6 +60,7 @@ export async function getInvoice(id: string) {
 }
 
 export async function updateInvoice(id: string, data: any) {
+  console.log('[API-CLIENT] updateInvoice: sending data with amountLanguage =', data.amountLanguage);
   const res = await typedClient.api.invoices[':id'].$put({
     param: { id },
     json: data,
@@ -69,6 +72,7 @@ export async function updateInvoice(id: string, data: any) {
   }
   
   const result = await res.json();
+  console.log('[API-CLIENT] updateInvoice response: amountLanguage =', result.data?.amountLanguage);
   return result.data;
 }
 
@@ -170,7 +174,8 @@ export async function loginUser(email: string, password: string) {
   if (result.data?.token) {
     localStorage.setItem('teif_access_token', result.data.token);
   }
-  return result.data;
+  // Return the actual user object for AuthContext
+  return result.data?.user ?? null;
 }
 
 export async function registerUser(name: string, email: string, password: string) {
@@ -188,7 +193,7 @@ export async function registerUser(name: string, email: string, password: string
   if (result.data?.token) {
     localStorage.setItem('teif_access_token', result.data.token);
   }
-  return result.data;
+  return result.data?.user ?? null;
 }
 
 export async function logoutUser() {
@@ -227,7 +232,7 @@ export async function getCurrentUser() {
   }
   
   const result = await res.json();
-  return result.data;
+  return result.data?.user ?? null;
 }
 
 export async function verifyEmailCode(email: string, code: string) {
@@ -245,7 +250,7 @@ export async function verifyEmailCode(email: string, code: string) {
   if (result.data?.token) {
     localStorage.setItem('teif_access_token', result.data.token);
   }
-  return result.data;
+  return result.data?.user ?? null;
 }
 
 export async function resendVerificationCode(email: string) {

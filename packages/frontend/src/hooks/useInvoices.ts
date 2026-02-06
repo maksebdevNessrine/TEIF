@@ -78,8 +78,12 @@ export function useCreateInvoice() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: InvoiceData) => createInvoice(data),
+    mutationFn: (data: InvoiceData) => {
+      console.log('[HOOK] useCreateInvoice: sending data with amountLanguage =', (data as any).amountLanguage);
+      return createInvoice(data);
+    },
     onSuccess: (invoice: any) => {
+      console.log('[HOOK] useCreateInvoice success: received invoice.amountLanguage =', invoice.amountLanguage);
       // Invalidate all invoice lists to trigger refetch
       queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.lists() });
       
@@ -89,6 +93,7 @@ export function useCreateInvoice() {
       toast.success('Invoice created successfully');
     },
     onError: (error: any) => {
+      console.error('[HOOK] useCreateInvoice error:', error);
       const message = error.message || 'Failed to create invoice';
       toast.error(message);
     },
@@ -107,9 +112,12 @@ export function useUpdateInvoice() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: InvoiceData }) =>
-      updateInvoice(id, data),
+    mutationFn: ({ id, data }: { id: string; data: InvoiceData }) => {
+      console.log('[HOOK] useUpdateInvoice: sending data with amountLanguage =', (data as any).amountLanguage);
+      return updateInvoice(id, data);
+    },
     onSuccess: (invoice: any, variables) => {
+      console.log('[HOOK] useUpdateInvoice success: received invoice.amountLanguage =', invoice.amountLanguage);
       // Update the specific invoice in cache
       queryClient.setQueryData(invoiceQueryKeys.detail(invoice.id), invoice);
       
@@ -119,6 +127,7 @@ export function useUpdateInvoice() {
       toast.success('Invoice updated successfully');
     },
     onError: (error: any) => {
+      console.error('[HOOK] useUpdateInvoice error:', error);
       const message = error.message || 'Failed to update invoice';
       toast.error(message);
     },

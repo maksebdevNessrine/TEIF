@@ -7,6 +7,7 @@ import { EmailVerification } from '@/pages/EmailVerification';
 import { InvoiceList } from '@/pages/InvoiceList';
 import { InvoiceNew } from '@/pages/InvoiceNew';
 import { InvoiceDetail } from '@/pages/InvoiceDetail';
+import { Settings } from '@/pages/Settings';
 
 export const router = createBrowserRouter([
   {
@@ -26,7 +27,7 @@ export const router = createBrowserRouter([
     element: <EmailVerification />,
   },
   {
-    path: '/invoices',
+    // Protected area wrapped by Layout (header/footer present)
     element: (
       <ProtectedRoute>
         <Layout />
@@ -34,16 +35,21 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
+        path: '/invoices',
         index: true,
         element: <InvoiceList />,
       },
       {
-        path: 'new',
+        path: '/invoices/new',
         element: <InvoiceNew />,
       },
       {
-        path: ':id',
+        path: '/invoices/:id',
         element: <InvoiceDetail />,
+      },
+      {
+        path: '/settings',
+        element: <Settings />,
       },
     ],
   },

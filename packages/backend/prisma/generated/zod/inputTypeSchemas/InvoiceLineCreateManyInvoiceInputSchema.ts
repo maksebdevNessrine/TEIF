@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
 export const InvoiceLineCreateManyInvoiceInputSchema: z.ZodType<Prisma.InvoiceLineCreateManyInvoiceInput> = z.object({
-  id: z.string().cuid().optional(),
+  id: z.cuid().optional(),
   itemCode: z.string(),
   description: z.string(),
   quantity: z.number(),

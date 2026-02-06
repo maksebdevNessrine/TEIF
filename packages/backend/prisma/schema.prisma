@@ -34,8 +34,64 @@ model User {
   // Relations
   invoices                    Invoice[]
   refreshTokens               RefreshToken[]
+  signature                   UserSignature?
   
   @@index([email])
+}
+
+// User Signature model for certificate storage and signing
+model UserSignature {
+  id                      String    @id @default(cuid())
+  userId                  String    @unique
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Certificate File (PKCS#12 / .p12 or .pfx)
+  certificateFilename     String    // Original filename from user upload
+  encryptedContent        String    @db.Text // Base64 AES-256-GCM encrypted PKCS#12 blob
+  signaturePinHash        String    // Bcrypt hash of user's PIN (for verification)
+  
+  // Certificate Metadata
+  certificateSubject      String?   // Certificate subject DN (e.g., CN=User Name, O=Org)
+  certificateIssuer       String?   // Certificate issuer DN
+  certificateSerialNumber String?   // Certificate serial number in hex
+  certificateValidFrom    DateTime? // Certificate validity start
+  certificateValidUntil   DateTime? // Certificate validity end
+  keyAlgorithm            String?   // RSA, ECDSA, etc.
+  
+  // Status Tracking
+  status                  String    @default("pending_verification") // pending_verification, verified, expired, revoked
+  
+  // Audit
+  uploadedAt              DateTime  @default(now())
+  lastUsedAt              DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  
+  @@index([status])
+  @@index([certificateValidUntil])
+}
+
+// Signature Audit Log for compliance tracking
+model SignatureAudit {
+  id                  String    @id @default(cuid())
+  userId              String
+  action              String    // UPLOAD, SIGN, VALIDATE_FAILED, EXPIRY_WARNING
+  invoiceId           String?
+  documentNumber      String?   // Invoice document number for reference
+  status              String    // SUCCESS, FAILED
+  errorMessage        String?   // Error details if failed
+  certificateUsed     String?   // Certificate subject for audit trail
+  ipAddress           String?   // User IP for security audit
+  userAgent           String?   // User agent for audit trail
+  
+  // Metadata
+  createdAt           DateTime  @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([invoiceId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 // Refresh token model for session management
@@ -136,6 +192,7 @@ model Invoice {
   
   // Custom Amount Description
   amountDescriptionOverride String? // Custom amount description in letters
+  amountLanguage        String    @default("fr") // Language for amount in words: 'fr', 'ar', 'en'
   
   // XML Content
   xmlContent            String    @db.Text        // Generated TEIF XML content
@@ -255,7 +312,3 @@ model AllowanceCharge {
   @@index([lineId])
   @@index([type])
 }
-
-// Future: Add more models as needed
-// - User (for authentication)
-// - AuditLog (for compliance tracking)

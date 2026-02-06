@@ -5,7 +5,7 @@ import { NullableJsonNullValueInputSchema } from './NullableJsonNullValueInputSc
 import { InputJsonValueSchema } from './InputJsonValueSchema';
 
 export const InvoiceCreateManyInputSchema: z.ZodType<Prisma.InvoiceCreateManyInput> = z.object({
-  id: z.string().cuid().optional(),
+  id: z.cuid().optional(),
   documentType: z.string(),
   documentNumber: z.string(),
   invoiceDate: z.coerce.date(),
@@ -51,6 +51,7 @@ export const InvoiceCreateManyInputSchema: z.ZodType<Prisma.InvoiceCreateManyInp
   qrCodeEnabled: z.boolean().optional(),
   qrCodeContent: z.string().optional().nullable(),
   amountDescriptionOverride: z.string().optional().nullable(),
+  amountLanguage: z.string().optional(),
   xmlContent: z.string(),
   status: z.string().optional(),
   totalHT: z.number().optional(),

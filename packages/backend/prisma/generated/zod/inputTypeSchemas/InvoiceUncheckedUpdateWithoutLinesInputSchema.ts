@@ -13,7 +13,7 @@ import { InputJsonValueSchema } from './InputJsonValueSchema';
 import { AllowanceChargeUncheckedUpdateManyWithoutInvoiceNestedInputSchema } from './AllowanceChargeUncheckedUpdateManyWithoutInvoiceNestedInputSchema';
 
 export const InvoiceUncheckedUpdateWithoutLinesInputSchema: z.ZodType<Prisma.InvoiceUncheckedUpdateWithoutLinesInput> = z.object({
-  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  id: z.union([ z.cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   documentType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   documentNumber: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   invoiceDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -59,6 +59,7 @@ export const InvoiceUncheckedUpdateWithoutLinesInputSchema: z.ZodType<Prisma.Inv
   qrCodeEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   qrCodeContent: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   amountDescriptionOverride: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  amountLanguage: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   xmlContent: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   totalHT: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),

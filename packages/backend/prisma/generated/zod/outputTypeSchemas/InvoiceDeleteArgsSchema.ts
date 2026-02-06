@@ -57,6 +57,7 @@ export const InvoiceSelectSchema: z.ZodType<Prisma.InvoiceSelect> = z.object({
   qrCodeEnabled: z.boolean().optional(),
   qrCodeContent: z.boolean().optional(),
   amountDescriptionOverride: z.boolean().optional(),
+  amountLanguage: z.boolean().optional(),
   xmlContent: z.boolean().optional(),
   status: z.boolean().optional(),
   totalHT: z.boolean().optional(),

@@ -139,6 +139,7 @@ export interface InvoiceData {
   otherPaymentReference?: string; // Reference for other payment method
   // General
   amountDescriptionOverride?: string;
+  amountLanguage?: 'fr' | 'ar' | 'en'; // Language for amount in words: French (default), Arabic, or English
   ircRate?: number; // I-1604: IRC withholding tax rate (0-10%, optional)
   ircAmount?: number; // Calculated IRC amount
   ircExemptionReason?: string; // Reason if IRC is exempted
@@ -202,4 +203,76 @@ export interface InvoiceListResponse {
     sortBy: string;
     sortOrder: string;
   };
+}
+
+// ============================================
+// SIGNATURE TYPES
+// ============================================
+
+export type CertificateStatus = 'pending_verification' | 'verified' | 'expired' | 'revoked';
+
+export interface UserSignatureProfile {
+  userId: string;
+  hasCertificate: boolean;
+  status?: CertificateStatus;
+  certificateSubject?: string;
+  certificateIssuer?: string;
+  certificateValidFrom?: string;
+  certificateValidUntil?: string;
+  daysRemaining?: number | null;
+  uploadedAt?: string;
+  lastUsedAt?: string | null;
+}
+
+export interface SignatureUploadRequest {
+  pin: string;
+  // File sent as FormData with key 'certificate'
+}
+
+export interface SignatureUploadResponse {
+  success: boolean;
+  data?: {
+    certificateSubject: string;
+    certificateIssuer: string;
+    validFrom: string;
+    validUntil: string;
+    status: CertificateStatus;
+    message: string;
+  };
+  error?: string;
+  code?: string;
+}
+
+export interface SignInvoiceRequest {
+  pin: string;
+}
+
+export interface SignInvoiceResponse {
+  success: boolean;
+  data?: {
+    signedXml: string;
+    signatureId: string;
+    timestamp: string;
+    filename: string;
+  };
+  error?: string;
+  code?: string;
+}
+
+export interface SignatureStatusResponse {
+  success: boolean;
+  data: UserSignatureProfile;
+}
+
+export interface SignatureAuditLog {
+  id: string;
+  userId: string;
+  action: 'UPLOAD' | 'SIGN' | 'VALIDATE_FAILED' | 'EXPIRY_WARNING' | 'REVOKE';
+  invoiceId?: string;
+  documentNumber?: string;
+  status: 'SUCCESS' | 'FAILED';
+  errorMessage?: string;
+  certificateUsed?: string;
+  ipAddress?: string;
+  createdAt: string;
 }

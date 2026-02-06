@@ -129,7 +129,7 @@ export async function generateInvoicePdf(
   language: Language = 'fr'
 ): Promise<Buffer> {
   try {
-    console.log(`[PDF] Generating PDF for invoice ${invoiceId} (language: ${language})`);
+    console.log(`[PDF] generateInvoicePdf START: invoiceId=${invoiceId}, language=${language}`);
 
     // Fetch invoice with all relations
     const invoice = await getInvoiceById(userId, invoiceId);
@@ -137,6 +137,8 @@ export async function generateInvoicePdf(
     if (!invoice) {
       throw new Error(`Invoice ${invoiceId} not found`);
     }
+
+    console.log(`[PDF] Fetched invoice: amountLanguage=${(invoice as any).amountLanguage}`);
 
     // Generate QR code
     const qrCodeDataUrl = await generateQrCodeDataUrl(invoice);

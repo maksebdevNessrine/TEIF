@@ -55,6 +55,12 @@ export function Layout() {
                 >
                   {t('newInvoice')}
                 </Link>
+                <Link
+                  to="/settings"
+                  className="text-sm text-gray-300 hover:text-emerald-400 transition-colors whitespace-nowrap"
+                >
+                  {t('settings')}
+                </Link>
               </nav>
 
               {/* Language Switcher */}
@@ -93,6 +99,15 @@ export function Layout() {
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <Outlet />
       </main>
+        {/* Footer */}
+        <footer className="border-t border-emerald-900/20 bg-slate-900 mt-8">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+            <div className={`flex items-center justify-between ${flexDirClass}`}>
+              <div className="text-sm text-gray-400">{t('appTitle')}</div>
+              <div className="text-sm text-gray-500">© {new Date().getFullYear()} • {t('footer')}</div>
+            </div>
+          </div>
+        </footer>
     </div>
   );
 }

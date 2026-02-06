@@ -9,21 +9,23 @@ import { DateTimeNullableFilterSchema } from './DateTimeNullableFilterSchema';
 import { DateTimeFilterSchema } from './DateTimeFilterSchema';
 import { InvoiceListRelationFilterSchema } from './InvoiceListRelationFilterSchema';
 import { RefreshTokenListRelationFilterSchema } from './RefreshTokenListRelationFilterSchema';
+import { UserSignatureNullableRelationFilterSchema } from './UserSignatureNullableRelationFilterSchema';
+import { UserSignatureWhereInputSchema } from './UserSignatureWhereInputSchema';
 
 export const UserWhereUniqueInputSchema: z.ZodType<Prisma.UserWhereUniqueInput> = z.union([
   z.object({
-    id: z.string().cuid(),
+    id: z.cuid(),
     email: z.string(),
   }),
   z.object({
-    id: z.string().cuid(),
+    id: z.cuid(),
   }),
   z.object({
     email: z.string(),
   }),
 ])
 .and(z.object({
-  id: z.string().cuid().optional(),
+  id: z.cuid().optional(),
   email: z.string().optional(),
   AND: z.union([ z.lazy(() => UserWhereInputSchema), z.lazy(() => UserWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => UserWhereInputSchema).array().optional(),
@@ -37,6 +39,7 @@ export const UserWhereUniqueInputSchema: z.ZodType<Prisma.UserWhereUniqueInput> 
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   invoices: z.lazy(() => InvoiceListRelationFilterSchema).optional(),
   refreshTokens: z.lazy(() => RefreshTokenListRelationFilterSchema).optional(),
-}).strict()) as any;
+  signature: z.union([ z.lazy(() => UserSignatureNullableRelationFilterSchema), z.lazy(() => UserSignatureWhereInputSchema) ]).optional().nullable(),
+}).strict());
 
 export default UserWhereUniqueInputSchema;

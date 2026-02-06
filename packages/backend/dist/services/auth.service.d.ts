@@ -38,12 +38,12 @@ export declare function rotateRefreshToken(userId: string, oldToken: string): Pr
  * Supabase Auth: Sign up new user
  */
 export declare function signUpWithSupabase(email: string, password: string, name: string): Promise<{
-    id: string;
-    createdAt: Date;
     name: string;
     email: string;
-    passwordHash: string;
+    id: string;
     emailVerified: boolean;
+    createdAt: Date;
+    passwordHash: string;
     verificationCode: string | null;
     verificationCodeExpires: Date | null;
     updatedAt: Date;
@@ -53,9 +53,9 @@ export declare function signUpWithSupabase(email: string, password: string, name
  */
 export declare function signInWithSupabase(email: string, password: string): Promise<{
     user: {
-        id: string;
         name: string;
         email: string;
+        id: string;
     } | null;
     accessToken: string;
     refreshToken: string;
@@ -69,26 +69,26 @@ export declare function signOutWithSupabase(accessToken: string): Promise<void>;
  * Create a new user in the database (Custom JWT fallback)
  */
 export declare function createUser(name: string, email: string, password: string): Promise<{
-    id: string;
     name: string;
     email: string;
+    id: string;
 }>;
 /**
  * Find a user by email (includes passwordHash for login verification)
  */
 export declare function findUserByEmail(email: string): Promise<{
-    id: string;
     name: string;
     email: string;
+    id: string;
     passwordHash: string;
 }>;
 /**
  * Find a user by ID (excludes passwordHash)
  */
 export declare function findUserById(id: string): Promise<{
-    id: string;
     name: string;
     email: string;
+    id: string;
 }>;
 /**
  * Login user with email and password (local authentication)
@@ -110,9 +110,9 @@ export declare function sendVerificationEmail(email: string, code: string, name:
  * Create user with verification code and send email
  */
 export declare function createUserWithVerification(name: string, email: string, password: string): Promise<{
-    id: string;
     name: string;
     email: string;
+    id: string;
     emailVerified: boolean;
     verificationCode: string | null;
     verificationCodeExpires: Date | null;
@@ -121,9 +121,9 @@ export declare function createUserWithVerification(name: string, email: string, 
  * Verify email with code
  */
 export declare function verifyEmailCode(email: string, code: string): Promise<{
-    id: string;
     name: string;
     email: string;
+    id: string;
     emailVerified: boolean;
     verificationCode: string | null;
     verificationCodeExpires: Date | null;

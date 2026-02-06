@@ -60,6 +60,7 @@ export const InvoiceScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Invoi
   qrCodeEnabled: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema), z.boolean() ]).optional(),
   qrCodeContent: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
   amountDescriptionOverride: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
+  amountLanguage: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   xmlContent: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   status: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   totalHT: z.union([ z.lazy(() => FloatWithAggregatesFilterSchema), z.number() ]).optional(),

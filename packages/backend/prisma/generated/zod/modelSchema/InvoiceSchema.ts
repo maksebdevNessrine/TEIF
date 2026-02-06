@@ -52,6 +52,7 @@ export const InvoiceSchema = z.object({
   qrCodeEnabled: z.boolean(),
   qrCodeContent: z.string().nullable(),
   amountDescriptionOverride: z.string().nullable(),
+  amountLanguage: z.string(),
   xmlContent: z.string(),
   status: z.string(),
   totalHT: z.number(),

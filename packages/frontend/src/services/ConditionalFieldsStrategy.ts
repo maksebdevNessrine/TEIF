@@ -141,8 +141,10 @@ export const ConditionalFieldsRules = {
   },
 
   showStampDuty: (data: InvoiceData): boolean => {
+    // Always show stamp duty for regular invoices
+    // Hide only for delivery notes (I-30) and receipt notes (I-31)
     const docType = data.documentType as DocTypeCode;
-    return !['I-30', 'I-31'].includes(docType); // Not for receipts
+    return !['I-30', 'I-31', 'I-32', 'I-33'].includes(docType);
   },
 
   showGlobalDiscount: (data: InvoiceData): boolean => {

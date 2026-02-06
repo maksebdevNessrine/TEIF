@@ -28,6 +28,7 @@ export async function createInvoice(
   userId: string,
   invoiceData: InvoiceCreateApiDto
 ): Promise<any> {
+  console.log('[SERVICE] createInvoice: amountLanguage from request =', invoiceData.amountLanguage);
   // Data is guaranteed to match InvoiceCreateApiSchema
   // TypeScript ensures type safety; no runtime validation needed
   const validatedData = invoiceData;
@@ -87,6 +88,7 @@ export async function createInvoice(
         paymentMeans: validatedData.paymentMeans || '',
         orderReference: validatedData.orderReference,
         operationNature: validatedData.operationNature || '',
+        amountLanguage: validatedData.amountLanguage || 'fr',
         xmlContent,
         metadata: validatedData.currency ? { currency: validatedData.currency } : undefined,
       },
@@ -300,6 +302,7 @@ export async function updateInvoice(
         ...(validatedData.paymentMeans && { paymentMeans: validatedData.paymentMeans }),
         ...(validatedData.orderReference !== undefined && { orderReference: validatedData.orderReference }),
         ...(validatedData.operationNature !== undefined && { operationNature: validatedData.operationNature || '' }),
+        ...(validatedData.amountLanguage && { amountLanguage: validatedData.amountLanguage }),
         ...(validatedData.currency && { metadata: { currency: validatedData.currency } }),
         // Always recalculate and update totals when lines/discounts/taxes change
         totalHT: invoiceTotals.totalHT,

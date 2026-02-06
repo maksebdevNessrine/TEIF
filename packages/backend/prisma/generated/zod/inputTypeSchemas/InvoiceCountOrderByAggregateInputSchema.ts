@@ -50,6 +50,7 @@ export const InvoiceCountOrderByAggregateInputSchema: z.ZodType<Prisma.InvoiceCo
   qrCodeEnabled: z.lazy(() => SortOrderSchema).optional(),
   qrCodeContent: z.lazy(() => SortOrderSchema).optional(),
   amountDescriptionOverride: z.lazy(() => SortOrderSchema).optional(),
+  amountLanguage: z.lazy(() => SortOrderSchema).optional(),
   xmlContent: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
   totalHT: z.lazy(() => SortOrderSchema).optional(),

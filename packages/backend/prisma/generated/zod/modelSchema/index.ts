@@ -1,4 +1,6 @@
 export * from './UserSchema';
+export * from './UserSignatureSchema';
+export * from './SignatureAuditSchema';
 export * from './RefreshTokenSchema';
 export * from './InvoiceSchema';
 export * from './PartnerSchema';

@@ -23,6 +23,7 @@ export const InvoiceCreateApiSchema = z.object({
   // Operational fields
   operationNature: z.string().default(''),
   ttnReference: z.string().nullable().optional(),
+  amountLanguage: z.enum(['fr', 'ar', 'en']).optional().default('fr'),
 
   // Financial fields
   globalDiscount: z.number().default(0),

@@ -60,6 +60,7 @@ export const InvoiceScalarWhereInputSchema: z.ZodType<Prisma.InvoiceScalarWhereI
   qrCodeEnabled: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
   qrCodeContent: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
   amountDescriptionOverride: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  amountLanguage: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   xmlContent: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   status: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   totalHT: z.union([ z.lazy(() => FloatFilterSchema), z.number() ]).optional(),

@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
 export const AllowanceChargeCreateManyInvoiceInputSchema: z.ZodType<Prisma.AllowanceChargeCreateManyInvoiceInput> = z.object({
-  id: z.string().cuid().optional(),
+  id: z.cuid().optional(),
   type: z.string(),
   code: z.string(),
   description: z.string(),

@@ -47,7 +47,7 @@ export async function createInvoice(userId, invoiceData) {
             ...invoiceCalculationsService.calculateLineTotals(line),
         }));
         // Calculate invoice totals
-        const invoiceTotals = invoiceCalculationsService.calculateInvoiceTotals(linesWithTotals, validatedData.globalDiscount || 0, validatedData.stampDuty || 0, validatedData.ircRate);
+        const invoiceTotals = invoiceCalculationsService.calculateInvoiceTotals(linesWithTotals, validatedData.globalDiscount || 0, validatedData.stampDuty || 0, validatedData.ircRate || undefined);
         // Generate XML content (cast DTO to InvoiceData format)
         const xmlContent = xmlGeneratorService.generateInvoiceXml(validatedData);
         // Create invoice record
@@ -72,6 +72,7 @@ export async function createInvoice(userId, invoiceData) {
                 paymentMeans: validatedData.paymentMeans || '',
                 orderReference: validatedData.orderReference,
                 operationNature: validatedData.operationNature || '',
+                amountLanguage: validatedData.amountLanguage || 'fr',
                 xmlContent,
                 metadata: validatedData.currency ? { currency: validatedData.currency } : undefined,
             },
@@ -232,7 +233,7 @@ export async function updateInvoice(userId, invoiceId, invoiceData) {
             ...invoiceCalculationsService.calculateLineTotals(line),
         }));
         // Calculate invoice totals
-        const invoiceTotals = invoiceCalculationsService.calculateInvoiceTotals(linesWithTotals, validatedData.globalDiscount || 0, validatedData.stampDuty || 0, validatedData.ircRate);
+        const invoiceTotals = invoiceCalculationsService.calculateInvoiceTotals(linesWithTotals, validatedData.globalDiscount || 0, validatedData.stampDuty || 0, validatedData.ircRate || undefined);
         // Generate XML content (cast DTO to InvoiceData format)
         const xmlContent = xmlGeneratorService.generateInvoiceXml(validatedData);
         // Update invoice record
@@ -251,7 +252,12 @@ export async function updateInvoice(userId, invoiceId, invoiceData) {
                 ...(validatedData.paymentMeans && { paymentMeans: validatedData.paymentMeans }),
                 ...(validatedData.orderReference !== undefined && { orderReference: validatedData.orderReference }),
                 ...(validatedData.operationNature !== undefined && { operationNature: validatedData.operationNature || '' }),
+                ...(validatedData.amountLanguage && { amountLanguage: validatedData.amountLanguage }),
                 ...(validatedData.currency && { metadata: { currency: validatedData.currency } }),
+                // Always recalculate and update totals when lines/discounts/taxes change
+                totalHT: invoiceTotals.totalHT,
+                totalTVA: invoiceTotals.totalTVA,
+                totalTTC: invoiceTotals.totalTTC,
             },
             include: {
                 supplier: true,

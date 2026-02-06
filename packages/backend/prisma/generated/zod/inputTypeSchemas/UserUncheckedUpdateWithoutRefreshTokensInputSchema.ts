@@ -7,9 +7,10 @@ import { NullableStringFieldUpdateOperationsInputSchema } from './NullableString
 import { NullableDateTimeFieldUpdateOperationsInputSchema } from './NullableDateTimeFieldUpdateOperationsInputSchema';
 import { DateTimeFieldUpdateOperationsInputSchema } from './DateTimeFieldUpdateOperationsInputSchema';
 import { InvoiceUncheckedUpdateManyWithoutUserNestedInputSchema } from './InvoiceUncheckedUpdateManyWithoutUserNestedInputSchema';
+import { UserSignatureUncheckedUpdateOneWithoutUserNestedInputSchema } from './UserSignatureUncheckedUpdateOneWithoutUserNestedInputSchema';
 
 export const UserUncheckedUpdateWithoutRefreshTokensInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutRefreshTokensInput> = z.object({
-  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  id: z.union([ z.cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   passwordHash: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
@@ -19,6 +20,7 @@ export const UserUncheckedUpdateWithoutRefreshTokensInputSchema: z.ZodType<Prism
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   invoices: z.lazy(() => InvoiceUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  signature: z.lazy(() => UserSignatureUncheckedUpdateOneWithoutUserNestedInputSchema).optional(),
 }).strict();
 
 export default UserUncheckedUpdateWithoutRefreshTokensInputSchema;

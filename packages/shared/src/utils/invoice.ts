@@ -57,18 +57,15 @@ export const generateQrString = (data: InvoiceData, totalTtc: number, totalTva: 
 };
 
 /**
- * Converts a number to French words, specifically formatted for Tunisian Dinars with 3 decimals
+ * Converts a number to French words for Tunisian Dinars with 3 decimals
  * Handles both integer and decimal parts (dinars and millimes)
- *
+ * 
  * @param total - Numeric amount to convert
  * @returns French text representation with dinar and millime portions
- *
+ * 
  * @example
  * numberToLettersFr(1234.567)
  * // Returns: 'ARRÊTÉ LA PRÉSENTE FACTURE À LA SOMME DE : MILLE DEUX CENT TRENTE-QUATRE DINARS ET CINQ CENT SOIXANTE-SEPT MILLIMES'
- * 
- * numberToLettersFr(0.001)
- * // Returns: 'ARRÊTÉ LA PRÉSENTE FACTURE À LA SOMME DE : UN MILLIME'
  */
 export const numberToLettersFr = (total: number): string => {
   const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
@@ -122,6 +119,184 @@ export const numberToLettersFr = (total: number): string => {
   }
 
   return "ARRÊTÉ LA PRÉSENTE FACTURE À LA SOMME DE : " + result.toUpperCase();
+};
+
+/**
+ * Converts a number to Arabic words for Tunisian Dinars with 3 decimals
+ * Handles both integer and decimal parts (dinars and millimes)
+ * Compliant with Tunisian invoice regulations
+ * 
+ * @param total - Numeric amount to convert
+ * @returns Arabic text representation with dinar and millime portions
+ * 
+ * @example
+ * numberToLettersAr(1234.567)
+ * // Returns: 'تم تحرير هذا الفاتورة بمبلغ : ألف ومائتان وأربعة وثلاثون دينار وخمسمائة وسبعة وستون مليم'
+ */
+export const numberToLettersAr = (total: number): string => {
+  const units = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة"];
+  const teens = ["عشرة", "احدى عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
+  const tens = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
+  const hundreds = ["", "مائة", "مائتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
+
+  const convertBase = (n: number): string => {
+    if (n === 0) return "";
+    if (n < 10) return units[n];
+    if (n < 20) return teens[n - 10];
+    if (n < 100) {
+      const ten = Math.floor(n / 10);
+      const one = n % 10;
+      if (one === 0) return tens[ten];
+      return tens[ten] + " و" + units[one];
+    }
+    if (n < 1000) {
+      const h = Math.floor(n / 100);
+      const remainder = n % 100;
+      if (remainder === 0) return hundreds[h];
+      return hundreds[h] + " و" + convertBase(remainder);
+    }
+    return "";
+  };
+
+  const convertLarge = (n: number): string => {
+    if (n === 0) return "صفر";
+    
+    const billions = Math.floor(n / 1000000000);
+    const millions = Math.floor((n % 1000000000) / 1000000);
+    const thousands = Math.floor((n % 1000000) / 1000);
+    const remainder = n % 1000;
+
+    let res = "";
+    
+    if (billions > 0) {
+      res += convertBase(billions) + " مليار";
+    }
+    if (millions > 0) {
+      if (res) res += " و";
+      res += convertBase(millions) + " مليون";
+    }
+    if (thousands > 0) {
+      if (res) res += " و";
+      if (thousands === 1) res += "ألف";
+      else if (thousands === 2) res += "ألفان";
+      else if (thousands < 10) res += convertBase(thousands) + " آلاف";
+      else res += convertBase(thousands) + " ألف";
+    }
+    if (remainder > 0) {
+      if (res) res += " و";
+      res += convertBase(remainder);
+    }
+
+    return res.trim();
+  };
+
+  const integerPart = Math.floor(total);
+  const decimalPart = Math.round((total - integerPart) * 1000);
+
+  let result = convertLarge(integerPart);
+  if (integerPart === 1) result += " دينار";
+  else if (integerPart === 2) result += " ديناران";
+  else if (integerPart < 10) result += " دنانير";
+  else result += " دينار";
+
+  if (decimalPart > 0) {
+    result += " و" + convertLarge(decimalPart);
+    if (decimalPart === 1) result += " مليم";
+    else if (decimalPart === 2) result += " مليمان";
+    else if (decimalPart < 10) result += " مليمات";
+    else result += " مليم";
+  }
+
+  return "تم تحرير هذا الفاتورة بمبلغ : " + result;
+};
+
+/**
+ * Converts a number to English words for Tunisian Dinars with 3 decimals
+ * Handles both integer and decimal parts (dinars and millimes)
+ * 
+ * @param total - Numeric amount to convert
+ * @returns English text representation with dinar and millime portions
+ * 
+ * @example
+ * numberToLettersEn(1234.567)
+ * // Returns: 'THIS INVOICE AMOUNTS TO : ONE THOUSAND TWO HUNDRED THIRTY-FOUR DINARS AND FIVE HUNDRED SIXTY-SEVEN MILLIMES'
+ */
+export const numberToLettersEn = (total: number): string => {
+  const units = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+  const teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+  const tens = ["", "ten", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+
+  const convertBase = (n: number): string => {
+    if (n === 0) return "";
+    if (n < 10) return units[n];
+    if (n < 20) return teens[n - 10];
+    if (n < 100) {
+      const q = Math.floor(n / 10);
+      const r = n % 10;
+      if (r === 0) return tens[q];
+      return tens[q] + "-" + units[r];
+    }
+    if (n < 1000) {
+      const q = Math.floor(n / 100);
+      const r = n % 100;
+      if (r === 0) return units[q] + " hundred";
+      return units[q] + " hundred " + convertBase(r);
+    }
+    return "";
+  };
+
+  const convertLarge = (n: number): string => {
+    if (n === 0) return "zero";
+    const billions = Math.floor(n / 1000000000);
+    const millions = Math.floor((n % 1000000000) / 1000000);
+    const thousands = Math.floor((n % 1000000) / 1000);
+    const remainder = Math.floor(n % 1000);
+
+    let res = "";
+    if (billions > 0) res += convertBase(billions) + " billion ";
+    if (millions > 0) res += convertBase(millions) + " million ";
+    if (thousands > 0) {
+      if (thousands === 1) res += "one thousand ";
+      else res += convertBase(thousands) + " thousand ";
+    }
+    if (remainder > 0) res += convertBase(remainder);
+    return res.trim();
+  };
+
+  const integerPart = Math.floor(total);
+  const decimalPart = Math.round((total - integerPart) * 1000);
+
+  let result = convertLarge(integerPart) + " dinar" + (integerPart > 1 ? "s" : "");
+  if (decimalPart > 0) {
+    result += " and " + convertLarge(decimalPart) + " millime" + (decimalPart > 1 ? "s" : "");
+  }
+
+  return "THIS INVOICE AMOUNTS TO : " + result.toUpperCase();
+};
+
+/**
+ * Generates amount in words based on language preference
+ * Supports French, Arabic, and English
+ * 
+ * @param total - Numeric amount to convert
+ * @param language - Language code: 'fr' (French), 'ar' (Arabic), 'en' (English)
+ * @returns Formatted amount in words with currency notation
+ * 
+ * @example
+ * amountToWords(1234.567, 'fr')
+ * amountToWords(1234.567, 'ar')
+ * amountToWords(1234.567, 'en')
+ */
+export const amountToWords = (total: number, language: 'fr' | 'ar' | 'en' = 'fr'): string => {
+  switch (language) {
+    case 'ar':
+      return numberToLettersAr(total);
+    case 'en':
+      return numberToLettersEn(total);
+    case 'fr':
+    default:
+      return numberToLettersFr(total);
+  }
 };
 
 /**
@@ -184,6 +359,8 @@ const escapeXml = (text: string | undefined): string => {
 };
 
 export const generateTeifXml = (data: InvoiceData, minify: boolean = false): string => {
+  const amountLanguageDebug = (data as any).amountLanguage || 'fr';
+  console.log('[XML] generateTeifXml START: amountLanguage =', amountLanguageDebug);
   const lineDetails = data.lines.map(line => {
     const grossHt = line.quantity * line.unitPrice;
     const discount = grossHt * line.discountRate; // discountRate is already fractional (0-1)
@@ -224,7 +401,11 @@ export const generateTeifXml = (data: InvoiceData, minify: boolean = false): str
   const totalIrc = data.ircRate && data.ircRate > 0 ? (totalNetHt + totalFodec + totalTva) * (data.ircRate / 100) : 0;
   const totalTtc = totalNetHt + totalFodec + totalTva + (data.stampDuty || 0) - totalIrc;
   
-  const amountLetters = data.amountDescriptionOverride || numberToLettersFr(totalTtc);
+  // Get language from data.amountLanguage or default to French ('fr')
+  const amountLanguage = (data as any).amountLanguage || 'fr';
+  console.log('[XML] Using amountLanguage:', amountLanguage, 'totalTtc:', totalTtc);
+  const amountLetters = data.amountDescriptionOverride || amountToWords(totalTtc, amountLanguage);
+  console.log('[XML] Generated amountLetters:', amountLetters.substring(0, 50) + '...');
 
   const linesXml = lineDetails.map((l, index) => `
       <Lin>
@@ -341,7 +522,7 @@ export const generateTeifXml = (data: InvoiceData, minify: boolean = false): str
     </InvoiceAlc>` : ''}
     <InvoiceMoa>
       <AmountDetails><Moa amountTypeCode="I-176" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${totalNetHt.toFixed(3)}</Amount></Moa></AmountDetails>
-      <AmountDetails><Moa amountTypeCode="I-180" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${totalTtc.toFixed(3)}</Amount><AmountDescription lang="fr">${amountLetters}</AmountDescription></Moa></AmountDetails>
+      <AmountDetails><Moa amountTypeCode="I-180" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${totalTtc.toFixed(3)}</Amount><AmountDescription lang="${amountLanguage}">${amountLetters}</AmountDescription></Moa></AmountDetails>
     </InvoiceMoa>
     <InvoiceTax>
       <InvoiceTaxDetails><Tax><TaxTypeName code="I-1601">droit de timbre</TaxTypeName><TaxDetails><TaxRate>0.0</TaxRate></TaxDetails></Tax><AmountDetails><Moa amountTypeCode="I-178" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${(data.stampDuty || 0).toFixed(3)}</Amount></Moa></AmountDetails></InvoiceTaxDetails>

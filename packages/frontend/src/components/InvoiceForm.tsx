@@ -5,6 +5,7 @@ import * as Validators from '@teif/shared/validation';
 import { invoiceDataSchema } from '@teif/shared/validation';
 import { useTranslation } from '../services/i18n';
 import { generateQrString, validateRib, numberToLettersFr } from '../services/xmlGenerator';
+import { amountToWords } from '@teif/shared/utils';
 import { useConditionalFields } from '../services/useConditionalFields';
 import { FormInput, FormSelect, FormSection, StepIndicator } from './design-system';
 import { FieldValidationError, RequiredFieldMark, FieldWrapper } from './ValidationError';
@@ -214,6 +215,9 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
   };
   
   const updateField = (path: string, value: any) => {
+    if (path === 'amountLanguage') {
+      console.log('[FORM] updateField: amountLanguage =', value, 'previous:', (data as any).amountLanguage);
+    }
     const newData = JSON.parse(JSON.stringify(data));
     const parts = path.split('.');
     let current: any = newData;
@@ -221,6 +225,9 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
       current = current[parts[i]];
     }
     current[parts[parts.length - 1]] = value;
+    if (path === 'amountLanguage') {
+      console.log('[FORM] updateField: new data.amountLanguage =', (newData as any).amountLanguage);
+    }
     onChange(newData);
   };
 
@@ -248,7 +255,11 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
 
   const qrString = useMemo(() => generateQrString(data, totals.totalTtc, totals.tva), [data, totals]);
   const isRibValid = data.bankRib ? validateRib(data.bankRib) : true;
-  const calculatedLetters = useMemo(() => numberToLettersFr(totals.totalTtc), [totals.totalTtc]);
+  const calculatedLetters = useMemo(() => {
+    const language = (data as any).amountLanguage || 'fr';
+    console.log('[FORM] calculatedLetters: using language =', language, 'amount =', totals.totalTtc);
+    return amountToWords(totals.totalTtc, language as any);
+  }, [totals.totalTtc, (data as any).amountLanguage]);
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({
     optionalDates: false,
     allowances: false,
@@ -256,6 +267,17 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
 
   // Get conditional field visibility
   const visibility = useConditionalFields(data);
+
+  // Sync amountLanguage with current app language automatically
+  useEffect(() => {
+    console.log('[FORM] useEffect: lang changed to', lang, 'current amountLanguage:', (data as any).amountLanguage);
+    if ((data as any).amountLanguage !== lang) {
+      console.log('[FORM] useEffect: Setting amountLanguage to', lang);
+      updateField('amountLanguage', lang);
+    } else {
+      console.log('[FORM] useEffect: amountLanguage already matches lang');
+    }
+  }, [lang]);
 
   return (
     <div className="space-y-8">
@@ -705,6 +727,9 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
             description="Droit de timbre"
           />
         )}
+
+        {/* Amount language automatically follows app language */}
+        {/* Hidden field to sync amountLanguage with current app language */}
 
         {visibility.showBankingDetails && (
           <>

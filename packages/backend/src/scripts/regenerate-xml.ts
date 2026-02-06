@@ -6,7 +6,7 @@
 
 import { prisma } from '../lib/prisma';
 import { xmlGeneratorService } from '../services/xmlGenerator.service';
-import { invoiceCalculationsService } from '../services/invoiceCalculations.service';
+import { invoiceCalculationsService } from '../services/invoice-calculations.service';
 
 async function regenerateXml() {
   try {

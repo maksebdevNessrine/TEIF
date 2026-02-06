@@ -3,6 +3,26 @@ import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+// Parafiscal rates (env-configurable) — Tunisian fiscal system
+// FODEC: professional tax of competitiveness (sector-specific rates)
+// - Preserved foods & metallic packings: 1%
+// - Tourism: 1%
+// - Imports: 1%
+// - General industry: 1%
+const FODEC_PRESERVED_FOODS_RATE = parseFloat(process.env.FODEC_PRESERVED_FOODS_RATE || '0.01');
+const FODEC_TOURISM_RATE = parseFloat(process.env.FODEC_TOURISM_RATE || '0.01');
+const FODEC_IMPORT_RATE = parseFloat(process.env.FODEC_IMPORT_RATE || '0.01');
+const FODEC_INDUSTRY_RATE = parseFloat(process.env.FODEC_INDUSTRY_RATE || '0.01');
+const FODEC_AGRICULTURE_RATE = parseFloat(process.env.FODEC_AGRICULTURE_RATE || '0.01');
+
+// PFT: professional formation tax (2% general, 1% manufacturing)
+const PFT_RATE = parseFloat(process.env.PFT_RATE || '0.02');
+const PFT_MANUFACTURING_RATE = parseFloat(process.env.PFT_MANUFACTURING_RATE || '0.01');
+
+// FLPSE: fund for lodging promotion for salaried employees (1%)
+const FLPSE_RATE = parseFloat(process.env.FLPSE_RATE || '0.01');
+
+console.log(`ℹ️ Parafiscal rates (Tunisian) — FODEC (preserved:${FODEC_PRESERVED_FOODS_RATE}, tourism:${FODEC_TOURISM_RATE}, import:${FODEC_IMPORT_RATE}), PFT:${PFT_RATE}, FLPSE:${FLPSE_RATE}`);
 // Utility function to generate realistic test data
 const generateRandomReference = (prefix: string): string => {
   return `${prefix}-2024-${Math.floor(Math.random() * 10000).toString().padStart(5, '0')}`;
@@ -295,11 +315,15 @@ async function main() {
   ];
 
   let lineCount = 0;
-  for (const { invoice } of invoiceData) {
+  for (const { invoice, supplier } of invoiceData) {
     const lineCount_ = Math.floor(Math.random() * 4) + 2; // 2-5 lines per invoice
 
     let invoiceTotal = 0;
     let invoiceTVA = 0;
+    let invoiceFodecTotal = 0;
+    let invoicePFTTotal = 0;
+    let invoiceFLPSETotal = 0;
+    const parafiscalBreakdown: any = { fodec: 0, pft: 0, flpse: 0, details: [] };
 
     for (let j = 0; j < lineCount_; j++) {
       const quantity = Math.floor(Math.random() * 100) + 1;
@@ -308,31 +332,85 @@ async function main() {
       const taxRates = [0, 0.07, 0.13, 0.19];
       const taxRate =
         taxRates[Math.floor(Math.random() * taxRates.length)];
-      const fodec = Math.random() > 0.7;
+
+      // Choose description first so we can detect preserved foods / tourism keywords
+      const descriptionText =
+        descriptions[
+          Math.floor(Math.random() * descriptions.length)
+        ];
+
+      const descLower = descriptionText.toLowerCase();
+      const supplierName = supplier?.name ? supplier.name.toLowerCase() : '';
+      const operationNature = invoice.operationNature;
+
+      // Determine FODEC applicability and rate per Tunisian fiscal rules
+      // FODEC applies to: industrial production, imports, preserved foods, tourism, agriculture
+      let fodecRate = 0;
+      let fodecReason = 'N/A';
+
+      // Check for preserved foods/metallic packings (§ 2)
+      if (/preserv|preserved|food|metal|packing|packag|tin|can|box/.test(descLower)) {
+        fodecRate = FODEC_PRESERVED_FOODS_RATE;
+        fodecReason = 'Preserved Foods/Metallic Packaging';
+      }
+      // Check for tourism services (§ 3)
+      else if (/touris|hotel|restaurant|travel|lodg|food|drink|leisure/.test(descLower) ||
+               /touris|hotel|restaurant|travel|agency/.test(supplierName)) {
+        fodecRate = FODEC_TOURISM_RATE;
+        fodecReason = 'Tourism Services';
+      }
+      // Check for import operation (§ 1)
+      else if (operationNature === 'OP-IMPORT') {
+        fodecRate = FODEC_IMPORT_RATE;
+        fodecReason = 'Import Operation';
+      }
+      // Check for agricultural products (§ 4)
+      else if (/agricult|farm|crop|fruit|vegetable|cereal|fishing|fish|oil|bean/.test(descLower) ||
+               operationNature === 'OP-SUPPLY' && Math.random() > 0.8) {
+        fodecRate = FODEC_AGRICULTURE_RATE;
+        fodecReason = 'Agricultural Product';
+      }
+      // General industry/manufacturing (§ 1)
+      else if (/manufactur|industry|production|supply|component|equipment/.test(descLower) &&
+               (operationNature === 'OP-SUPPLY' || operationNature === 'OP-DELIVERY') &&
+               Math.random() > 0.6) {
+        fodecRate = FODEC_INDUSTRY_RATE;
+        fodecReason = 'Industrial Production';
+      }
 
       const lineAmount = quantity * unitPrice * (1 - discountRate / 100);
-      const fodecAmount = fodec ? lineAmount * 0.01 : 0;
-      const taxAmount =
-        (lineAmount + fodecAmount) * taxRate;
+      const fodecAmount = fodecRate > 0 ? lineAmount * fodecRate : 0;
+      const taxAmount = (lineAmount + fodecAmount) * taxRate;
       const totalAmount = lineAmount + fodecAmount + taxAmount;
 
-      invoiceTotal += lineAmount;
+      // Accumulate totals (include FODEC in invoice HT total)
+      invoiceTotal += lineAmount + fodecAmount;
       invoiceTVA += taxAmount;
+      invoiceFodecTotal += fodecAmount;
+
+      // Track parafiscal breakdown for audit
+      parafiscalBreakdown.fodec += fodecAmount;
+      if (fodecAmount > 0) {
+        parafiscalBreakdown.details.push({
+          type: 'FODEC',
+          reason: fodecReason,
+          lineAmount,
+          rate: fodecRate,
+          amount: fodecAmount,
+        });
+      }
 
       await prisma.invoiceLine.create({
         data: {
           invoiceId: invoice.id,
           itemCode: `ITEM-${j + 1}`,
-          description:
-            descriptions[
-              Math.floor(Math.random() * descriptions.length)
-            ],
+          description: descriptionText,
           quantity,
           unit: units[Math.floor(Math.random() * units.length)],
           unitPrice,
           discountRate,
           taxRate,
-          fodec,
+          fodec: fodecRate > 0,
           exemptionReason:
             taxRate === 0 ? 'Non-taxable service' : null,
           lineAmount,
@@ -380,7 +458,7 @@ async function main() {
       });
     }
 
-    // Update invoice totals
+    // Update invoice totals and metadata with parafiscal breakdown
     const globalDiscount = invoice.globalDiscount || 0;
     const netTotal = invoiceTotal - globalDiscount;
     const totalTTC = netTotal + invoiceTVA + invoice.stampDuty;
@@ -391,6 +469,14 @@ async function main() {
         totalHT: invoiceTotal,
         totalTVA: invoiceTVA,
         totalTTC,
+        metadata: {
+          ...invoice.metadata,
+          parafiscalTaxes: {
+            fodecTotal: parseFloat(invoiceFodecTotal.toFixed(2)),
+            fodecRate: FODEC_INDUSTRY_RATE,
+            breakdown: parafiscalBreakdown,
+          },
+        },
       },
     });
   }
