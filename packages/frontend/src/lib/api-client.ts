@@ -13,7 +13,12 @@ import { hc } from 'hono/client';
 // Note: Types will be resolved at build time via tsconfig path alias
 // import type { AppType } from '@teif/backend';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// Normalize the injected base URL: if the env includes a trailing '/api',
+// strip it so the Hono RPC client can append the RPC paths (which include
+// their own '/api' prefix) without producing '/api/api'. This allows the
+// env to be either 'http://host' or 'http://host/api'.
+const _RAW_API_BASE = import.meta.env.VITE_API_BASE_URL;
+const API_BASE = _RAW_API_BASE ? _RAW_API_BASE.replace(/\/api\/?$/, '') : _RAW_API_BASE;
 
 /**
  * Create strictly typed Hono client
