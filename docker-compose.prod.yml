@@ -11,6 +11,14 @@
 
 version: '3.8'
 
+# DNS configuration for WSL Docker compatibility
+# These are applied to all services to ensure proper DNS resolution
+x-dns: &dns-config
+  dns:
+    - 8.8.8.8
+    - 8.8.4.4
+    - 1.1.1.1
+
 x-common-variables: &common-vars
   # Prevents deployment if service fails
   restart_policy: &restart-policy
@@ -22,6 +30,7 @@ services:
     image: postgres:16-alpine
     container_name: teif-postgres
     hostname: postgres
+    <<: *dns-config
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -81,6 +90,7 @@ services:
     image: teif-backend:latest
     container_name: teif-backend
     hostname: backend
+    <<: *dns-config
     depends_on:
       postgres:
         condition: service_healthy
@@ -161,6 +171,7 @@ services:
     image: teif-frontend:latest
     container_name: teif-frontend
     hostname: frontend
+    <<: *dns-config
     depends_on:
       backend:
         condition: service_healthy

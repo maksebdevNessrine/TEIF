@@ -105,6 +105,22 @@ if [ "$DOCKER_INSTALLED" = false ]; then
   apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin 2>/dev/null || \
     log_error "Failed to install Docker packages"
   
+  # Configure Docker daemon for WSL DNS compatibility
+  log_info "Configuring Docker daemon..."
+  mkdir -p /etc/docker
+  cat > /etc/docker/daemon.json <<'DOCKER_DAEMON_CONFIG'
+{
+  "dns": ["8.8.8.8", "8.8.4.4", "1.1.1.1"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  },
+  "storage-driver": "overlay2"
+}
+DOCKER_DAEMON_CONFIG
+  log_success "Docker daemon configuration written"
+  
   # Try to start Docker - WSL requires special handling
   log_info "Starting Docker service..."
   
