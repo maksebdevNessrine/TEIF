@@ -36,8 +36,11 @@ services:
       - postgres_backups:/backups
       # Optional: restore from backup on startup
       # - ./backups/latest.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
+    # Resource limits for production (internal-only, no ports exposed to host)
+    mem_limit: 512M
+    mem_reservation: 256M
+    cpus: 1.0
+    cpu_shares: 1024
     # Health check - must pass before dependent services start
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
@@ -110,11 +113,7 @@ services:
       # Logging (for monitoring)
       LOG_LEVEL: ${LOG_LEVEL:-info}
     
-    # Port exposure (Coolify will reverse proxy this)
-    ports:
-      - "3000:3000"
-    
-    # Network attachment
+    # Network attachment (internal-only, no ports exposed to host)
     networks:
       - teif-network
     
@@ -133,16 +132,14 @@ services:
     security_opt:
       - no-new-privileges:true
     
-    # Resource management - prevents resource exhaustion
+    # Resource management - prevents resource exhaustion (compose format)
+    mem_limit: 512M
+    mem_reservation: 256M
+    cpus: 1.0
+    cpu_shares: 1024
+    
+    # Restart policy for resilience (requires deploy section in docker-compose v3.8)
     deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
-      # Restart policy for resilience
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -174,11 +171,7 @@ services:
       # Optional AI Features
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     
-    # Port exposure for web traffic
-    ports:
-      - "80:80"
-    
-    # Network attachment
+    # Network attachment (reverse proxy will handle external traffic)
     networks:
       - teif-network
     
@@ -197,15 +190,14 @@ services:
     security_opt:
       - no-new-privileges:true
     
-    # Resource management
+    # Resource management (compose format)
+    mem_limit: 256M
+    mem_reservation: 128M
+    cpus: 0.5
+    cpu_shares: 512
+    
+    # Restart policy for resilience (requires deploy section in docker-compose v3.8)
     deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
       restart_policy:
         condition: on-failure
         delay: 5s

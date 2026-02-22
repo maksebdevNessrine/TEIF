@@ -13,6 +13,8 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+.env.docker
+docker-compose.override.yml
 *.local
 
 # Package-specific
@@ -52,4 +54,12 @@ lerna-debug.log*
 # Playwright
 .playwright/
 test-results/
-*.md
+
+# Docker volumes & local test files
+volumes/
+docker-compose.override.yml
+test-local.ps1
+
+# Markdown documentation (keep important docs, ignore deploy logs)
+deploy-coolifi-logs/
+DEPLOYMENT.md

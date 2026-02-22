@@ -40,7 +40,8 @@ COPY packages/backend packages/backend/
 COPY packages/shared packages/shared/
 
 # Build shared package FIRST (backend depends on it)
-# Use tsc directly with rootDir and outDir to ensure proper compilation
+# Use tsc directly which will respect the tsconfig.json exclude patterns
+# tsconfig.json excludes test files (*.test.ts, *.spec.ts)
 RUN cd /app/packages/shared && npx tsc --rootDir ./src --outDir ./dist --declaration --declarationMap
 
 # Verify shared dist was created
@@ -68,6 +69,10 @@ RUN { \
     echo "=== BUILDING BACKEND ===" && \
     pnpm --filter @teif/backend build; \
     } 2>&1 | tee /tmp/backend-build.log
+
+# Prune devDependencies in builder stage (before copying to prod)
+# This ensures only production dependencies are included in the final image
+RUN pnpm prune --prod
 
 
 # ============================================
@@ -102,9 +107,9 @@ RUN addgroup -g 1001 -S nodejs && \
 COPY --from=builder /app/packages/backend/dist ./dist
 COPY --from=builder /app/packages/backend/package.json ./
 COPY --from=builder /app/packages/shared ./packages/shared
-COPY --from=builder /app/package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
 
-# Copy only production node_modules (excluding devDependencies)
+# Copy only production node_modules (pruned in builder stage - no devDependencies)
 COPY --from=builder /app/node_modules ./node_modules
 
 # Change ownership to nodejs user

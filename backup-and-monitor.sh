@@ -39,8 +39,8 @@ log "🔄 Starting database backup..."
 
 BACKUP_FILE="$BACKUP_DIR/teif-backup-$(date +%Y-%m-%d-%H%M%S).sql.gz"
 
-# Perform backup via Docker
-docker compose exec -T postgres pg_dump \
+# Perform backup via Docker (specify prod compose file and correct service name)
+docker compose -f docker-compose.prod.yml -p teif exec -T postgres pg_dump \
   -U "$POSTGRES_USER" \
   "$POSTGRES_DB" | \
   gzip > "$BACKUP_FILE"
@@ -84,8 +84,8 @@ log "✅ Cleanup complete. Deleted $DELETED_COUNT old backups."
 
 log "💚 Running service health checks..."
 
-# Check PostgreSQL
-if docker compose exec -T postgres pg_isready -U "$POSTGRES_USER" &>/dev/null; then
+# Check PostgreSQL (specify prod compose file)
+if docker compose -f docker-compose.prod.yml -p teif exec -T postgres pg_isready -U "$POSTGRES_USER" &>/dev/null; then
   log "  ✅ PostgreSQL: Healthy"
 else
   log "  ❌ PostgreSQL: Unhealthy"
@@ -132,8 +132,8 @@ fi
 
 log "🔧 Running database maintenance..."
 
-# Vacuum database (cleanup dead rows)
-docker compose exec -T postgres psql \
+# Vacuum database (cleanup dead rows - specify prod compose file)
+docker compose -f docker-compose.prod.yml -p teif exec -T postgres psql \
   -U "$POSTGRES_USER" \
   -d "$POSTGRES_DB" \
   -c "VACUUM ANALYZE;" &>/dev/null

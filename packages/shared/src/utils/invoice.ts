@@ -348,7 +348,7 @@ const renderPartner = (partner: Partner, role: string) => {
  * @param text - Text to escape
  * @returns XML-safe text
  */
-const escapeXml = (text: string | undefined): string => {
+export const escapeXml = (text: string | undefined): string => {
   if (!text) return '';
   return String(text)
     .replace(/&/g, '&amp;')
