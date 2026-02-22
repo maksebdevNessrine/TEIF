@@ -27,6 +27,12 @@ APP_DIR="/opt/teif"
 REPO_URL="${REPO_URL:-https://github.com/your-org/teif.git}"
 BRANCH="${BRANCH:-main}"
 EMAIL="${EMAIL:-admin@example.com}"
+TEST_MODE="${TEST_MODE:-false}"
+
+# Detect test mode from domain
+if [[ "$DOMAIN" == "test.local" ]] || [[ "$DOMAIN" == "localhost" ]]; then
+  TEST_MODE=true
+fi
 
 # ============================================
 # PRE-FLIGHT CHECKS
@@ -53,7 +59,7 @@ log_success "All dependencies found"
 log_info "Updating system packages..."
 apt-get update -qq
 apt-get upgrade -y -qq
-apt-get install -y -qq curl wget git ufw certbot python3-certbot-nginx
+apt-get install -y -qq curl wget git ufw certbot python3-certbot-nginx openssl
 log_success "System updated"
 
 # ============================================
@@ -137,24 +143,43 @@ else
 fi
 
 # ============================================
-# 6. SSL CERTIFICATE (Let's Encrypt)
+# 6. SSL CERTIFICATE (Let's Encrypt or Self-Signed)
 # ============================================
 log_info "Setting up SSL certificate..."
 
-if [ ! -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]; then
-  log_info "Requesting new SSL certificate from Let's Encrypt..."
-  certbot certonly --standalone \
-    -d "$DOMAIN" \
-    -d "www.${DOMAIN}" \
-    --non-interactive \
-    --agree-tos \
-    --email "$EMAIL"
+if [ "$TEST_MODE" = true ]; then
+  log_warning "TEST MODE: Using self-signed certificate for $DOMAIN"
+  mkdir -p /etc/nginx/ssl
   
-  # Create auto-renewal
-  echo "0 3 * * * /usr/bin/certbot renew --quiet" | crontab -
-  log_success "SSL certificate installed and auto-renewal configured"
+  if [ ! -f "/etc/nginx/ssl/cert.pem" ]; then
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+      -keyout /etc/nginx/ssl/key.pem \
+      -out /etc/nginx/ssl/cert.pem \
+      -subj "/CN=$DOMAIN/O=TEIF-Test/C=TN"
+    log_success "Self-signed certificate created for testing"
+  else
+    log_success "Self-signed certificate already exists"
+  fi
 else
-  log_success "SSL certificate already exists"
+  # Production: Use Let's Encrypt
+  if [ ! -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]; then
+    log_info "Requesting new SSL certificate from Let's Encrypt..."
+    
+    if certbot certonly --standalone \
+      -d "$DOMAIN" \
+      -d "www.${DOMAIN}" \
+      --non-interactive \
+      --agree-tos \
+      --email "$EMAIL" 2>&1; then
+      # Create auto-renewal
+      echo "0 3 * * * /usr/bin/certbot renew --quiet" | crontab -
+      log_success "SSL certificate installed and auto-renewal configured"
+    else
+      log_error "Failed to obtain SSL certificate from Let's Encrypt. Check your domain and email."
+    fi
+  else
+    log_success "SSL certificate already exists"
+  fi
 fi
 
 # ============================================
