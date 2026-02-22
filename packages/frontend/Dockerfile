@@ -22,8 +22,8 @@ COPY packages/shared/package.json packages/shared/tsconfig.json packages/shared/
 COPY packages/backend/package.json packages/backend/
 
 # Enable and configure pnpm
-RUN corepack enable
-RUN pnpm config set node-linker hoisted
+# Install pnpm globally using npm (avoids corepack download issues in isolated Docker builds)
+RUN npm install -g pnpm@10.28.1 && pnpm config set node-linker hoisted
 
 # Install all dependencies (including devDependencies for build)
 RUN pnpm install --frozen-lockfile
