@@ -131,18 +131,24 @@ DOCKER_DAEMON_CONFIG
     systemctl enable docker 2>/dev/null || true
   fi
   
-  # For WSL without systemd, start dockerd directly
+  # For WSL without systemd, start dockerd directly with DNS configuration
   if [ ! -S /var/run/docker.sock ] 2>/dev/null; then
-    log_info "Starting Docker daemon directly..."
+    log_info "Starting Docker daemon directly with DNS configuration..."
     # Kill any existing dockerd process
     pkill -f dockerd 2>/dev/null || true
     sleep 1
     
-    # Start dockerd in background
-    dockerd > /tmp/dockerd.log 2>&1 &
+    # Start dockerd with explicit DNS settings and config file
+    # DNS flags: --dns=8.8.8.8 --dns=8.8.4.4 --dns=1.1.1.1
+    dockerd \
+      --config-file=/etc/docker/daemon.json \
+      --dns=8.8.8.8 \
+      --dns=8.8.4.4 \
+      --dns=1.1.1.1 \
+      > /tmp/dockerd.log 2>&1 &
     DOCKER_PID=$!
     echo $DOCKER_PID > /tmp/dockerd.pid
-    log_info "Docker daemon started with PID $DOCKER_PID"
+    log_info "Docker daemon started with PID $DOCKER_PID (DNS: 8.8.8.8, 8.8.4.4, 1.1.1.1)"
     sleep 3
   fi
   
