@@ -150,36 +150,67 @@ if [ "$DOCKER_INSTALLED" = false ]; then
 fi
 
 # ============================================
-# 1.2 INSTALL DOCKER COMPOSE (Standalone)
+# 1.2 INSTALL DOCKER COMPOSE
 # ============================================
 log_info "Checking for docker-compose installation..."
 
-# Check if docker-compose command exists and works
+# Check if docker-compose command exists (standalone)
+COMPOSE_INSTALLED=false
 if docker-compose --version &> /dev/null 2>&1 && [ $? -eq 0 ]; then
   COMPOSE_VERSION=$(docker-compose --version 2>/dev/null)
   log_success "docker-compose already installed: $COMPOSE_VERSION"
   COMPOSE_INSTALLED=true
+# Check if docker compose plugin is available (v2 installed via docker-compose-plugin)
+elif docker compose version &> /dev/null 2>&1 && [ $? -eq 0 ]; then
+  COMPOSE_VERSION=$(docker compose version 2>/dev/null)
+  log_success "docker-compose (plugin) already installed: $COMPOSE_VERSION"
+  COMPOSE_INSTALLED=true
+  
+  # Create symlink for compatibility if docker-compose binary doesn't exist
+  if ! command -v docker-compose &>/dev/null; then
+    log_info "Creating docker-compose symlink for compatibility..."
+    cat > /usr/local/bin/docker-compose <<'EOF'
+#!/bin/bash
+docker compose "$@"
+EOF
+    chmod +x /usr/local/bin/docker-compose
+    log_success "Created docker-compose wrapper script"
+  fi
 else
-  log_info "docker-compose not found or not working. Installing..."
-  COMPOSE_INSTALLED=false
+  log_info "docker-compose not found. Installing..."
 fi
 
 if [ "$COMPOSE_INSTALLED" = false ]; then
   # Get latest version with fallback
   DOCKER_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest 2>/dev/null | grep 'tag_name' | cut -d'"' -f4) || \
-    DOCKER_COMPOSE_VERSION="v2.20.0"
+    DOCKER_COMPOSE_VERSION="v2.25.0"
   
   log_info "Downloading docker-compose ${DOCKER_COMPOSE_VERSION}..."
   
-  curl -fL "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" \
-    -o /usr/local/bin/docker-compose 2>/dev/null || log_error "Failed to download docker-compose"
-  
-  chmod +x /usr/local/bin/docker-compose || log_error "Failed to make docker-compose executable"
-  
-  if docker-compose --version &> /dev/null 2>&1; then
-    log_success "docker-compose installed: $(docker-compose --version 2>/dev/null)"
+  if curl -fL "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" \
+    -o /usr/local/bin/docker-compose 2>/dev/null; then
+    chmod +x /usr/local/bin/docker-compose || log_error "Failed to make docker-compose executable"
+    
+    if docker-compose --version &> /dev/null 2>&1; then
+      log_success "docker-compose installed: $(docker-compose --version 2>/dev/null)"
+    else
+      log_error "docker-compose binary exists but not executable"
+    fi
   else
-    log_error "docker-compose installation failed"
+    log_error "Failed to download docker-compose. Trying to use docker compose plugin instead..."
+    
+    # Verify plugin is available as fallback
+    if docker compose version &> /dev/null 2>&1; then
+      log_success "Using docker compose plugin (v2)"
+      # Create wrapper for compatibility
+      cat > /usr/local/bin/docker-compose <<'EOF'
+#!/bin/bash
+docker compose "$@"
+EOF
+      chmod +x /usr/local/bin/docker-compose
+    else
+      log_error "Neither docker-compose binary nor plugin available"
+    fi
   fi
 fi
 
