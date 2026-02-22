@@ -9,8 +9,6 @@
 # - Automatic backups configured
 # - Monitoring & logging built-in
 
-version: '3.8'
-
 # DNS configuration for WSL Docker compatibility
 # These are applied to all services to ensure proper DNS resolution
 x-dns: &dns-config
@@ -18,6 +16,11 @@ x-dns: &dns-config
     - 8.8.8.8
     - 8.8.4.4
     - 1.1.1.1
+
+# Environment file - loads all variables for all services
+x-env-file: &env-file
+  env_file:
+    - .env.docker
 
 x-common-variables: &common-vars
   # Prevents deployment if service fails
@@ -30,7 +33,7 @@ services:
     image: postgres:16-alpine
     container_name: teif-postgres
     hostname: postgres
-    <<: *dns-config
+    <<: [*dns-config, *env-file]
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -90,7 +93,7 @@ services:
     image: teif-backend:latest
     container_name: teif-backend
     hostname: backend
-    <<: *dns-config
+    <<: [*dns-config, *env-file]
     depends_on:
       postgres:
         condition: service_healthy
@@ -171,7 +174,7 @@ services:
     image: teif-frontend:latest
     container_name: teif-frontend
     hostname: frontend
-    <<: *dns-config
+    <<: [*dns-config, *env-file]
     depends_on:
       backend:
         condition: service_healthy
