@@ -1,7 +1,7 @@
 # ============================================
 # BUILDER STAGE
 # ============================================
-FROM node:20-alpine AS builder
+FROM node:20-bullseye-slim AS builder
 
 WORKDIR /app
 
@@ -10,21 +10,17 @@ ENV NODE_ENV=development
 # Skip Puppeteer download - will use system Chromium
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
-# Alpine compatibility + Prisma requirements - with retry logic for DNS issues
-# Note: Alpine doesn't have all packages, so we keep it minimal
-RUN apk update && \
-    apk add --no-cache \
-    libc6-compat \
+# Install build dependencies with retries for DNS reliability
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     openssl \
     curl \
     ca-certificates || \
-    (sleep 5 && apk update && apk add --no-cache \
-    libc6-compat \
+    (sleep 5 && apt-get update && apt-get install -y --no-install-recommends \
     openssl \
     curl \
     ca-certificates) || \
-    (sleep 10 && apk update && apk add --no-cache \
-    libc6-compat \
+    (sleep 10 && apt-get update && apt-get install -y --no-install-recommends \
     openssl \
     curl \
     ca-certificates)
@@ -88,7 +84,7 @@ RUN pnpm prune --prod
 # ============================================
 # PRODUCTION STAGE
 # ============================================
-FROM node:20-alpine
+FROM node:20-bullseye-slim
 
 WORKDIR /app
 
@@ -98,23 +94,23 @@ ENV PORT=3000
 # Skip Puppeteer download in production (will use system/predownloaded binary if needed)
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
-# Install runtime dependencies (critical for Prisma + database operations) - with retry logic
-RUN apk update && \
-    apk add --no-cache \
-    libc6-compat \
+# Install runtime dependencies with retries for DNS reliability
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     openssl \
     curl \
-    ca-certificates || \
-    (sleep 5 && apk update && apk add --no-cache \
-    libc6-compat \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/* || \
+    (sleep 5 && apt-get update && apt-get install -y --no-install-recommends \
     openssl \
     curl \
-    ca-certificates) || \
-    (sleep 10 && apk update && apk add --no-cache \
-    libc6-compat \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*) || \
+    (sleep 10 && apt-get update && apt-get install -y --no-install-recommends \
     openssl \
     curl \
-    ca-certificates)
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*)
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \

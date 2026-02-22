@@ -1,7 +1,7 @@
 # ============================================
 # BUILDER STAGE
 # ============================================
-FROM node:20-alpine AS builder
+FROM node:20-bullseye-slim AS builder
 
 WORKDIR /app
 
@@ -11,11 +11,17 @@ ENV NODE_ENV=development
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
-# Alpine compatibility for Vite/esbuild - with retry logic for DNS issues
-RUN apk update && \
-    apk add --no-cache libc6-compat || \
-    (sleep 5 && apk update && apk add --no-cache libc6-compat) || \
-    (sleep 10 && apk update && apk add --no-cache libc6-compat)
+# Install build dependencies with retries for DNS reliability
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/* || \
+    (sleep 5 && apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*) || \
+    (sleep 10 && apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*)
 
 # Copy workspace configuration and root package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json tsconfig.base.json ./
