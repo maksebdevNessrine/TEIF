@@ -56,7 +56,16 @@ RUN test -d /app/packages/frontend/dist || (echo "ERROR: dist folder not created
 # ============================================
 # PRODUCTION STAGE
 # ============================================
-FROM nginx:1.25-alpine
+FROM nginx:1.25
+
+# Install CA certificates for HTTPS
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/* || \
+    (sleep 5 && apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*)
 
 COPY --from=builder /app/packages/frontend/dist /usr/share/nginx/html
 COPY packages/frontend/nginx.conf /etc/nginx/conf.d/default.conf
