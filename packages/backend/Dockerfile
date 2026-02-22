@@ -10,14 +10,29 @@ ENV NODE_ENV=development
 # Skip Puppeteer download - will use system Chromium
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
-# Alpine compatibility + Prisma requirements
-RUN apk add --no-cache \
+# Alpine compatibility + Prisma requirements - with retry logic for DNS issues
+RUN apk update && \
+    apk add --no-cache \
     libc6-compat \
     openssl \
     chromium \
     nss \
     freetype \
-    harfbuzz
+    harfbuzz || \
+    (sleep 5 && apk update && apk add --no-cache \
+    libc6-compat \
+    openssl \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz) || \
+    (sleep 10 && apk update && apk add --no-cache \
+    libc6-compat \
+    openssl \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz)
 
 # Copy workspace configuration and root package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.json ./
@@ -88,15 +103,32 @@ ENV PORT=3000
 # Use system Chromium for Puppeteer (must match installation location)
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-# Install runtime dependencies (critical for Prisma + database operations)
-RUN apk add --no-cache \
+# Install runtime dependencies (critical for Prisma + database operations) - with retry logic
+RUN apk update && \
+    apk add --no-cache \
     libc6-compat \
     openssl \
     curl \
     chromium \
     nss \
     freetype \
-    harfbuzz
+    harfbuzz || \
+    (sleep 5 && apk update && apk add --no-cache \
+    libc6-compat \
+    openssl \
+    curl \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz) || \
+    (sleep 10 && apk update && apk add --no-cache \
+    libc6-compat \
+    openssl \
+    curl \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz)
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \

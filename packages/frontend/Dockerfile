@@ -11,8 +11,11 @@ ENV NODE_ENV=development
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
-# Alpine compatibility for Vite/esbuild
-RUN apk add --no-cache libc6-compat
+# Alpine compatibility for Vite/esbuild - with retry logic for DNS issues
+RUN apk update && \
+    apk add --no-cache libc6-compat || \
+    (sleep 5 && apk update && apk add --no-cache libc6-compat) || \
+    (sleep 10 && apk update && apk add --no-cache libc6-compat)
 
 # Copy workspace configuration and root package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json tsconfig.base.json ./
