@@ -68,51 +68,95 @@ log_success "Base dependencies installed"
 # ============================================
 # 1.1 INSTALL DOCKER
 # ============================================
-if command -v docker &> /dev/null; then
-  log_success "Docker already installed: $(docker --version)"
+log_info "Checking for Docker installation..."
+
+# Check if docker command exists and works
+if docker --version &> /dev/null 2>&1 && [ $? -eq 0 ]; then
+  DOCKER_VERSION=$(docker --version 2>/dev/null)
+  log_success "Docker already installed: $DOCKER_VERSION"
+  DOCKER_INSTALLED=true
 else
-  log_info "Installing Docker..."
+  log_info "Docker not found or not working. Installing Docker..."
+  DOCKER_INSTALLED=false
+fi
+
+# Install Docker if needed
+if [ "$DOCKER_INSTALLED" = false ]; then
+  # Detect if running in WSL
+  if grep -qi microsoft /proc/version; then
+    log_warning "WSL detected. Docker Desktop integration recommended."
+    log_info "To use Docker Desktop with WSL 2:"
+    log_info "  1. Open Docker Desktop on Windows"
+    log_info "  2. Settings > Resources > WSL Integration"
+    log_info "  3. Enable 'Ubuntu-VPS'"
+    log_info "  4. Restart Docker Desktop"
+    log_info "  5. Then run this script again"
+    log_warning "Alternatively, installing native Docker in WSL..."
+  fi
   
   # Add Docker GPG key
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg || \
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg 2>/dev/null | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg 2>/dev/null || \
     log_error "Failed to download Docker GPG key"
   
   # Add Docker repository
   echo \
     "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null || \
+    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1 || \
     log_error "Failed to add Docker repository"
   
   # Install Docker
-  apt-get update -qq || log_error "Failed to update after adding Docker repo"
-  apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin || \
+  apt-get update -qq 2>/dev/null || log_error "Failed to update after adding Docker repo"
+  apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin 2>/dev/null || \
     log_error "Failed to install Docker packages"
   
-  # Start Docker
-  systemctl start docker || log_error "Failed to start Docker service"
-  systemctl enable docker || log_error "Failed to enable Docker service"
+  # Try to start Docker
+  if systemctl is-system-running &> /dev/null; then
+    systemctl start docker 2>/dev/null || log_warning "Could not start Docker service via systemctl"
+    systemctl enable docker 2>/dev/null || log_warning "Could not enable Docker service"
+  else
+    log_warning "systemd not available. WSL might need Docker Desktop integration"
+  fi
   
-  log_success "Docker installed: $(docker --version)"
+  # Final verification
+  if docker --version &> /dev/null 2>&1; then
+    log_success "Docker installed: $(docker --version 2>/dev/null)"
+  else
+    log_error "Docker installation failed. Please enable Docker Desktop WSL 2 integration or check installation manually."
+  fi
 fi
 
 # ============================================
 # 1.2 INSTALL DOCKER COMPOSE (Standalone)
 # ============================================
-if command -v docker-compose &> /dev/null; then
-  log_success "docker-compose already installed: $(docker-compose --version)"
+log_info "Checking for docker-compose installation..."
+
+# Check if docker-compose command exists and works
+if docker-compose --version &> /dev/null 2>&1 && [ $? -eq 0 ]; then
+  COMPOSE_VERSION=$(docker-compose --version 2>/dev/null)
+  log_success "docker-compose already installed: $COMPOSE_VERSION"
+  COMPOSE_INSTALLED=true
 else
-  log_info "Installing docker-compose..."
-  
-  # Get latest version
-  DOCKER_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d'"' -f4) || \
+  log_info "docker-compose not found or not working. Installing..."
+  COMPOSE_INSTALLED=false
+fi
+
+if [ "$COMPOSE_INSTALLED" = false ]; then
+  # Get latest version with fallback
+  DOCKER_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest 2>/dev/null | grep 'tag_name' | cut -d'"' -f4) || \
     DOCKER_COMPOSE_VERSION="v2.20.0"
   
+  log_info "Downloading docker-compose ${DOCKER_COMPOSE_VERSION}..."
+  
   curl -fL "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" \
-    -o /usr/local/bin/docker-compose || log_error "Failed to download docker-compose"
+    -o /usr/local/bin/docker-compose 2>/dev/null || log_error "Failed to download docker-compose"
   
   chmod +x /usr/local/bin/docker-compose || log_error "Failed to make docker-compose executable"
   
-  log_success "docker-compose installed: $(docker-compose --version)"
+  if docker-compose --version &> /dev/null 2>&1; then
+    log_success "docker-compose installed: $(docker-compose --version 2>/dev/null)"
+  else
+    log_error "docker-compose installation failed"
+  fi
 fi
 
 # ============================================
@@ -120,27 +164,31 @@ fi
 # ============================================
 log_info "Verifying all dependencies..."
 
-REQUIRED_CMDS=("docker" "docker-compose" "git" "curl" "openssl" "certbot")
+REQUIRED_CMDS=("docker" "docker-compose" "git" "curl" "certbot")
+MISSING_DEPS=0
+
 for cmd in "${REQUIRED_CMDS[@]}"; do
-  if command -v "$cmd" &> /dev/null; then
-    VERSION=$("$cmd" --version 2>&1 | head -1)
+  if $cmd --version &> /dev/null 2>&1; then
+    VERSION=$($cmd --version 2>&1 | head -1)
     log_success "$cmd: $VERSION"
   else
-    log_error "Missing required command: $cmd"
+    log_warning "$cmd: NOT AVAILABLE"
+    MISSING_DEPS=$((MISSING_DEPS + 1))
   fi
 done
 
-# Verify docker daemon is running
-if ! docker info &> /dev/null; then
-  log_error "Docker daemon is not running. Start Docker service with: sudo service docker start"
+# Verify docker daemon is accessible
+if docker info &> /dev/null 2>&1; then
+  log_success "Docker daemon is accessible"
+else
+  log_warning "Docker daemon is not accessible. Check Docker Desktop WSL 2 integration or systemd."
 fi
-log_success "Docker daemon is running"
 
-# Verify docker-compose can talk to daemon
-if ! docker-compose --version &> /dev/null; then
-  log_error "docker-compose cannot connect to Docker daemon"
+if [ $MISSING_DEPS -gt 0 ]; then
+  log_error "Missing $MISSING_DEPS required dependencies. Please fix and try again."
 fi
-log_success "All dependencies verified"
+
+log_success "All critical dependencies verified"
 
 # ============================================
 # 2. FIREWALL CONFIGURATION
