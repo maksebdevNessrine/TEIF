@@ -11,17 +11,15 @@ ENV NODE_ENV=development
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
-# Install build dependencies with retries for DNS reliability
-RUN apt-get update && \
+# Install build dependencies with DNS configuration
+# Set DNS resolvers before apt-get for WSL compatibility
+RUN echo 'nameserver 8.8.8.8' > /etc/resolv.conf && \
+    echo 'nameserver 8.8.4.4' >> /etc/resolv.conf && \
+    echo 'nameserver 1.1.1.1' >> /etc/resolv.conf && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
     ca-certificates && \
-    rm -rf /var/lib/apt/lists/* || \
-    (sleep 5 && apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*) || \
-    (sleep 10 && apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*)
+    rm -rf /var/lib/apt/lists/*
 
 # Copy workspace configuration and root package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json tsconfig.base.json ./
@@ -59,13 +57,14 @@ RUN test -d /app/packages/frontend/dist || (echo "ERROR: dist folder not created
 FROM nginx:1.25
 
 # Install CA certificates for HTTPS
-RUN apt-get update && \
+# Install CA certificates for HTTPS with DNS configuration
+RUN echo 'nameserver 8.8.8.8' > /etc/resolv.conf && \
+    echo 'nameserver 8.8.4.4' >> /etc/resolv.conf && \
+    echo 'nameserver 1.1.1.1' >> /etc/resolv.conf && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
     ca-certificates && \
-    rm -rf /var/lib/apt/lists/* || \
-    (sleep 5 && apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*)
+    rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/packages/frontend/dist /usr/share/nginx/html
 COPY packages/frontend/nginx.conf /etc/nginx/conf.d/default.conf

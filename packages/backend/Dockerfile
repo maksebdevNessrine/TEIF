@@ -10,20 +10,17 @@ ENV NODE_ENV=development
 # Skip Puppeteer download - will use system Chromium
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
-# Install build dependencies with retries for DNS reliability
-RUN apt-get update && \
+# Install build dependencies with DNS configuration
+# Set DNS resolvers before apt-get for WSL compatibility
+RUN echo 'nameserver 8.8.8.8' > /etc/resolv.conf && \
+    echo 'nameserver 8.8.4.4' >> /etc/resolv.conf && \
+    echo 'nameserver 1.1.1.1' >> /etc/resolv.conf && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
     openssl \
     curl \
-    ca-certificates || \
-    (sleep 5 && apt-get update && apt-get install -y --no-install-recommends \
-    openssl \
-    curl \
-    ca-certificates) || \
-    (sleep 10 && apt-get update && apt-get install -y --no-install-recommends \
-    openssl \
-    curl \
-    ca-certificates)
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy workspace configuration and root package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.json ./
@@ -94,23 +91,16 @@ ENV PORT=3000
 # Skip Puppeteer download in production (will use system/predownloaded binary if needed)
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
-# Install runtime dependencies with retries for DNS reliability
-RUN apt-get update && \
+# Install runtime dependencies with DNS configuration
+RUN echo 'nameserver 8.8.8.8' > /etc/resolv.conf && \
+    echo 'nameserver 8.8.4.4' >> /etc/resolv.conf && \
+    echo 'nameserver 1.1.1.1' >> /etc/resolv.conf && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
     openssl \
     curl \
     ca-certificates && \
-    rm -rf /var/lib/apt/lists/* || \
-    (sleep 5 && apt-get update && apt-get install -y --no-install-recommends \
-    openssl \
-    curl \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*) || \
-    (sleep 10 && apt-get update && apt-get install -y --no-install-recommends \
-    openssl \
-    curl \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*)
+    rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
