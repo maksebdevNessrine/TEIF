@@ -138,17 +138,17 @@ DOCKER_DAEMON_CONFIG
     pkill -f dockerd 2>/dev/null || true
     sleep 1
     
-    # Start dockerd with explicit DNS settings and config file
-    # DNS flags: --dns=8.8.8.8 --dns=8.8.4.4 --dns=1.1.1.1
+    # Start dockerd with explicit DNS settings (DNS flags work everywhere)
+    # Do NOT reference config file as it may not exist in WSL
     dockerd \
-      --config-file=/etc/docker/daemon.json \
       --dns=8.8.8.8 \
       --dns=8.8.4.4 \
       --dns=1.1.1.1 \
       > /tmp/dockerd.log 2>&1 &
     DOCKER_PID=$!
     echo $DOCKER_PID > /tmp/dockerd.pid
-    log_info "Docker daemon started with PID $DOCKER_PID (DNS: 8.8.8.8, 8.8.4.4, 1.1.1.1)"
+    log_info "Docker daemon started with PID $DOCKER_PID"
+    log_info "DNS configuration: 8.8.8.8, 8.8.4.4, 1.1.1.1"
     sleep 3
   fi
   
