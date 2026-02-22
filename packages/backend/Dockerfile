@@ -86,9 +86,9 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true
 # No additional package installation needed - all dependencies included in base image
 # (openssl, curl, ca-certificates already present in node:20-bullseye-slim)
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+# Create non-root user for security (Debian syntax)
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 --gid 1001 nodejs
 
 # Copy built application and minimal dependencies
 # Use multi-stage to avoid copying entire node_modules with devDependencies
