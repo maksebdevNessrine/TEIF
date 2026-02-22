@@ -84,44 +84,68 @@ fi
 if [ "$DOCKER_INSTALLED" = false ]; then
   # Detect if running in WSL
   if grep -qi microsoft /proc/version; then
-    log_warning "WSL detected. Docker Desktop integration recommended."
-    log_info "To use Docker Desktop with WSL 2:"
-    log_info "  1. Open Docker Desktop on Windows"
-    log_info "  2. Settings > Resources > WSL Integration"
-    log_info "  3. Enable 'Ubuntu-VPS'"
-    log_info "  4. Restart Docker Desktop"
-    log_info "  5. Then run this script again"
-    log_warning "Alternatively, installing native Docker in WSL..."
+    log_info "WSL detected - Installing native Docker..."
   fi
   
   # Add Docker GPG key
+  log_info "Adding Docker GPG key..."
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg 2>/dev/null | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg 2>/dev/null || \
     log_error "Failed to download Docker GPG key"
   
   # Add Docker repository
+  log_info "Adding Docker repository..."
   echo \
     "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1 || \
     log_error "Failed to add Docker repository"
   
   # Install Docker
+  log_info "Installing Docker packages..."
   apt-get update -qq 2>/dev/null || log_error "Failed to update after adding Docker repo"
   apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin 2>/dev/null || \
     log_error "Failed to install Docker packages"
   
-  # Try to start Docker
-  if systemctl is-system-running &> /dev/null; then
-    systemctl start docker 2>/dev/null || log_warning "Could not start Docker service via systemctl"
-    systemctl enable docker 2>/dev/null || log_warning "Could not enable Docker service"
-  else
-    log_warning "systemd not available. WSL might need Docker Desktop integration"
+  # Try to start Docker - WSL requires special handling
+  log_info "Starting Docker service..."
+  
+  # First try systemctl (for systems with systemd)
+  if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
+    log_info "Using systemctl to start Docker..."
+    systemctl start docker 2>/dev/null || true
+    systemctl enable docker 2>/dev/null || true
   fi
+  
+  # For WSL without systemd, start dockerd directly
+  if [ ! -S /var/run/docker.sock ] 2>/dev/null; then
+    log_info "Starting Docker daemon directly..."
+    # Kill any existing dockerd process
+    pkill -f dockerd 2>/dev/null || true
+    sleep 1
+    
+    # Start dockerd in background
+    dockerd > /tmp/dockerd.log 2>&1 &
+    DOCKER_PID=$!
+    echo $DOCKER_PID > /tmp/dockerd.pid
+    log_info "Docker daemon started with PID $DOCKER_PID"
+    sleep 3
+  fi
+  
+  # Wait for Docker socket to be available
+  log_info "Waiting for Docker socket..."
+  for i in {1..15}; do
+    if [ -S /var/run/docker.sock ] 2>/dev/null; then
+      log_success "Docker socket is ready"
+      break
+    fi
+    log_info "  Waiting... ($i/15)"
+    sleep 1
+  done
   
   # Final verification
   if docker --version &> /dev/null 2>&1; then
-    log_success "Docker installed: $(docker --version 2>/dev/null)"
+    log_success "Docker installed and running: $(docker --version 2>/dev/null)"
   else
-    log_error "Docker installation failed. Please enable Docker Desktop WSL 2 integration or check installation manually."
+    log_error "Docker daemon not accessible. Check logs with: cat /tmp/dockerd.log"
   fi
 fi
 
