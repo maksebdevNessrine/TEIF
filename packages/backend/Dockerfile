@@ -103,8 +103,12 @@ COPY --from=builder /app/packages/backend/prisma /app/prisma
 COPY --from=builder /app/packages/backend/package.json /app/package.json
 COPY --from=builder /app/packages/shared /app/packages/shared
 
-# Copy only production node_modules (pruned in builder stage - no devDependencies)
-COPY --from=builder /app/node_modules /app/node_modules
+# Copy workspace files for pnpm install in production
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/
+
+# Install pnpm and production dependencies only (fresh install, not copied from builder)
+RUN npm install -g pnpm@10.28.1 && \
+    cd /app && pnpm install --frozen-lockfile --prod
 
 # Create symlink for workspace path alias (@teif/shared) so Node.js can resolve it
 RUN mkdir -p /app/node_modules/@teif && \
