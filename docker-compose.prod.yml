@@ -17,11 +17,6 @@ x-dns: &dns-config
     - 8.8.4.4
     - 1.1.1.1
 
-# Environment file - loads all variables for all services
-x-env-file: &env-file
-  env_file:
-    - .env.docker
-
 x-common-variables: &common-vars
   # Prevents deployment if service fails
   restart_policy: &restart-policy
@@ -33,7 +28,7 @@ services:
     image: postgres:16-alpine
     container_name: teif-postgres
     hostname: postgres
-    <<: [*dns-config, *env-file]
+    <<: *dns-config
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -93,7 +88,7 @@ services:
     image: teif-backend:latest
     container_name: teif-backend
     hostname: backend
-    <<: [*dns-config, *env-file]
+    <<: *dns-config
     depends_on:
       postgres:
         condition: service_healthy
@@ -174,7 +169,7 @@ services:
     image: teif-frontend:latest
     container_name: teif-frontend
     hostname: frontend
-    <<: [*dns-config, *env-file]
+    <<: *dns-config
     depends_on:
       backend:
         condition: service_healthy
