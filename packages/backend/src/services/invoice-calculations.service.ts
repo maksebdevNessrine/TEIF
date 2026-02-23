@@ -1,4 +1,4 @@
-import { calculateLineAmount, calculateTaxAmount } from '@teif/shared/utils';
+import { calculateLineAmount, calculateTaxAmount } from '../../shared/src/utils/index.js';
 
 export interface LineTotals {
   lineAmount: number;

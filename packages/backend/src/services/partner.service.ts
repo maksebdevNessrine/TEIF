@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma';
-import type { Partner } from '@teif/shared/types';
+import type { Partner } from '../../shared/src/types/index.js';
 
 /**
  * Map Prisma Partner result to shared Partner type
