@@ -8,7 +8,7 @@ import { puppeteerManager } from '../lib/puppeteer';
 import { storageService } from '../lib/storage';
 import { generateInvoiceHtml } from '../templates/invoice.template';
 import { getInvoiceById } from './invoice.service';
-import type { InvoiceResponse } from '../../shared/src/types/index.js';
+import type { InvoiceResponse } from '@teif/shared/types';
 
 type Language = 'ar' | 'fr' | 'en';
 

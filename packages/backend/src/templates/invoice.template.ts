@@ -3,8 +3,8 @@
  * Supports TEIF compliance with multi-language support (FR, EN, AR)
  */
 
-import type { InvoiceResponse, InvoiceLine, AllowanceCharge } from '../../shared/src/types/index.js';
-import { amountToWords } from '../../shared/src/utils/index.js';
+import type { InvoiceResponse, InvoiceLine, AllowanceCharge } from '@teif/shared/types';
+import { amountToWords } from '@teif/shared/utils';
 
 type Language = 'ar' | 'fr' | 'en';
 

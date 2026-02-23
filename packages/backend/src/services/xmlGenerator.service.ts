@@ -1,5 +1,5 @@
-import { generateTeifXml } from '../../shared/src/utils/index.js';
-import { InvoiceData } from '../../shared/src/types/index.js';
+import { generateTeifXml } from '@teif/shared/utils';
+import { InvoiceData } from '@teif/shared/types';
 
 /**
  * Generate TEIF-compliant XML from invoice data

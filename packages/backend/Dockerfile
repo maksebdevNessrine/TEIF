@@ -107,6 +107,10 @@ COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.ya
 # Copy only production node_modules (pruned in builder stage - no devDependencies)
 COPY --from=builder /app/node_modules /app/node_modules
 
+# Create symlink for workspace path alias (@teif/shared) so Node.js can resolve it
+RUN mkdir -p /app/node_modules/@teif && \
+    ln -s /app/packages/shared /app/node_modules/@teif/shared
+
 # Change ownership to nodejs user
 RUN chown -R nodejs:nodejs /app
 

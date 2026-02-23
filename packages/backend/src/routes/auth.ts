@@ -17,7 +17,7 @@ import {
   loginSchema,
   AuthResponse,
   LogoutResponse 
-} from '../../shared/src/index.js';
+} from '@teif/shared';
 import * as authService from '../services/auth.service';
 import { requireAuth, AuthUser } from '../middleware/auth';
 import { AuthError, authErrors } from '../utils/auth-errors';
