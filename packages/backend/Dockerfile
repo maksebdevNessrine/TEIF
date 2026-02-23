@@ -58,6 +58,9 @@ RUN { \
     cd packages/backend && npx tsc; \
     } 2>&1 | tee /tmp/backend-build.log
 
+# Fix ESM imports - add .js extensions to relative imports
+RUN cd /app/packages/backend && npx tsc-esm-fix --tsconfig tsconfig.json --dist dist
+
 # Verify build succeeded
 RUN if [ ! -f /app/packages/backend/dist/index.js ]; then \
     echo "ERROR: Backend build failed - dist/index.js not found"; \
