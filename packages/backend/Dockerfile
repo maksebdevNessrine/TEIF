@@ -100,9 +100,8 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Use multi-stage to avoid copying entire node_modules with devDependencies
 COPY --from=builder /app/packages/backend/dist /app/dist
 COPY --from=builder /app/packages/backend/prisma /app/prisma
-COPY --from=builder /app/packages/backend/package.json /app/
+COPY --from=builder /app/packages/backend/package.json /app/package.json
 COPY --from=builder /app/packages/shared /app/packages/shared
-COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/
 
 # Copy only production node_modules (pruned in builder stage - no devDependencies)
 COPY --from=builder /app/node_modules /app/node_modules
