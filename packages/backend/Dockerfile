@@ -51,18 +51,22 @@ RUN { \
     echo "Node: $(node --version)" && \
     echo "pnpm: $(pnpm --version)" && \
     echo "" && \
-    echo "=== DIRECTORY ===" && \
-    ls -la packages/backend/ && \
-    echo "" && \
-    echo "=== PACKAGE.JSON ===" && \
-    cat packages/backend/package.json && \
-    echo "" && \
-    echo "=== WORKSPACE ===" && \
-    pnpm list --depth=0 && \
+    echo "=== BACKEND SOURCE ===" && \
+    find packages/backend/src -type f -name "*.ts" | head -20 && \
     echo "" && \
     echo "=== BUILDING BACKEND ===" && \
-    pnpm --filter @teif/backend build; \
+    cd packages/backend && npx tsc; \
     } 2>&1 | tee /tmp/backend-build.log
+
+# Verify build succeeded
+RUN if [ ! -f /app/packages/backend/dist/index.js ]; then \
+    echo "ERROR: Backend build failed - dist/index.js not found"; \
+    echo "=== BUILD LOG ==="; \
+    cat /tmp/backend-build.log; \
+    echo "=== DIST CONTENTS ==="; \
+    ls -laR /app/packages/backend/dist/ 2>/dev/null || echo "dist directory missing"; \
+    exit 1; \
+  fi
 
 # Prune devDependencies in builder stage (before copying to prod)
 # This ensures only production dependencies are included in the final image
@@ -91,13 +95,14 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 # Copy built application and minimal dependencies
 # Use multi-stage to avoid copying entire node_modules with devDependencies
-COPY --from=builder /app/packages/backend/dist ./dist
-COPY --from=builder /app/packages/backend/package.json ./
-COPY --from=builder /app/packages/shared ./packages/shared
-COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/packages/backend/dist /app/dist
+COPY --from=builder /app/packages/backend/prisma /app/prisma
+COPY --from=builder /app/packages/backend/package.json /app/
+COPY --from=builder /app/packages/shared /app/packages/shared
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/
 
 # Copy only production node_modules (pruned in builder stage - no devDependencies)
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/node_modules /app/node_modules
 
 # Change ownership to nodejs user
 RUN chown -R nodejs:nodejs /app
