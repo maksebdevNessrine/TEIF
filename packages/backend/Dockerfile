@@ -72,8 +72,26 @@ RUN if [ ! -f /app/packages/backend/dist/index.js ]; then \
   fi
 
 # Prune devDependencies in builder stage (before copying to prod)
-# This ensures only production dependencies are included in the final image
-RUN pnpm prune --prod
+# Log what we're about to prune
+RUN echo "=== BEFORE PRUNE ===" && \
+    echo "dotenv location:" && \
+    find /app/node_modules -name "dotenv" -type d 2>/dev/null || echo "NOT FOUND" && \
+    echo "Total node_modules size:" && \
+    du -sh /app/node_modules && \
+    echo "pnpm list backend deps:" && \
+    cd /app && pnpm list -r --depth=0 --filter="@teif/backend" 2>/dev/null | head -20
+
+# Run prune
+RUN cd /app && pnpm prune --prod
+
+# Log what we have after prune
+RUN echo "=== AFTER PRUNE ===" && \
+    echo "dotenv location:" && \
+    find /app/node_modules -name "dotenv" -type d 2>/dev/null || echo "NOT FOUND" && \
+    echo "Total node_modules size:" && \
+    du -sh /app/node_modules && \
+    echo "Backend dependencies:" && \
+    cat /app/packages/backend/package.json | grep -A 20 '"dependencies"'
 
 
 # ============================================
