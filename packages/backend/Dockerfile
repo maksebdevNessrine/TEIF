@@ -100,11 +100,13 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Use multi-stage to avoid copying entire node_modules with devDependencies
 COPY --from=builder /app/packages/backend/dist /app/dist
 COPY --from=builder /app/packages/backend/prisma /app/prisma
-COPY --from=builder /app/packages/backend/package.json /app/packages/backend/package.json
 COPY --from=builder /app/packages/shared /app/packages/shared
 
-# Copy workspace files for pnpm install in production (must include all package.json files for workspace resolution)
+# Copy complete workspace structure for pnpm resolution
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/
+COPY --from=builder /app/packages/backend/package.json /app/packages/backend/
+COPY --from=builder /app/packages/frontend/package.json /app/packages/frontend/
+COPY --from=builder /app/packages/shared/package.json /app/packages/shared/
 
 # Install pnpm and production dependencies only (fresh install, not copied from builder)
 RUN npm install -g pnpm@10.28.1 && \
