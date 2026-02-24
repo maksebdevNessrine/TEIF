@@ -96,21 +96,17 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 --gid 1001 nodejs
 
-# Copy built application and minimal dependencies
-# Use multi-stage to avoid copying entire node_modules with devDependencies
+# Copy built application and dependencies
 COPY --from=builder /app/packages/backend/dist /app/dist
 COPY --from=builder /app/packages/backend/prisma /app/prisma
 COPY --from=builder /app/packages/shared /app/packages/shared
+COPY --from=builder /app/node_modules /app/node_modules
 
-# Copy complete workspace structure for pnpm resolution
+# Copy workspace files for reference (even though node_modules is already copied)
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/
 COPY --from=builder /app/packages/backend/package.json /app/packages/backend/
 COPY --from=builder /app/packages/frontend/package.json /app/packages/frontend/
 COPY --from=builder /app/packages/shared/package.json /app/packages/shared/
-
-# Install pnpm and production dependencies only (fresh install, not copied from builder)
-RUN npm install -g pnpm@10.28.1 && \
-    cd /app && pnpm install --frozen-lockfile --prod
 
 # Create symlink for workspace path alias (@teif/shared) so Node.js can resolve it
 RUN mkdir -p /app/node_modules/@teif && \
