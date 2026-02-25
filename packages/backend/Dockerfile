@@ -158,12 +158,7 @@ COPY --from=builder /app/packages/backend/prisma /app/prisma
 COPY --from=builder /app/packages/shared /app/packages/shared
 COPY --from=builder /app/node_modules /app/node_modules
 
-# Fix ESM imports - add .js extensions to relative imports (idempotent - won't double-add)
-RUN cd /app/dist && \
-    for f in $(find . -type f -name "*.js"); do \
-      sed -i "s/from '\([.][^']*\)'\([^.]\|$\)/from '\1.js'\2/g" "$f"; \
-    done && \
-    echo "✅ ESM imports fixed"
+# Note: ESM imports were already fixed in builder stage, don't re-fix here
 
 # Copy workspace files for reference (even though node_modules is already copied)
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/
