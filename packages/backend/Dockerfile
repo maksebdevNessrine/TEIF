@@ -66,7 +66,7 @@ RUN { \
     exit $TSC_EXIT; \
     } 2>&1 | tee /tmp/backend-build.log
 
-# Fix ESM imports - add .js extensions using simple Node.js
+# Fix ESM imports - add .js extensions using simple Node.js (idempotent - won't double-add)
 RUN node << 'EOF'
 const fs = require('fs');
 const path = require('path');
@@ -81,7 +81,13 @@ function fixImports(dir) {
       fixImports(fullPath);
     } else if (file.endsWith('.js')) {
       let content = fs.readFileSync(fullPath, 'utf8');
-      content = content.replace(/from ['"`](\.[^'"`]*?)(['"`])/g, 'from \'$1.js\'');
+      // Only add .js if the import doesn't already end with .js, .json, or a known extension
+      content = content.replace(/from ['"`](\.[^'"`]*?)(['"`])/g, (match, importPath, quote) => {
+        if (/\.(js|json|node)$/.test(importPath)) {
+          return match; // Already has extension
+        }
+        return `from '${importPath}.js'`;
+      });
       fs.writeFileSync(fullPath, content);
     }
   });
@@ -152,10 +158,10 @@ COPY --from=builder /app/packages/backend/prisma /app/prisma
 COPY --from=builder /app/packages/shared /app/packages/shared
 COPY --from=builder /app/node_modules /app/node_modules
 
-# Fix ESM imports - add .js extensions to relative imports using simple text replacement
+# Fix ESM imports - add .js extensions to relative imports (idempotent - won't double-add)
 RUN cd /app/dist && \
     for f in $(find . -type f -name "*.js"); do \
-      sed -i "s/from '\([.][^']*\)'/from '\1.js'/g" "$f"; \
+      sed -i "s/from '\([.][^']*\)'\([^.]\|$\)/from '\1.js'\2/g" "$f"; \
     done && \
     echo "✅ ESM imports fixed"
 
