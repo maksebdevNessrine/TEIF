@@ -52,11 +52,18 @@ RUN { \
     echo "Node: $(node --version)" && \
     echo "pnpm: $(pnpm --version)" && \
     echo "" && \
-    echo "=== BACKEND SOURCE ===" && \
-    find packages/backend/src -type f -name "*.ts" | head -20 && \
+    echo "=== BACKEND SOURCE FILES ===" && \
+    find packages/backend/src -type f -name "*.ts" && \
     echo "" && \
     echo "=== BUILDING BACKEND ===" && \
-    cd packages/backend && NODE_OPTIONS="--max-old-space-size=8192" npx tsc; \
+    cd packages/backend && NODE_OPTIONS="--max-old-space-size=8192" npx tsc 2>&1; \
+    TSC_EXIT=$?; \
+    echo ""; \
+    echo "=== TSC EXIT CODE: $TSC_EXIT ===" ; \
+    echo "=== CHECKING DIST AFTER COMPILE ===" && \
+    ls -la dist/utils/ 2>/dev/null || echo "dist/utils NOT FOUND"; \
+    test -f dist/utils/auth-errors.js && echo "auth-errors.js EXISTS" || echo "auth-errors.js MISSING"; \
+    exit $TSC_EXIT; \
     } 2>&1 | tee /tmp/backend-build.log
 
 # Fix ESM imports - add .js extensions to relative imports
