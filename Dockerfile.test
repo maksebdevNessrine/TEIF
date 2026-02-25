@@ -1,0 +1,15 @@
+FROM node:20-bullseye-slim
+
+WORKDIR /app
+
+# Just copy packages/backend and list it
+COPY packages/backend packages/backend/
+
+RUN echo "=== Contents of packages/backend/src/utils ===" && \
+    ls -la packages/backend/src/utils/ && \
+    echo "" && \
+    echo "=== Looking for auth-errors ===" && \
+    find packages/backend/src -name 'auth-errors*' && \
+    echo "" && \
+    echo "=== All TypeScript files ===" && \
+    find packages/backend/src -name '*.ts' | sort
