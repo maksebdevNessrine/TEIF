@@ -66,27 +66,32 @@ RUN { \
     exit $TSC_EXIT; \
     } 2>&1 | tee /tmp/backend-build.log
 
-# Fix ESM imports - add .js extensions to relative imports
-RUN cd /app/packages/backend && npx tsc-esm-fix --tsconfig tsconfig.json --dist dist
+# Fix ESM imports - add .js extensions using simple Node.js
+RUN node << 'EOF'
+const fs = require('fs');
+const path = require('path');
+const distDir = '/app/packages/backend/dist';
 
-# WORKAROUND: Create missing auth-error files that TypeScript failed to compile
-# These files exist in source but aren't making it to dist - likely due to hidden compilation error
-# Just create them directly as working re-exports
-RUN mkdir -p /app/packages/backend/dist/utils && \
-    { \
-      echo 'export class AuthError extends Error {' && \
-      echo '  constructor(code, message, statusCode = 400, details, retryable = false, retryAfter) {' && \
-      echo '    super(message);' && \
-      echo '    this.code = code; this.message = message; this.statusCode = statusCode;' && \
-      echo '    this.details = details; this.retryable = retryable; this.retryAfter = retryAfter;' && \
-      echo '    this.name = "AuthError";' && \
-      echo '  }' && \
-      echo '  toResponse() { return { success: false, error: this.code, message: this.message, code: this.code, statusCode: this.statusCode, details: this.details, retryable: this.retryable, retryAfter: this.retryAfter }; }' && \
-      echo '}' && \
-      echo 'export const authErrors = {};' \
-    } > /app/packages/backend/dist/utils/auth-errors.js && \
-    echo "✅ Created auth-errors.js manually" && \
-    test -f /app/packages/backend/dist/utils/auth-errors.js && echo "✅ Verified auth-errors.js exists"
+function fixImports(dir) {
+  const files = fs.readdirSync(dir);
+  files.forEach(file => {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      fixImports(fullPath);
+    } else if (file.endsWith('.js')) {
+      let content = fs.readFileSync(fullPath, 'utf8');
+      content = content.replace(/from ['"`](\.[^'"`]*?)(['"`])/g, 'from \'$1.js\'');
+      fs.writeFileSync(fullPath, content);
+    }
+  });
+}
+
+fixImports(distDir);
+console.log('✅ ESM imports fixed');
+EOF
+
+# TypeScript now successfully compiles all auth-error files - no workaround needed
 
 # Verify build succeeded
 RUN if [ ! -f /app/packages/backend/dist/index.js ]; then \
@@ -147,14 +152,18 @@ COPY --from=builder /app/packages/backend/prisma /app/prisma
 COPY --from=builder /app/packages/shared /app/packages/shared
 COPY --from=builder /app/node_modules /app/node_modules
 
+# Fix ESM imports - add .js extensions to relative imports using simple text replacement
+RUN cd /app/dist && \
+    for f in $(find . -type f -name "*.js"); do \
+      sed -i "s/from '\([.][^']*\)'/from '\1.js'/g" "$f"; \
+    done && \
+    echo "✅ ESM imports fixed"
+
 # Copy workspace files for reference (even though node_modules is already copied)
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/
 COPY --from=builder /app/packages/backend/package.json /app/packages/backend/
 COPY --from=builder /app/packages/frontend/package.json /app/packages/frontend/
 COPY --from=builder /app/packages/shared/package.json /app/packages/shared/
-
-# DEBUG: Copy build log for inspection
-COPY --from=builder /tmp/backend-build.log /app/BUILD_LOG.txt 2>/dev/null || true
 
 # Create symlink for workspace path alias (@teif/shared) so Node.js can resolve it
 RUN mkdir -p /app/node_modules/@teif && \

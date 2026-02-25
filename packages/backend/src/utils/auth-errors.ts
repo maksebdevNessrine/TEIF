@@ -5,9 +5,10 @@
 
 export {
   AuthErrorCode,
-  AuthErrorResponse,
   AuthError,
 } from './auth-error-types';
+
+export type { AuthErrorResponse } from './auth-error-types';
 
 export {
   authErrors,
