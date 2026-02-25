@@ -44,60 +44,17 @@ RUN test -d /app/packages/shared/dist || (echo "ERROR: shared dist not created";
 # Generate Prisma client (CRITICAL - required for database operations)
 RUN cd /app/packages/backend && npx prisma generate --schema=./prisma/schema.prisma
 
-# Build diagnostic output to a file
-# Increase Node heap to 12GB for TypeScript compilation (avoid OOM during build)
-RUN { \
-    echo "=== BACKEND BUILD DIAGNOSTICS ===" && \
-    echo "PWD: $(pwd)" && \
-    echo "Node: $(node --version)" && \
-    echo "pnpm: $(pnpm --version)" && \
-    echo "" && \
-    echo "=== BACKEND SOURCE FILES ===" && \
-    find packages/backend/src -type f -name "*.ts" && \
-    echo "" && \
-    echo "=== BUILDING BACKEND ===" && \
-    cd packages/backend && NODE_OPTIONS="--max-old-space-size=12288" npx tsc 2>&1; \
-    TSC_EXIT=$?; \
-    echo ""; \
-    echo "=== TSC EXIT CODE: $TSC_EXIT ===" ; \
-    echo "=== CHECKING DIST AFTER COMPILE ===" && \
-    ls -la dist/utils/ 2>/dev/null || echo "dist/utils NOT FOUND"; \
-    test -f dist/utils/auth-errors.js && echo "auth-errors.js EXISTS" || echo "auth-errors.js MISSING"; \
-    exit $TSC_EXIT; \
-    } 2>&1 | tee /tmp/backend-build.log
-
-# Fix ESM imports - add .js extensions using simple Node.js (idempotent - won't double-add)
-RUN node << 'EOF'
-const fs = require('fs');
-const path = require('path');
-const distDir = '/app/packages/backend/dist';
-
-function fixImports(dir) {
-  const files = fs.readdirSync(dir);
-  files.forEach(file => {
-    const fullPath = path.join(dir, file);
-    const stat = fs.statSync(fullPath);
-    if (stat.isDirectory()) {
-      fixImports(fullPath);
-    } else if (file.endsWith('.js')) {
-      let content = fs.readFileSync(fullPath, 'utf8');
-      // Only add .js if the import doesn't already end with .js, .json, or a known extension
-      content = content.replace(/from ['"`](\.[^'"`]*?)(['"`])/g, (match, importPath, quote) => {
-        if (/\.(js|json|node)$/.test(importPath)) {
-          return match; // Already has extension
-        }
-        return `from '${importPath}.js'`;
-      });
-      fs.writeFileSync(fullPath, content);
-    }
-  });
-}
-
-fixImports(distDir);
-console.log('✅ ESM imports fixed');
-EOF
-
-# TypeScript now successfully compiles all auth-error files - no workaround needed
+# Build backend using esbuild (handles ESM .js extensions automatically)
+RUN cd /app/packages/backend && \
+    NODE_OPTIONS="--max-old-space-size=12288" \
+    npx esbuild 'src/**/*.ts' \
+    --outdir=dist \
+    --platform=node \
+    --format=esm \
+    --target=es2022 \
+    --packages=external \
+    2>&1 | tee /tmp/backend-build.log && \
+    echo "✅ Backend compiled with esbuild (ESM .js extensions added automatically)"
 
 # Verify build succeeded
 RUN if [ ! -f /app/packages/backend/dist/index.js ]; then \
