@@ -127,6 +127,9 @@ COPY --from=builder /app/packages/backend/package.json /app/packages/backend/
 COPY --from=builder /app/packages/frontend/package.json /app/packages/frontend/
 COPY --from=builder /app/packages/shared/package.json /app/packages/shared/
 
+# DEBUG: Copy build log for inspection
+COPY --from=builder /tmp/backend-build.log /app/BUILD_LOG.txt 2>/dev/null || true
+
 # Create symlink for workspace path alias (@teif/shared) so Node.js can resolve it
 RUN mkdir -p /app/node_modules/@teif && \
     ln -s /app/packages/shared /app/node_modules/@teif/shared
