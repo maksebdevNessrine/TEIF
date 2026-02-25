@@ -45,6 +45,7 @@ RUN test -d /app/packages/shared/dist || (echo "ERROR: shared dist not created";
 RUN cd /app/packages/backend && npx prisma generate --schema=./prisma/schema.prisma
 
 # Build diagnostic output to a file
+# Increase Node heap to 4GB for TypeScript compilation (avoid OOM during build)
 RUN { \
     echo "=== BACKEND BUILD DIAGNOSTICS ===" && \
     echo "PWD: $(pwd)" && \
@@ -55,7 +56,7 @@ RUN { \
     find packages/backend/src -type f -name "*.ts" | head -20 && \
     echo "" && \
     echo "=== BUILDING BACKEND ===" && \
-    cd packages/backend && npx tsc; \
+    cd packages/backend && NODE_OPTIONS="--max-old-space-size=4096" npx tsc; \
     } 2>&1 | tee /tmp/backend-build.log
 
 # Fix ESM imports - add .js extensions to relative imports
