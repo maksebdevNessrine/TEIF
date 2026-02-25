@@ -36,7 +36,7 @@ COPY packages/shared packages/shared/
 # Build shared package FIRST (backend depends on it)
 # Use tsc directly which will respect the tsconfig.json exclude patterns
 # tsconfig.json excludes test files (*.test.ts, *.spec.ts)
-RUN cd /app/packages/shared && npx tsc --rootDir ./src --outDir ./dist --declaration --declarationMap
+RUN cd /app/packages/shared && NODE_OPTIONS="--max-old-space-size=8192" npx tsc --rootDir ./src --outDir ./dist --declaration --declarationMap 2>&1 | tee /tmp/shared-build.log
 
 # Verify shared dist was created
 RUN test -d /app/packages/shared/dist || (echo "ERROR: shared dist not created"; ls -la /app/packages/shared/; exit 1)
@@ -45,7 +45,7 @@ RUN test -d /app/packages/shared/dist || (echo "ERROR: shared dist not created";
 RUN cd /app/packages/backend && npx prisma generate --schema=./prisma/schema.prisma
 
 # Build diagnostic output to a file
-# Increase Node heap to 8GB for TypeScript compilation (avoid OOM during build)
+# Increase Node heap to 12GB for TypeScript compilation (avoid OOM during build)
 RUN { \
     echo "=== BACKEND BUILD DIAGNOSTICS ===" && \
     echo "PWD: $(pwd)" && \
@@ -56,7 +56,7 @@ RUN { \
     find packages/backend/src -type f -name "*.ts" && \
     echo "" && \
     echo "=== BUILDING BACKEND ===" && \
-    cd packages/backend && NODE_OPTIONS="--max-old-space-size=8192" npx tsc 2>&1; \
+    cd packages/backend && NODE_OPTIONS="--max-old-space-size=12288" npx tsc 2>&1; \
     TSC_EXIT=$?; \
     echo ""; \
     echo "=== TSC EXIT CODE: $TSC_EXIT ===" ; \
