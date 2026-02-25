@@ -44,7 +44,7 @@ RUN test -d /app/packages/shared/dist || (echo "ERROR: shared dist not created";
 # Generate Prisma client (CRITICAL - required for database operations)
 RUN cd /app/packages/backend && npx prisma generate --schema=./prisma/schema.prisma
 
-# Build backend using esbuild (handles ESM .js extensions automatically)
+# Build backend using esbuild
 RUN cd /app/packages/backend && \
     NODE_OPTIONS="--max-old-space-size=12288" \
     npx esbuild 'src/**/*.ts' \
@@ -54,7 +54,43 @@ RUN cd /app/packages/backend && \
     --target=es2022 \
     --packages=external \
     2>&1 | tee /tmp/backend-build.log && \
-    echo "✅ Backend compiled with esbuild (ESM .js extensions added automatically)"
+    echo "✅ Backend compiled with esbuild"
+
+# Post-process: Add .js extensions to relative imports (ESM requirement)
+# This Node.js script ensures idempotence (doesn't add .js.js if already .js)
+RUN cd /app/packages/backend/dist && node << 'FIXJS'
+const fs = require('fs');
+const path = require('path');
+function walkDir(dir) {
+  const files = [];
+  fs.readdirSync(dir).forEach(file => {
+    const fullPath = path.join(dir, file);
+    if (fs.statSync(fullPath).isDirectory()) {
+      files.push(...walkDir(fullPath));
+    } else if (file.endsWith('.js')) {
+      files.push(fullPath);
+    }
+  });
+  return files;
+}
+let fixed = 0;
+walkDir('.').forEach(file => {
+  let content = fs.readFileSync(file, 'utf8');
+  const original = content;
+  // Fix relative imports: ./path and ../path that don't already end with .js
+  content = content.replace(/from\s+["'](\.[^"']*?)["']/g, (match, importPath) => {
+    if (!importPath.endsWith('.js') && !importPath.includes('.json')) {
+      return `from "${importPath}.js"`;
+    }
+    return match;
+  });
+  if (content !== original) {
+    fs.writeFileSync(file, content, 'utf8');
+    fixed++;
+  }
+});
+console.log(`✅ Fixed ${fixed} files with ESM imports`);
+FIXJS
 
 # Verify build succeeded
 RUN if [ ! -f /app/packages/backend/dist/index.js ]; then \
