@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - production
   workflow_dispatch:
 
 env:
@@ -37,7 +38,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -79,7 +80,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push backend image
-        id: docker_build_backend
+        id: backend
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -87,11 +88,9 @@ jobs:
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Build and push frontend image
-        id: docker_build_frontend
+        id: frontend
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -99,11 +98,8 @@ jobs:
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
-      - name: Image digest (backend)
-        run: echo 'Backend image pushed with digest:' ${{ steps.docker_build_backend.outputs.digest }}
-
-      - name: Image digest (frontend)
-        run: echo 'Frontend image pushed with digest:' ${{ steps.docker_build_frontend.outputs.digest }}
+      - name: Image digest
+        run: |
+          echo "Backend digest: ${{ steps.backend.outputs.digest }}"
+          echo "Frontend digest: ${{ steps.frontend.outputs.digest }}"
