@@ -12,7 +12,7 @@ COPY packages/shared ./packages/shared
 COPY packages/frontend ./packages/frontend
 
 # Install dependencies
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+RUN npm install -g pnpm && pnpm install --no-frozen-lockfile
 
 # Build frontend with Vite
 WORKDIR /app/packages/frontend
