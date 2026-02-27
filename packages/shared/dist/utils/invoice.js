@@ -1,0 +1,553 @@
+/**
+ * TEIF Invoice Utilities
+ * Shared utility functions for invoice processing, formatting, and validation
+ * Used by both frontend and backend for consistent behavior
+ */
+import { DOCUMENT_TYPES, PAYMENT_MEANS } from '../types/index';
+/**
+ * Formats a date string from YYYY-MM-DD format to ddMMyy format
+ * Used for TEIF XML generation where dates must follow Tunisian invoice format
+ *
+ * @param dateStr - Date string in YYYY-MM-DD format
+ * @returns Formatted date string in ddMMyy format, or empty string if input is empty
+ *
+ * @example
+ * formatTtnDate('2024-01-15') // Returns '150124'
+ * formatTtnDate('2025-12-31') // Returns '311225'
+ */
+export const formatTtnDate = (dateStr) => {
+    if (!dateStr)
+        return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}${month}${year.slice(-2)}`;
+};
+/**
+ * Generates a QR code content string for TEIF invoices
+ * Format: supplier_id|invoice_number|date|total_ttc|total_tva
+ *
+ * @param data - Complete invoice data object
+ * @param totalTtc - Total amount including tax (3 decimals)
+ * @param totalTva - Total tax amount (3 decimals)
+ * Generate QR code content per TEIF 1.8.8 spec (I-88 ReferenceCEV)
+ * Format: SupplierTaxID|InvoiceNumber|Date(ddMMyy)|SupplierName|BuyerTaxID|TotalTTC|TotalTVA|TTNReference
+ *
+ * @example
+ * const qrString = generateQrString(invoiceData, 1230.456, 230.456);
+ * // Returns: '1234567A|INV-001|210124|TTN Company|9876543B|1230.456|230.456|TTN-2025-001'
+ */
+export const generateQrString = (data, totalTtc, totalTva) => {
+    // Format date as ddMMyy per TEIF spec
+    const invoiceDateFormatted = data.invoiceDate
+        ? new Date(data.invoiceDate).toLocaleDateString('fr-TN', { year: '2-digit', month: '2-digit', day: '2-digit' })
+        : '';
+    return [
+        data.supplier.idValue || 'N/A', // Supplier Tax ID
+        data.documentNumber || 'N/A', // Invoice Number
+        invoiceDateFormatted, // Invoice Date (ddMMyy format)
+        data.supplier.name || 'N/A', // Supplier Name
+        data.buyer.idValue || 'N/A', // Buyer Tax ID
+        totalTtc.toFixed(3), // Total TTC (3 decimals)
+        totalTva.toFixed(3), // Total TVA (3 decimals)
+        data.ttnReference || `TTN-${data.documentNumber}` // TTN Reference
+    ].join('|');
+};
+/**
+ * Converts a number to French words for Tunisian Dinars with 3 decimals
+ * Handles both integer and decimal parts (dinars and millimes)
+ *
+ * @param total - Numeric amount to convert
+ * @returns French text representation with dinar and millime portions
+ *
+ * @example
+ * numberToLettersFr(1234.567)
+ * // Returns: 'ARRÊTÉ LA PRÉSENTE FACTURE À LA SOMME DE : MILLE DEUX CENT TRENTE-QUATRE DINARS ET CINQ CENT SOIXANTE-SEPT MILLIMES'
+ */
+export const numberToLettersFr = (total) => {
+    const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
+    const teens = ["dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"];
+    const tens = ["", "dix", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante-dix", "quatre-vingt", "quatre-vingt-dix"];
+    const convertBase = (n) => {
+        if (n === 0)
+            return "";
+        if (n < 10)
+            return units[n];
+        if (n < 20)
+            return teens[n - 10];
+        if (n < 100) {
+            const q = Math.floor(n / 10);
+            const r = n % 10;
+            if (r === 0)
+                return tens[q];
+            if (r === 1 && q < 8)
+                return tens[q] + " et un";
+            return tens[q] + "-" + units[r];
+        }
+        if (n < 1000) {
+            const q = Math.floor(n / 100);
+            const r = n % 100;
+            if (q === 1)
+                return "cent " + convertBase(r);
+            return units[q] + " cent " + convertBase(r);
+        }
+        return "";
+    };
+    const convertLarge = (n) => {
+        if (n === 0)
+            return "zéro";
+        const billions = Math.floor(n / 1000000000);
+        const millions = Math.floor((n % 1000000000) / 1000000);
+        const thousands = Math.floor((n % 1000000) / 1000);
+        const remainder = Math.floor(n % 1000);
+        let res = "";
+        if (billions > 0)
+            res += convertBase(billions) + " milliard" + (billions > 1 ? "s " : " ");
+        if (millions > 0)
+            res += convertBase(millions) + " million" + (millions > 1 ? "s " : " ");
+        if (thousands > 0) {
+            if (thousands === 1)
+                res += "mille ";
+            else
+                res += convertBase(thousands) + " mille ";
+        }
+        if (remainder > 0)
+            res += convertBase(remainder);
+        return res.trim();
+    };
+    const integerPart = Math.floor(total);
+    const decimalPart = Math.round((total - integerPart) * 1000);
+    let result = convertLarge(integerPart) + " dinar" + (integerPart > 1 ? "s" : "");
+    if (decimalPart > 0) {
+        result += " et " + convertLarge(decimalPart) + " millime" + (decimalPart > 1 ? "s" : "");
+    }
+    return "ARRÊTÉ LA PRÉSENTE FACTURE À LA SOMME DE : " + result.toUpperCase();
+};
+/**
+ * Converts a number to Arabic words for Tunisian Dinars with 3 decimals
+ * Handles both integer and decimal parts (dinars and millimes)
+ * Compliant with Tunisian invoice regulations
+ *
+ * @param total - Numeric amount to convert
+ * @returns Arabic text representation with dinar and millime portions
+ *
+ * @example
+ * numberToLettersAr(1234.567)
+ * // Returns: 'تم تحرير هذا الفاتورة بمبلغ : ألف ومائتان وأربعة وثلاثون دينار وخمسمائة وسبعة وستون مليم'
+ */
+export const numberToLettersAr = (total) => {
+    const units = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة"];
+    const teens = ["عشرة", "احدى عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
+    const tens = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
+    const hundreds = ["", "مائة", "مائتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
+    const convertBase = (n) => {
+        if (n === 0)
+            return "";
+        if (n < 10)
+            return units[n];
+        if (n < 20)
+            return teens[n - 10];
+        if (n < 100) {
+            const ten = Math.floor(n / 10);
+            const one = n % 10;
+            if (one === 0)
+                return tens[ten];
+            return tens[ten] + " و" + units[one];
+        }
+        if (n < 1000) {
+            const h = Math.floor(n / 100);
+            const remainder = n % 100;
+            if (remainder === 0)
+                return hundreds[h];
+            return hundreds[h] + " و" + convertBase(remainder);
+        }
+        return "";
+    };
+    const convertLarge = (n) => {
+        if (n === 0)
+            return "صفر";
+        const billions = Math.floor(n / 1000000000);
+        const millions = Math.floor((n % 1000000000) / 1000000);
+        const thousands = Math.floor((n % 1000000) / 1000);
+        const remainder = n % 1000;
+        let res = "";
+        if (billions > 0) {
+            res += convertBase(billions) + " مليار";
+        }
+        if (millions > 0) {
+            if (res)
+                res += " و";
+            res += convertBase(millions) + " مليون";
+        }
+        if (thousands > 0) {
+            if (res)
+                res += " و";
+            if (thousands === 1)
+                res += "ألف";
+            else if (thousands === 2)
+                res += "ألفان";
+            else if (thousands < 10)
+                res += convertBase(thousands) + " آلاف";
+            else
+                res += convertBase(thousands) + " ألف";
+        }
+        if (remainder > 0) {
+            if (res)
+                res += " و";
+            res += convertBase(remainder);
+        }
+        return res.trim();
+    };
+    const integerPart = Math.floor(total);
+    const decimalPart = Math.round((total - integerPart) * 1000);
+    let result = convertLarge(integerPart);
+    if (integerPart === 1)
+        result += " دينار";
+    else if (integerPart === 2)
+        result += " ديناران";
+    else if (integerPart < 10)
+        result += " دنانير";
+    else
+        result += " دينار";
+    if (decimalPart > 0) {
+        result += " و" + convertLarge(decimalPart);
+        if (decimalPart === 1)
+            result += " مليم";
+        else if (decimalPart === 2)
+            result += " مليمان";
+        else if (decimalPart < 10)
+            result += " مليمات";
+        else
+            result += " مليم";
+    }
+    return "تم تحرير هذا الفاتورة بمبلغ : " + result;
+};
+/**
+ * Converts a number to English words for Tunisian Dinars with 3 decimals
+ * Handles both integer and decimal parts (dinars and millimes)
+ *
+ * @param total - Numeric amount to convert
+ * @returns English text representation with dinar and millime portions
+ *
+ * @example
+ * numberToLettersEn(1234.567)
+ * // Returns: 'THIS INVOICE AMOUNTS TO : ONE THOUSAND TWO HUNDRED THIRTY-FOUR DINARS AND FIVE HUNDRED SIXTY-SEVEN MILLIMES'
+ */
+export const numberToLettersEn = (total) => {
+    const units = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+    const teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+    const tens = ["", "ten", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+    const convertBase = (n) => {
+        if (n === 0)
+            return "";
+        if (n < 10)
+            return units[n];
+        if (n < 20)
+            return teens[n - 10];
+        if (n < 100) {
+            const q = Math.floor(n / 10);
+            const r = n % 10;
+            if (r === 0)
+                return tens[q];
+            return tens[q] + "-" + units[r];
+        }
+        if (n < 1000) {
+            const q = Math.floor(n / 100);
+            const r = n % 100;
+            if (r === 0)
+                return units[q] + " hundred";
+            return units[q] + " hundred " + convertBase(r);
+        }
+        return "";
+    };
+    const convertLarge = (n) => {
+        if (n === 0)
+            return "zero";
+        const billions = Math.floor(n / 1000000000);
+        const millions = Math.floor((n % 1000000000) / 1000000);
+        const thousands = Math.floor((n % 1000000) / 1000);
+        const remainder = Math.floor(n % 1000);
+        let res = "";
+        if (billions > 0)
+            res += convertBase(billions) + " billion ";
+        if (millions > 0)
+            res += convertBase(millions) + " million ";
+        if (thousands > 0) {
+            if (thousands === 1)
+                res += "one thousand ";
+            else
+                res += convertBase(thousands) + " thousand ";
+        }
+        if (remainder > 0)
+            res += convertBase(remainder);
+        return res.trim();
+    };
+    const integerPart = Math.floor(total);
+    const decimalPart = Math.round((total - integerPart) * 1000);
+    let result = convertLarge(integerPart) + " dinar" + (integerPart > 1 ? "s" : "");
+    if (decimalPart > 0) {
+        result += " and " + convertLarge(decimalPart) + " millime" + (decimalPart > 1 ? "s" : "");
+    }
+    return "THIS INVOICE AMOUNTS TO : " + result.toUpperCase();
+};
+/**
+ * Generates amount in words based on language preference
+ * Supports French, Arabic, and English
+ *
+ * @param total - Numeric amount to convert
+ * @param language - Language code: 'fr' (French), 'ar' (Arabic), 'en' (English)
+ * @returns Formatted amount in words with currency notation
+ *
+ * @example
+ * amountToWords(1234.567, 'fr')
+ * amountToWords(1234.567, 'ar')
+ * amountToWords(1234.567, 'en')
+ */
+export const amountToWords = (total, language = 'fr') => {
+    switch (language) {
+        case 'ar':
+            return numberToLettersAr(total);
+        case 'en':
+            return numberToLettersEn(total);
+        case 'fr':
+        default:
+            return numberToLettersFr(total);
+    }
+};
+/**
+ * Renders partner details for TEIF XML
+ * @internal Used internally by generateTeifXml
+ */
+const renderPartner = (partner, role) => {
+    const isBusiness = partner.idType === 'I-01' || partner.idType === 'I-04';
+    return `
+      <PartnerDetails functionCode="${role}">
+        <Nad>
+          <PartnerIdentifier type="${partner.idType}">${escapeXml(partner.idValue)}</PartnerIdentifier>
+          <PartnerName nameType="Qualification">${escapeXml(partner.name)}</PartnerName>
+          <PartnerAdresses lang="fr">
+            <AdressDescription>${escapeXml(partner.addressDescription || '')}</AdressDescription>
+            <Street>${escapeXml(partner.street || '')}</Street>
+            <CityName>${escapeXml(partner.city || '')}</CityName>
+            <PostalCode>${escapeXml(partner.postalCode || '')}</PostalCode>
+            <Country codeList="ISO_3166-1">${escapeXml(partner.country)}</Country>
+          </PartnerAdresses>
+        </Nad>
+        ${isBusiness && partner.rc ? `<RffSection><Reference refID="I-815">${escapeXml(partner.rc)}</Reference></RffSection>` : ''}
+        ${isBusiness && partner.capital ? `<RffSection><Reference refID="I-816">${escapeXml(partner.capital)}</Reference></RffSection>` : ''}
+        <CtaSection>
+          <Contact functionCode="I-94"><ContactName>${escapeXml(partner.name)}</ContactName></Contact>
+          ${partner.phone ? `<Communication><ComMeansType>I-101</ComMeansType><ComAdress>${escapeXml(partner.phone)}</ComAdress></Communication>` : ''}
+          ${partner.email ? `<Communication><ComMeansType>I-103</ComMeansType><ComAdress>${escapeXml(partner.email)}</ComAdress></Communication>` : ''}
+        </CtaSection>
+      </PartnerDetails>`;
+};
+/**
+ * Generate TEIF-compliant XML from invoice data
+ * This function generates a complete TEIF XML document from invoice data
+ * Used by both frontend (for preview/download) and backend (for storage)
+ *
+ * @param data - InvoiceData object with all invoice details
+ * @param minify - Optional boolean to minify XML output (remove whitespace for transmission)
+ * @returns Complete TEIF XML string
+ *
+ * @example
+ * const xml = generateTeifXml(invoiceData);
+ * const minified = generateTeifXml(invoiceData, true);
+ */
+/**
+ * Escape special XML characters in text content
+ * Prevents XML parsing errors from unescaped characters
+ * @param text - Text to escape
+ * @returns XML-safe text
+ */
+export const escapeXml = (text) => {
+    if (!text)
+        return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+};
+export const generateTeifXml = (data, minify = false) => {
+    const amountLanguageDebug = data.amountLanguage || 'fr';
+    console.log('[XML] generateTeifXml START: amountLanguage =', amountLanguageDebug);
+    const lineDetails = data.lines.map(line => {
+        const grossHt = line.quantity * line.unitPrice;
+        const discount = grossHt * line.discountRate; // discountRate is already fractional (0-1)
+        const netHt = grossHt - discount;
+        const fodec = line.fodec ? netHt * 0.01 : 0;
+        const tvaBase = netHt + fodec;
+        const tva = tvaBase * line.taxRate; // taxRate is fractional (0-1)
+        return { ...line, netHt, discount, fodec, tva, tvaBase };
+    });
+    const subtotalNetHt = lineDetails.reduce((s, l) => s + l.netHt, 0);
+    // Calculate global discount (can be rendered as I-153 allowance)
+    const globalAllowanceAmount = data.globalDiscount || 0;
+    // Calculate invoice-level allowances impact
+    const invoiceLevelAllowances = data.allowances?.filter(a => a.basedOn !== 'line') || [];
+    const invoiceAllowancesAmount = invoiceLevelAllowances
+        .filter(a => a.type === 'allowance')
+        .reduce((s, a) => s + a.amount, 0);
+    const invoiceChargesAmount = invoiceLevelAllowances
+        .filter(a => a.type === 'charge')
+        .reduce((s, a) => s + a.amount, 0);
+    // Calculate net amount after all allowances
+    const totalNetHt = subtotalNetHt - globalAllowanceAmount - invoiceAllowancesAmount + invoiceChargesAmount;
+    const totalFodec = lineDetails.reduce((s, l) => s + l.fodec, 0);
+    const taxSummaries = lineDetails.reduce((acc, l) => {
+        const rate = l.taxRate;
+        if (!acc[rate])
+            acc[rate] = { base: 0, amount: 0, justification: l.exemptionReason };
+        acc[rate].base += l.tvaBase;
+        acc[rate].amount += l.tva;
+        return acc;
+    }, {});
+    const totalTva = Object.values(taxSummaries).reduce((s, t) => s + t.amount, 0);
+    const totalIrc = data.ircRate && data.ircRate > 0 ? (totalNetHt + totalFodec + totalTva) * (data.ircRate / 100) : 0;
+    const totalTtc = totalNetHt + totalFodec + totalTva + (data.stampDuty || 0) - totalIrc;
+    // Get language from data.amountLanguage or default to French ('fr')
+    const amountLanguage = data.amountLanguage || 'fr';
+    console.log('[XML] Using amountLanguage:', amountLanguage, 'totalTtc:', totalTtc);
+    const amountLetters = data.amountDescriptionOverride || amountToWords(totalTtc, amountLanguage);
+    console.log('[XML] Generated amountLetters:', amountLetters.substring(0, 50) + '...');
+    const linesXml = lineDetails.map((l, index) => `
+      <Lin>
+        <ItemIdentifier>${index + 1}</ItemIdentifier>
+        <LinImd lang="fr">
+          <ItemCode>${escapeXml(l.itemCode)}</ItemCode>
+          <ItemDescription>${escapeXml(l.description)}</ItemDescription>
+        </LinImd>
+        <LinQty>
+          <Quantity measurementUnit="${l.unit}">${l.quantity.toFixed(3)}</Quantity>
+        </LinQty>
+        <LinTax>
+          <TaxTypeName code="I-1602">TVA</TaxTypeName>
+          <TaxDetails><TaxRate>${(l.taxRate * 100).toFixed(1)}</TaxRate></TaxDetails>
+          ${l.taxRate === 0 && l.exemptionReason ? `<TaxExemptionReference>${escapeXml(l.exemptionReason)}</TaxExemptionReference>` : ''}
+        </LinTax>
+        ${l.fodec ? `<LinTax><TaxTypeName code="I-162">FODEC</TaxTypeName><TaxDetails><TaxRate>1.0</TaxRate></TaxDetails></LinTax>` : ''}
+        <LinMoa>
+          <MoaDetails><Moa amountTypeCode="I-183" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${l.unitPrice.toFixed(3)}</Amount></Moa></MoaDetails>
+          <MoaDetails><Moa amountTypeCode="I-171" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${l.netHt.toFixed(3)}</Amount></Moa></MoaDetails>
+        </LinMoa>
+      </Lin>`).join('');
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<TEIF controlingAgency="TTN" version="1.8.8">
+  <InvoiceHeader>
+    <MessageSenderIdentifier type="${data.supplier.idType}">${escapeXml(data.supplier.idValue)}</MessageSenderIdentifier>
+    <MessageRecieverIdentifier type="${data.buyer.idType}">${escapeXml(data.buyer.idValue)}</MessageRecieverIdentifier>
+  </InvoiceHeader>
+  <InvoiceBody>
+    <Bgm>
+      <DocumentIdentifier>${escapeXml(data.documentNumber)}</DocumentIdentifier>
+      <DocumentType code="${data.documentType}">${escapeXml(DOCUMENT_TYPES[data.documentType])}</DocumentType>
+    </Bgm>
+    <Dtm>
+      <DateText format="ddMMyy" functionCode="I-31">${formatTtnDate(data.invoiceDate)}</DateText>
+      ${data.dueDate ? `<DateText format="ddMMyy" functionCode="I-32">${formatTtnDate(data.dueDate)}</DateText>` : ''}
+      ${data.deliveryDate ? `<DateText format="ddMMyy" functionCode="I-33">${formatTtnDate(data.deliveryDate)}</DateText>` : ''}
+      ${data.dispatchDate ? `<DateText format="ddMMyy" functionCode="I-34">${formatTtnDate(data.dispatchDate)}</DateText>` : ''}
+      ${data.paymentDate ? `<DateText format="ddMMyy" functionCode="I-35">${formatTtnDate(data.paymentDate)}</DateText>` : ''}
+      ${data.periodStart && data.periodEnd ? `<DateText format="ddMMyy-ddMMyy" functionCode="I-36">${formatTtnDate(data.periodStart)}-${formatTtnDate(data.periodEnd)}</DateText>` : ''}
+      ${data.signatureDate ? `<DateText format="ddMMyyHHmm" functionCode="I-37">${data.signatureDate}</DateText>` : ''}
+      ${data.otherDate ? `<DateText format="ddMMyy" functionCode="I-38">${formatTtnDate(data.otherDate)}</DateText>` : ''}
+    </Dtm>
+    <PartnerSection>
+      ${renderPartner(data.supplier, 'I-62')}
+      ${renderPartner(data.buyer, 'I-64')}
+    </PartnerSection>
+    <PytSection>
+      <PytSectionDetails>
+        <Pyt>
+          <PaymentTearmsTypeCode>${data.paymentMeans}</PaymentTearmsTypeCode>
+          <PaymentTearmsDescription>${escapeXml(PAYMENT_MEANS[data.paymentMeans])}</PaymentTearmsDescription>
+        </Pyt>
+        ${data.bankRib && data.paymentMeans === 'I-114' ? `
+        <PytFii functionCode="I-141">
+          <AccountHolder>
+            <AccountNumber>${escapeXml(data.bankRib)}</AccountNumber>
+            <OwnerIdentifier>${escapeXml(data.bankAccountOwner || '')}</OwnerIdentifier>
+          </AccountHolder>
+          <InstitutionIdentification nameCode="${data.bankCode || ''}">
+            ${data.bankCode ? `<InstitutionIdentifier>${data.bankCode}</InstitutionIdentifier>` : ''}
+            <InstitutionName>${escapeXml(data.bankName || 'BANK')}</InstitutionName>
+          </InstitutionIdentification>
+        </PytFii>` : ''}
+        ${data.postalAccountNumber && data.paymentMeans === 'I-115' ? `
+        <PytFii functionCode="I-141">
+          <AccountHolder>
+            <AccountNumber>${escapeXml(data.postalAccountNumber)}</AccountNumber>
+            <OwnerIdentifier>${escapeXml(data.postalAccountOwner || '')}</OwnerIdentifier>
+          </AccountHolder>
+          <InstitutionIdentification nameCode="${data.postalBranchCode || '0000'}">
+            <BranchIdentifier>${data.postalBranchCode || '0000'}</BranchIdentifier>
+            <InstitutionName>${escapeXml(data.postalServiceName || 'La Poste')}</InstitutionName>
+          </InstitutionIdentification>
+        </PytFii>` : ''}
+        ${data.checkNumber && data.paymentMeans === 'I-117' ? `
+        <PytFii functionCode="I-142">
+            <CheckReference>${escapeXml(data.checkNumber)}</CheckReference>
+        </PytFii>` : ''}
+        ${data.cardReference && data.paymentMeans === 'I-118' ? `
+        <PytFii functionCode="I-143">
+          <CardIdentification>
+            <CardType>${escapeXml(data.cardType || 'VISA')}</CardType>
+            <CardNumber>${escapeXml(data.cardLast4 || '')}</CardNumber>
+            <AuthorizationCode>${escapeXml(data.cardReference)}</AuthorizationCode>
+          </CardIdentification>
+        </PytFii>` : ''}
+        ${data.ePaymentTransactionId && data.paymentMeans === 'I-119' ? `
+        <PytFii functionCode="I-144">
+          <EPaymentReference>
+            <Gateway>${escapeXml(data.ePaymentGateway || 'ELECTRONIC')}</Gateway>
+            <TransactionId>${escapeXml(data.ePaymentTransactionId)}</TransactionId>
+          </EPaymentReference>
+        </PytFii>` : ''}
+        ${data.otherPaymentReference && data.paymentMeans === 'I-120' ? `
+        <PytFii functionCode="I-145">
+          <OtherPaymentReference>
+            <Description>${escapeXml(data.otherPaymentDescription || 'Other')}</Description>
+            <Reference>${escapeXml(data.otherPaymentReference)}</Reference>
+          </OtherPaymentReference>
+        </PytFii>` : ''}
+      </PytSectionDetails>
+    </PytSection>
+    <RffSection>
+      ${data.orderReference ? `<Reference refID="I-81">${escapeXml(data.orderReference)}</Reference>` : ''}
+      ${data.contractReference ? `<Reference refID="I-82">${escapeXml(data.contractReference)}</Reference>` : ''}
+      ${data.deliveryNoteReference ? `<Reference refID="I-83">${escapeXml(data.deliveryNoteReference)}</Reference>` : ''}
+    </RffSection>
+    <LinSection>${linesXml}</LinSection>
+    ${globalAllowanceAmount > 0 || invoiceLevelAllowances.length > 0 ? `<InvoiceAlc>
+      ${globalAllowanceAmount > 0 ? `<Alc><AlcDetails><AllowanceChargeCode>I-153</AllowanceChargeCode><AllowanceChargeReasonCode>Discount</AllowanceChargeReasonCode></AlcDetails><AlcMonetaryAmount currencyCodeList="ISO_4217"><Moa amountTypeCode="I-176" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${globalAllowanceAmount.toFixed(3)}</Amount></Moa></AlcMonetaryAmount></Alc>` : ''}
+      ${invoiceLevelAllowances.map(alc => `<Alc><AlcDetails><AllowanceChargeCode>${alc.code}</AllowanceChargeCode><AllowanceChargeReasonCode>${escapeXml(alc.description)}</AllowanceChargeReasonCode></AlcDetails><AlcMonetaryAmount currencyCodeList="ISO_4217"><Moa amountTypeCode="${alc.type === 'allowance' ? 'I-176' : 'I-174'}" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${alc.amount.toFixed(3)}</Amount></Moa></AlcMonetaryAmount></Alc>`).join('')}
+    </InvoiceAlc>` : ''}
+    <InvoiceMoa>
+      <AmountDetails><Moa amountTypeCode="I-176" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${totalNetHt.toFixed(3)}</Amount></Moa></AmountDetails>
+      <AmountDetails><Moa amountTypeCode="I-180" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${totalTtc.toFixed(3)}</Amount><AmountDescription lang="${amountLanguage}">${amountLetters}</AmountDescription></Moa></AmountDetails>
+    </InvoiceMoa>
+    <InvoiceTax>
+      <InvoiceTaxDetails><Tax><TaxTypeName code="I-1601">droit de timbre</TaxTypeName><TaxDetails><TaxRate>0.0</TaxRate></TaxDetails></Tax><AmountDetails><Moa amountTypeCode="I-178" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${(data.stampDuty || 0).toFixed(3)}</Amount></Moa></AmountDetails></InvoiceTaxDetails>
+      ${totalFodec > 0 ? `<InvoiceTaxDetails><Tax><TaxTypeName code="I-1603">FODEC</TaxTypeName><TaxDetails><TaxRate>1.0</TaxRate></TaxDetails></Tax><AmountDetails><Moa amountTypeCode="I-178" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${totalFodec.toFixed(3)}</Amount></Moa></AmountDetails></InvoiceTaxDetails>` : ''}
+      ${totalIrc > 0 ? `<InvoiceTaxDetails><Tax><TaxTypeName code="I-1604">IRC Withholding</TaxTypeName><TaxDetails><TaxRate>${(data.ircRate || 0).toFixed(1)}</TaxRate></TaxDetails></Tax><AmountDetails><Moa amountTypeCode="I-178" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${totalIrc.toFixed(3)}</Amount></Moa></AmountDetails></InvoiceTaxDetails>` : ''}
+      ${Object.entries(taxSummaries).map(([rate, s]) => `
+      <InvoiceTaxDetails>
+        <Tax><TaxTypeName code="I-1602">TVA</TaxTypeName><TaxDetails><TaxRate>${(parseFloat(rate) * 100).toFixed(1)}</TaxRate></TaxDetails>${parseFloat(rate) === 0 && s.justification ? `<TaxExemptionReference>${escapeXml(s.justification)}</TaxExemptionReference>` : ''}</Tax>
+        <AmountDetails><Moa amountTypeCode="I-177" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${s.base.toFixed(3)}</Amount></Moa></AmountDetails>
+        <AmountDetails><Moa amountTypeCode="I-178" currencyCodeList="ISO_4217"><Amount currencyIdentifier="${data.currency}">${s.amount.toFixed(3)}</Amount></Moa></AmountDetails>
+      </InvoiceTaxDetails>`).join('')}
+    </InvoiceTax>
+  </InvoiceBody>
+  <RefTtnVal>
+    <ReferenceTTN refID="I-88">${escapeXml(data.ttnReference)}</ReferenceTTN>
+    ${data.qrCodeEnabled && totalTtc > 0 ? (() => {
+        const qrString = generateQrString(data, totalTtc, totalTva);
+        const qrBase64 = btoa(qrString);
+        return `<ReferenceCEV>${qrBase64}</ReferenceCEV>`;
+    })() : ''}
+  </RefTtnVal>
+  <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="SigFrs"></ds:Signature>
+</TEIF>`;
+    return minify ? xml.replace(/>\s+</g, '><').trim() : xml;
+};
