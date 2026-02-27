@@ -94,7 +94,8 @@ export function EmailVerification() {
       if (!pendingEmail) throw new Error('No email found');
       
       await verifyEmail(pendingEmail, fullCode);
-      navigate('/login', { replace: true });
+      // Navigate immediately to /login before state updates trigger redirect
+      setTimeout(() => navigate('/login', { replace: true }), 100);
     } catch (err) {
       const message = (err as Error).message || t('verificationFailed');
       setError(message);

@@ -4,7 +4,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     // Get API URL from environment variable (passed during build)
-    const apiBaseUrl = process.env.VITE_API_BASE_URL || 'https://facturationtunisie.com/api/api';
+    // For development: use localhost:3000, For production: use the production domain
+    const apiBaseUrl = process.env.VITE_API_BASE_URL || (mode === 'development' ? 'http://localhost:3000/api' : 'https://facturationtunisie.com/api/api');
     
     return {
       build: {

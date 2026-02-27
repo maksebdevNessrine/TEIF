@@ -9,11 +9,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '15m') as string; // Short-lived access token
 const REFRESH_TOKEN_EXPIRES_IN = '7d' as string; // Longer-lived refresh token
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_ANON_KEY || ''
-);
+// Initialize Supabase client (optional for local dev)
+let supabase: any = null;
+if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+  supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY
+  );
+}
 
 /**
  * Hash a password using bcrypt with 10 salt rounds
@@ -364,6 +367,7 @@ export async function sendVerificationEmail(email: string, code: string, name: s
       host: process.env.SMTP_HOST || 'ssl0.ovh.net',
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: process.env.SMTP_SECURE === 'true', // true for 465, false for 587
+      requireTLS: true, // OVH requires TLS for port 587
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,

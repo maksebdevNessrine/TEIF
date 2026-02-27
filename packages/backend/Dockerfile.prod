@@ -1,0 +1,34 @@
+# Production Backend - Uses pre-built dist
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy root package files  
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy all package.json files
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/backend/package.json ./packages/backend/
+
+# Install ALL dependencies (needed for prisma migrate)
+RUN pnpm install --no-frozen-lockfile --ignore-scripts
+
+# Copy pre-built dist folders
+COPY packages/shared/dist ./packages/shared/dist
+COPY packages/backend/dist ./packages/backend/dist
+COPY packages/backend/prisma ./packages/backend/prisma
+
+WORKDIR /app/packages/backend
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
+
+# Start server with migrations
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && node dist/index.js"]
