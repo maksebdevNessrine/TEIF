@@ -1,28 +1,30 @@
-import { ZodError } from "zod";
-async function zodErrorHandler(c, next) {
-  try {
-    await next();
-  } catch (error) {
-    if (error instanceof ZodError) {
-      const details = error.errors.map((err) => ({
-        field: err.path.join("."),
-        message: err.message,
-        code: err.code,
-        type: "type" in err ? err.type : err.code
-      }));
-      return c.json(
-        {
-          success: false,
-          error: "Validation Failed",
-          details,
-          count: error.errors.length
-        },
-        400
-      );
+/**
+ * Global Zod Error Handler Middleware
+ * Catches Zod validation errors from @hono/zod-validator
+ * Transforms them into user-friendly API responses
+ */
+import { ZodError } from 'zod';
+export async function zodErrorHandler(c, next) {
+    try {
+        await next();
     }
-    throw error;
-  }
+    catch (error) {
+        if (error instanceof ZodError) {
+            // Format Zod validation errors
+            const details = error.errors.map((err) => ({
+                field: err.path.join('.'),
+                message: err.message,
+                code: err.code,
+                type: 'type' in err ? err.type : err.code,
+            }));
+            return c.json({
+                success: false,
+                error: 'Validation Failed',
+                details,
+                count: error.errors.length,
+            }, 400);
+        }
+        // Re-throw for other error handlers
+        throw error;
+    }
 }
-export {
-  zodErrorHandler
-};

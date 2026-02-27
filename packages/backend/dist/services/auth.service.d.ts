@@ -57,9 +57,9 @@ export declare function signInWithSupabase(email: string, password: string): Pro
         name: string;
         email: string;
     } | null;
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
+    accessToken: any;
+    refreshToken: any;
+    expiresIn: any;
 }>;
 /**
  * Supabase Auth: Sign out
