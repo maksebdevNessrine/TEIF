@@ -103,7 +103,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Image digest (backend)
-        run: echo "Backend image pushed with digest: ${{ steps.docker_build_backend.outputs.digest }}"
+        run: echo 'Backend image pushed with digest:' ${{ steps.docker_build_backend.outputs.digest }}
 
       - name: Image digest (frontend)
-        run: echo "Frontend image pushed with digest: ${{ steps.docker_build_frontend.outputs.digest }}"
+        run: echo 'Frontend image pushed with digest:' ${{ steps.docker_build_frontend.outputs.digest }}
