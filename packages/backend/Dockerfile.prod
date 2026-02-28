@@ -1,27 +1,35 @@
-# Production Backend - Uses pre-built dist
+# Production Backend - Minimal runtime image with pre-built artifacts
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Install pnpm
+# Install OpenSSL (required for Prisma runtime)
+RUN apk add --no-cache openssl
+
+# Install pnpm for production dependency management
 RUN npm install -g pnpm
 
-# Copy root package files  
+# Copy root package files for dependency resolution
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Copy all package.json files
+# Copy package.json files for dependency graph
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/backend/package.json ./packages/backend/
 
-# Install ALL dependencies (needed for prisma migrate)
-RUN pnpm install --no-frozen-lockfile --ignore-scripts
+# Install ONLY production dependencies (fast, no rebuild)
+RUN pnpm install --prod --no-frozen-lockfile
 
-# Copy pre-built dist folders
+# Copy pre-built artifacts from local build
 COPY packages/shared/dist ./packages/shared/dist
 COPY packages/backend/dist ./packages/backend/dist
+
+# Copy Prisma schema (NOT the .prisma binary folder, it has Windows-specific binaries)
 COPY packages/backend/prisma ./packages/backend/prisma
 
 WORKDIR /app/packages/backend
+
+# Generate Prisma client with Linux binaries during image build
+RUN pnpm exec prisma generate || echo "Prisma generation skipped or failed"
 
 # Expose port
 EXPOSE 3000
