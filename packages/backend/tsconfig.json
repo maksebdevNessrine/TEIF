@@ -16,7 +16,9 @@
       "@teif/shared": ["../shared/src"],
       "@teif/shared/*": ["../shared/src/*"],
       "@teif/generated/zod": ["../prisma/generated/zod/index.ts"]
-    }
+    },
+    "noEmit": false,
+    "listEmittedFiles": false
   },
   "include": ["src/**/*"]
 }
