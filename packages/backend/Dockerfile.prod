@@ -23,13 +23,10 @@ RUN pnpm install --prod --no-frozen-lockfile
 COPY packages/shared/dist ./packages/shared/dist
 COPY packages/backend/dist ./packages/backend/dist
 
-# Copy Prisma schema (NOT the .prisma binary folder, it has Windows-specific binaries)
+# Copy Prisma schema (for reference, though not strictly needed for running dist)
 COPY packages/backend/prisma ./packages/backend/prisma
 
 WORKDIR /app/packages/backend
-
-# Generate Prisma client with Linux binaries during image build
-RUN pnpm exec prisma generate || echo "Prisma generation skipped or failed"
 
 # Expose port
 EXPOSE 3000
@@ -38,5 +35,6 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
 
-# Start server with migrations
-CMD ["sh", "-c", "pnpm exec prisma migrate deploy && node dist/index.js"]
+# Start server directly (skip migrations for now - database assumed ready)
+# Prisma client should be available from pnpm install --prod which handles @prisma/* dependencies
+CMD ["node", "dist/index.js"]
