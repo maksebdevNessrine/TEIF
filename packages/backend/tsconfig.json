@@ -12,6 +12,10 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "noImplicitAny": true,
+    "strict": true,
     "paths": {
       "@teif/shared": ["../shared/src"],
       "@teif/shared/*": ["../shared/src/*"],
