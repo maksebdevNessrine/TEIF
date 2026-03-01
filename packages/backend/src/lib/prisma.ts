@@ -1,6 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
-// Access sql through Prisma namespace for raw SQL queries
-export const sql = Prisma.sql;
+const { sql } = Prisma;
+export { sql };
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;

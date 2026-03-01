@@ -56,7 +56,7 @@ signatureRoutes.post(
   certificateUploadLimiter,
   requireAuth,
   zValidator('form', uploadCertificateSchema),
-  async (c: Context) => {
+  async (c: any) => {
     try {
       const user = c.get('user') as AuthUser;
       const formData = await c.req.formData();
@@ -178,7 +178,7 @@ signatureRoutes.post(
   signingLimiter,
   requireAuth,
   zValidator('json', signInvoiceSchema),
-  async (c: Context) => {
+  async (c: any) => {
     try {
       const user = c.get('user') as AuthUser;
       const { invoiceId } = c.req.param();

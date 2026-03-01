@@ -37,7 +37,7 @@ invoiceRoutes.use('*', authMiddleware);
 invoiceRoutes.post(
   '/',
   zValidator('json', InvoiceCreateApiSchema),
-  async (c: Context) => {
+  async (c: any) => {
     const user = c.get('user') as any;
     const validatedData = (c.req.valid as any)('json');
 
@@ -75,7 +75,7 @@ invoiceRoutes.get('/:id', async (c: Context) => {
 invoiceRoutes.put(
   '/:id',
   zValidator('json', InvoiceUpdateApiSchema),
-  async (c: Context) => {
+  async (c: any) => {
     const user = c.get('user') as any;
     const invoiceId = c.req.param('id');
     const validatedData = (c.req.valid as any)('json');
