@@ -4,7 +4,7 @@
     "target": "ES2022",
     "module": "ES2022",
     "lib": ["ES2022"],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "outDir": "./dist",
     "rootDir": "./src",
     "skipLibCheck": true,
@@ -17,7 +17,8 @@
     "strict": true,
     "paths": {
       "@teif/shared": ["../shared/dist/index.d.ts"],
-      "@teif/shared/*": ["../shared/dist/*"],
+      "@teif/shared/types": ["../shared/dist/types/index.d.ts"],
+      "@teif/shared/utils": ["../shared/dist/utils/index.d.ts"],
       "@teif/generated/zod": ["../prisma/generated/zod/index.ts"]
     },
     "noEmit": false,

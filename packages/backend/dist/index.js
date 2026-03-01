@@ -3,7 +3,6 @@ import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { logger } from 'hono/logger';
 import { ZodError } from 'zod';
-import { PrismaClientKnownRequestError, PrismaClientInitializationError } from '@prisma/client/runtime/library';
 import { corsMiddleware } from './middleware/cors';
 import { signatureSecurityHeaders, signatureAuditLog } from './middleware/signatureSecurity';
 import { connectDatabase, disconnectDatabase } from './lib/prisma';
@@ -86,13 +85,13 @@ app.onError((err, c) => {
         const apiError = handleZodError(err);
         return sendErrorResponse(c, apiError);
     }
-    // Handle Prisma known request errors
-    if (err instanceof PrismaClientKnownRequestError) {
+    // Handle Prisma known request errors (check by error name to avoid import issues)
+    if (err?.code && typeof err.code === 'string' && err.code.startsWith('P')) {
         const apiError = handlePrismaError(err);
         return sendErrorResponse(c, apiError);
     }
     // Handle Prisma initialization errors
-    if (err instanceof PrismaClientInitializationError) {
+    if (err instanceof Error && err.constructor.name === 'PrismaClientInitializationError') {
         const apiError = handlePrismaClientError(err);
         return sendErrorResponse(c, apiError);
     }

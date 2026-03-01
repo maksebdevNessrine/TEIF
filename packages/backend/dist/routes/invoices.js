@@ -8,7 +8,6 @@
  * 4. Fully typed RPC for frontend
  */
 import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
 import { invoiceService } from '../services/invoice.service';
 import { pdfService } from '../services/pdf.service';
 import { authMiddleware } from '../middleware/auth';
@@ -27,9 +26,10 @@ invoiceRoutes.use('*', authMiddleware);
  *
  * Service layer converts to database format
  */
-invoiceRoutes.post('/', zValidator('json', InvoiceCreateApiSchema), async (c) => {
+invoiceRoutes.post('/', async (c) => {
     const user = c.get('user');
-    const validatedData = c.req.valid('json');
+    const body = await c.req.json();
+    const validatedData = InvoiceCreateApiSchema.parse(body);
     // Service handles conversion to Prisma format
     const invoice = await invoiceService.createInvoice(user.userId, validatedData);
     return c.json({ success: true, data: invoice }, 201);
@@ -52,10 +52,11 @@ invoiceRoutes.get('/:id', async (c) => {
 /**
  * PUT /api/invoices/:id - Update an invoice
  */
-invoiceRoutes.put('/:id', zValidator('json', InvoiceUpdateApiSchema), async (c) => {
+invoiceRoutes.put('/:id', async (c) => {
     const user = c.get('user');
     const invoiceId = c.req.param('id');
-    const validatedData = c.req.valid('json');
+    const body = await c.req.json();
+    const validatedData = InvoiceUpdateApiSchema.parse(body);
     const invoice = await invoiceService.updateInvoice(user.userId, invoiceId, validatedData);
     return c.json({ success: true, data: invoice }, 200);
 });

@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+
 // Export Prisma utilities
 export { Prisma };
 
@@ -13,8 +14,6 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
-
-export { Prisma };
 
 // Test database connection
 export async function connectDatabase() {

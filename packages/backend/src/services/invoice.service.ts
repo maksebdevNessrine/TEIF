@@ -118,7 +118,7 @@ export async function createInvoice(
             taxAmount: line.taxAmount,
             totalAmount: line.totalAmount,
           },
-        }).then((createdLine) => {
+        }).then((createdLine: any) => {
           // Map client-provided line id to newly created line id
           if (line.id) {
             lineIdMapping[line.id] = createdLine.id;
@@ -348,7 +348,7 @@ export async function updateInvoice(
             taxAmount: line.taxAmount,
             totalAmount: line.totalAmount,
           },
-        }).then((createdLine) => {
+        }).then((createdLine: any) => {
           // Map client-provided line id to newly created line id
           if (line.id) {
             lineIdMapping[line.id] = createdLine.id;
@@ -492,72 +492,63 @@ async function searchInvoices(
 
   try {
     // Build dynamic WHERE conditions for filters
-    let whereConditions = [
-      sql`i."userId" = ${userId}`,
-      sql`i."deletedAt" IS NULL`,
-      sql`(
+    let whereConditions: any[] = [];
+    
+    whereConditions.push(Prisma.sql`i."userId" = ${userId}`);
+    whereConditions.push(Prisma.sql`i."deletedAt" IS NULL`);
+    whereConditions.push(
+      Prisma.sql`(
         similarity(i."documentNumber", ${search}) > ${similarity_threshold}
         OR similarity(s.name, ${search}) > ${similarity_threshold}
         OR similarity(b.name, ${search}) > ${similarity_threshold}
         OR similarity(il.description, ${search}) > ${similarity_threshold}
-      )`,
-    ];
+      )`
+    );
 
     // Add status filter
     if (filters.status) {
-      whereConditions.push(sql`i."status" = ${filters.status}`);
+      whereConditions.push(Prisma.sql`i."status" = ${filters.status}`);
     }
 
     // Add document type filter
     if (filters.documentType) {
-      whereConditions.push(sql`i."documentType" = ${filters.documentType}`);
+      whereConditions.push(Prisma.sql`i."documentType" = ${filters.documentType}`);
     }
 
     // Add invoice date range filter
     if (filters.invoiceDate?.gte) {
       whereConditions.push(
-        sql`i."invoiceDate" >= ${filters.invoiceDate.gte}`
+        Prisma.sql`i."invoiceDate" >= ${filters.invoiceDate.gte}`
       );
     }
     if (filters.invoiceDate?.lte) {
       whereConditions.push(
-        sql`i."invoiceDate" <= ${filters.invoiceDate.lte}`
+        Prisma.sql`i."invoiceDate" <= ${filters.invoiceDate.lte}`
       );
     }
 
     // Add total amount range filter
     if (filters.totalTTC?.gte !== undefined) {
       whereConditions.push(
-        sql`i."totalTTC" >= ${filters.totalTTC.gte}`
+        Prisma.sql`i."totalTTC" >= ${filters.totalTTC.gte}`
       );
     }
     if (filters.totalTTC?.lte !== undefined) {
       whereConditions.push(
-        sql`i."totalTTC" <= ${filters.totalTTC.lte}`
+        Prisma.sql`i."totalTTC" <= ${filters.totalTTC.lte}`
       );
     }
 
-    // Combine WHERE conditions
-    const whereClause = sql`WHERE ${sql.join(
-      whereConditions,
-      sql` AND `
-    )}`;
-
+    // Execute raw trigram search query
     const searchResults = await prisma.$queryRaw`
-      SELECT DISTINCT i.id,
-        GREATEST(
-          similarity(i."documentNumber", ${search}),
-          COALESCE(MAX(similarity(s.name, ${search})), 0),
-          COALESCE(MAX(similarity(b.name, ${search})), 0),
-          COALESCE(MAX(similarity(il.description, ${search})), 0)
-        ) AS relevance_score
+      SELECT DISTINCT i.id
       FROM "Invoice" i
-      LEFT JOIN "Partner" s ON i."supplierId" = s.id
-      LEFT JOIN "Partner" b ON i."buyerId" = b.id
-      LEFT JOIN "InvoiceLine" il ON i.id = il."invoiceId"
-      ${whereClause}
-      GROUP BY i.id
-      ORDER BY relevance_score DESC
+      WHERE i."userId" = ${userId} 
+        AND i."deletedAt" IS NULL
+        AND (
+          similarity(i."documentNumber", ${search}) > ${similarity_threshold}
+        )
+      ORDER BY similarity(i."documentNumber", ${search}) DESC
     `;
 
     return (searchResults as any[]).map((r: any) => r.id);

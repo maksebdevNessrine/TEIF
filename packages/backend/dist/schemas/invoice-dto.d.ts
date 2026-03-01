@@ -174,6 +174,9 @@ export declare const InvoiceCreateApiSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     documentNumber: string;
     invoiceDate: string;
+    documentType: string;
+    globalDiscount: number;
+    stampDuty: number;
     supplier: {
         name: string;
         idType: string;
@@ -194,33 +197,10 @@ export declare const InvoiceCreateApiSchema: z.ZodObject<{
         postalCode?: string | undefined;
         country?: string | undefined;
     };
+    operationNature: string;
     paymentMeans: string;
     amountLanguage: "ar" | "fr" | "en";
-    operationNature: string;
-    stampDuty: number;
-    documentType: string;
-    globalDiscount: number;
     dueDate?: string | undefined;
-    lines?: {
-        description: string;
-        quantity: number;
-        unitPrice: number;
-        id?: string | undefined;
-        allowances?: {
-            type: string;
-            amount: number;
-            code?: string | undefined;
-            description?: string | undefined;
-        }[] | undefined;
-        itemCode?: string | undefined;
-        unit?: string | undefined;
-        discount?: number | undefined;
-        taxRate?: number | undefined;
-        fodec?: boolean | undefined;
-        discountRate?: number | undefined;
-        taxPercentage?: number | undefined;
-        exemptionReason?: string | null | undefined;
-    }[] | undefined;
     allowances?: {
         type: string;
         amount: number;
@@ -228,40 +208,15 @@ export declare const InvoiceCreateApiSchema: z.ZodObject<{
         description?: string | undefined;
         basedOn?: "invoice" | "line" | undefined;
     }[] | undefined;
-    deliveryDate?: string | undefined;
-    currency?: string | undefined;
-    orderReference?: string | null | undefined;
-    invoiceNumber?: string | undefined;
+    xmlContent?: string | undefined;
     ttnReference?: string | null | undefined;
+    deliveryDate?: string | undefined;
+    orderReference?: string | null | undefined;
+    currency?: string | undefined;
+    invoiceNumber?: string | undefined;
     ircRate?: number | null | undefined;
     paymentDate?: string | undefined;
     otherDate?: string | undefined;
-    xmlContent?: string | undefined;
-}, {
-    supplier: {
-        name: string;
-        idType: string;
-        idValue: string;
-        addressDescription?: string | undefined;
-        street?: string | undefined;
-        city?: string | undefined;
-        postalCode?: string | undefined;
-        country?: string | undefined;
-    };
-    buyer: {
-        name: string;
-        idType: string;
-        idValue: string;
-        addressDescription?: string | undefined;
-        street?: string | undefined;
-        city?: string | undefined;
-        postalCode?: string | undefined;
-        country?: string | undefined;
-    };
-    documentType: string;
-    documentNumber?: string | undefined;
-    invoiceDate?: any;
-    dueDate?: any;
     lines?: {
         description: string;
         quantity: number;
@@ -282,6 +237,33 @@ export declare const InvoiceCreateApiSchema: z.ZodObject<{
         taxPercentage?: number | undefined;
         exemptionReason?: string | null | undefined;
     }[] | undefined;
+}, {
+    documentType: string;
+    supplier: {
+        name: string;
+        idType: string;
+        idValue: string;
+        addressDescription?: string | undefined;
+        street?: string | undefined;
+        city?: string | undefined;
+        postalCode?: string | undefined;
+        country?: string | undefined;
+    };
+    buyer: {
+        name: string;
+        idType: string;
+        idValue: string;
+        addressDescription?: string | undefined;
+        street?: string | undefined;
+        city?: string | undefined;
+        postalCode?: string | undefined;
+        country?: string | undefined;
+    };
+    documentNumber?: string | undefined;
+    invoiceDate?: any;
+    dueDate?: any;
+    globalDiscount?: number | undefined;
+    stampDuty?: number | undefined;
     allowances?: {
         type: string;
         amount: number;
@@ -289,20 +271,38 @@ export declare const InvoiceCreateApiSchema: z.ZodObject<{
         description?: string | undefined;
         basedOn?: "invoice" | "line" | undefined;
     }[] | undefined;
+    xmlContent?: string | undefined;
+    operationNature?: string | undefined;
+    ttnReference?: string | null | undefined;
     deliveryDate?: any;
+    orderReference?: string | null | undefined;
     currency?: string | undefined;
     paymentMeans?: string | undefined;
-    orderReference?: string | null | undefined;
-    amountLanguage?: "ar" | "fr" | "en" | undefined;
-    operationNature?: string | undefined;
-    stampDuty?: number | undefined;
     invoiceNumber?: string | undefined;
-    ttnReference?: string | null | undefined;
-    globalDiscount?: number | undefined;
+    amountLanguage?: "ar" | "fr" | "en" | undefined;
     ircRate?: number | null | undefined;
     paymentDate?: any;
     otherDate?: any;
-    xmlContent?: string | undefined;
+    lines?: {
+        description: string;
+        quantity: number;
+        unitPrice: number;
+        id?: string | undefined;
+        allowances?: {
+            type: string;
+            amount: number;
+            code?: string | undefined;
+            description?: string | undefined;
+        }[] | undefined;
+        itemCode?: string | undefined;
+        unit?: string | undefined;
+        discount?: number | undefined;
+        taxRate?: number | undefined;
+        fodec?: boolean | undefined;
+        discountRate?: number | undefined;
+        taxPercentage?: number | undefined;
+        exemptionReason?: string | null | undefined;
+    }[] | undefined;
 }>;
 export type InvoiceCreateApiDto = z.infer<typeof InvoiceCreateApiSchema>;
 /**
@@ -474,6 +474,9 @@ export declare const InvoiceUpdateApiSchema: z.ZodObject<{
     documentNumber?: string | undefined;
     invoiceDate?: string | undefined;
     dueDate?: string | undefined;
+    documentType?: string | undefined;
+    globalDiscount?: number | undefined;
+    stampDuty?: number | undefined;
     supplier?: {
         name: string;
         idType: string;
@@ -494,6 +497,25 @@ export declare const InvoiceUpdateApiSchema: z.ZodObject<{
         postalCode?: string | undefined;
         country?: string | undefined;
     } | undefined;
+    allowances?: {
+        type: string;
+        amount: number;
+        code?: string | undefined;
+        description?: string | undefined;
+        basedOn?: "invoice" | "line" | undefined;
+    }[] | undefined;
+    xmlContent?: string | undefined;
+    operationNature?: string | undefined;
+    ttnReference?: string | null | undefined;
+    deliveryDate?: string | undefined;
+    orderReference?: string | null | undefined;
+    currency?: string | undefined;
+    paymentMeans?: string | undefined;
+    invoiceNumber?: string | undefined;
+    amountLanguage?: "ar" | "fr" | "en" | undefined;
+    ircRate?: number | null | undefined;
+    paymentDate?: string | undefined;
+    otherDate?: string | undefined;
     lines?: {
         description: string;
         quantity: number;
@@ -514,32 +536,13 @@ export declare const InvoiceUpdateApiSchema: z.ZodObject<{
         taxPercentage?: number | undefined;
         exemptionReason?: string | null | undefined;
     }[] | undefined;
-    allowances?: {
-        type: string;
-        amount: number;
-        code?: string | undefined;
-        description?: string | undefined;
-        basedOn?: "invoice" | "line" | undefined;
-    }[] | undefined;
-    deliveryDate?: string | undefined;
-    currency?: string | undefined;
-    paymentMeans?: string | undefined;
-    orderReference?: string | null | undefined;
-    amountLanguage?: "ar" | "fr" | "en" | undefined;
-    operationNature?: string | undefined;
-    stampDuty?: number | undefined;
-    documentType?: string | undefined;
-    invoiceNumber?: string | undefined;
-    ttnReference?: string | null | undefined;
-    globalDiscount?: number | undefined;
-    ircRate?: number | null | undefined;
-    paymentDate?: string | undefined;
-    otherDate?: string | undefined;
-    xmlContent?: string | undefined;
 }, {
     documentNumber?: string | undefined;
     invoiceDate?: any;
     dueDate?: any;
+    documentType?: string | undefined;
+    globalDiscount?: number | undefined;
+    stampDuty?: number | undefined;
     supplier?: {
         name: string;
         idType: string;
@@ -560,6 +563,25 @@ export declare const InvoiceUpdateApiSchema: z.ZodObject<{
         postalCode?: string | undefined;
         country?: string | undefined;
     } | undefined;
+    allowances?: {
+        type: string;
+        amount: number;
+        code?: string | undefined;
+        description?: string | undefined;
+        basedOn?: "invoice" | "line" | undefined;
+    }[] | undefined;
+    xmlContent?: string | undefined;
+    operationNature?: string | undefined;
+    ttnReference?: string | null | undefined;
+    deliveryDate?: any;
+    orderReference?: string | null | undefined;
+    currency?: string | undefined;
+    paymentMeans?: string | undefined;
+    invoiceNumber?: string | undefined;
+    amountLanguage?: "ar" | "fr" | "en" | undefined;
+    ircRate?: number | null | undefined;
+    paymentDate?: any;
+    otherDate?: any;
     lines?: {
         description: string;
         quantity: number;
@@ -580,27 +602,5 @@ export declare const InvoiceUpdateApiSchema: z.ZodObject<{
         taxPercentage?: number | undefined;
         exemptionReason?: string | null | undefined;
     }[] | undefined;
-    allowances?: {
-        type: string;
-        amount: number;
-        code?: string | undefined;
-        description?: string | undefined;
-        basedOn?: "invoice" | "line" | undefined;
-    }[] | undefined;
-    deliveryDate?: any;
-    currency?: string | undefined;
-    paymentMeans?: string | undefined;
-    orderReference?: string | null | undefined;
-    amountLanguage?: "ar" | "fr" | "en" | undefined;
-    operationNature?: string | undefined;
-    stampDuty?: number | undefined;
-    documentType?: string | undefined;
-    invoiceNumber?: string | undefined;
-    ttnReference?: string | null | undefined;
-    globalDiscount?: number | undefined;
-    ircRate?: number | null | undefined;
-    paymentDate?: any;
-    otherDate?: any;
-    xmlContent?: string | undefined;
 }>;
 export type InvoiceUpdateApiDto = z.infer<typeof InvoiceUpdateApiSchema>;
