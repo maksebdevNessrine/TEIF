@@ -16,8 +16,8 @@
     "noImplicitAny": true,
     "strict": true,
     "paths": {
-      "@teif/shared": ["../shared/src/index.ts"],
-      "@teif/shared/*": ["../shared/src/*"],
+      "@teif/shared": ["../shared/dist/index.d.ts"],
+      "@teif/shared/*": ["../shared/dist/*"],
       "@teif/generated/zod": ["../prisma/generated/zod/index.ts"]
     },
     "noEmit": false,

@@ -3,15 +3,15 @@ import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { logger } from 'hono/logger';
 import { ZodError } from 'zod';
-import { Prisma } from '@prisma/client';
-import { corsMiddleware } from './middleware/cors.js';
-import { signatureSecurityHeaders, signatureAuditLog } from './middleware/signatureSecurity.js';
-import { connectDatabase, disconnectDatabase } from './lib/prisma.js';
-import { validateEnv, checkSignatureSecurityRequirements } from './config/env.js';
-import { handleZodError, handlePrismaError, handlePrismaClientError, handleUnknownError, sendErrorResponse } from './utils/error-handler.js';
-import authRoutes from './routes/auth.js';
-import invoiceRoutes from './routes/invoices.js';
-import signatureRoutes from './routes/signature.js';
+import { PrismaClientKnownRequestError, PrismaClientInitializationError } from '@prisma/client/runtime/library';
+import { corsMiddleware } from './middleware/cors';
+import { signatureSecurityHeaders, signatureAuditLog } from './middleware/signatureSecurity';
+import { connectDatabase, disconnectDatabase } from './lib/prisma';
+import { validateEnv, checkSignatureSecurityRequirements } from './config/env';
+import { handleZodError, handlePrismaError, handlePrismaClientError, handleUnknownError, sendErrorResponse } from './utils/error-handler';
+import authRoutes from './routes/auth';
+import invoiceRoutes from './routes/invoices';
+import signatureRoutes from './routes/signature';
 // Validate environment variables at startup
 try {
     validateEnv();
@@ -87,12 +87,12 @@ app.onError((err, c) => {
         return sendErrorResponse(c, apiError);
     }
     // Handle Prisma known request errors
-    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err instanceof PrismaClientKnownRequestError) {
         const apiError = handlePrismaError(err);
         return sendErrorResponse(c, apiError);
     }
     // Handle Prisma initialization errors
-    if (err instanceof Prisma.PrismaClientInitializationError) {
+    if (err instanceof PrismaClientInitializationError) {
         const apiError = handlePrismaClientError(err);
         return sendErrorResponse(c, apiError);
     }

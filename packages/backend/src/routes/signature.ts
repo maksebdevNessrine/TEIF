@@ -55,6 +55,7 @@ signatureRoutes.post(
   '/upload',
   certificateUploadLimiter,
   requireAuth,
+  // @ts-ignore - zValidator middleware type checking causes infinite recursion with complex Zod schemas
   zValidator('form', uploadCertificateSchema),
   async (c: any) => {
     try {
@@ -177,6 +178,7 @@ signatureRoutes.post(
   '/invoices/:invoiceId/sign',
   signingLimiter,
   requireAuth,
+  // @ts-ignore - zValidator middleware type checking causes infinite recursion with complex Zod schemas
   zValidator('json', signInvoiceSchema),
   async (c: any) => {
     try {

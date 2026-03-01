@@ -1,5 +1,4 @@
 import { prisma, Prisma } from '../lib/prisma';
-import { sql } from '@prisma/client/runtime/library';
 import { partnerService } from './partner.service';
 import { invoiceCalculationsService } from './invoice-calculations.service';
 import { xmlGeneratorService } from './xmlGenerator.service';

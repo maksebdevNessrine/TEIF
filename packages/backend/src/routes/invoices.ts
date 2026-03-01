@@ -36,6 +36,7 @@ invoiceRoutes.use('*', authMiddleware);
  */
 invoiceRoutes.post(
   '/',
+  // @ts-ignore - zValidator middleware type checking causes infinite recursion with complex Zod schemas
   zValidator('json', InvoiceCreateApiSchema),
   async (c: any) => {
     const user = c.get('user') as any;
@@ -74,6 +75,7 @@ invoiceRoutes.get('/:id', async (c: Context) => {
  */
 invoiceRoutes.put(
   '/:id',
+  // @ts-ignore - zValidator middleware type checking causes infinite recursion with complex Zod schemas
   zValidator('json', InvoiceUpdateApiSchema),
   async (c: any) => {
     const user = c.get('user') as any;

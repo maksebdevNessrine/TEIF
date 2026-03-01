@@ -1,6 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
-const { sql } = Prisma;
-export { sql };
+// Export Prisma utilities
+export { Prisma };
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
