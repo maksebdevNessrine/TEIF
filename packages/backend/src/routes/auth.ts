@@ -311,15 +311,14 @@ authRoutes.get('/me', requireAuth(), async (c: Context) => {
  */
 authRoutes.post(
   '/verify-email',
-  // @ts-ignore - zValidator middleware type checking causes infinite recursion with complex Zod schemas
-  zValidator('json', z.object({
-    email: z.string().email('Invalid email format'),
-    code: z.string().regex(/^\d{6}$/, 'Verification code must be 6 digits'),
-  })),
   async (c: any) => {
     try {
-      const validatedData = (c.req.valid as any)('json');
-      const { email, code } = validatedData;
+      const body = await c.req.json();
+      const validated = z.object({
+        email: z.string().email('Invalid email format'),
+        code: z.string().regex(/^\d{6}$/, 'Verification code must be 6 digits'),
+      }).parse(body);
+      const { email, code } = validated;
 
       // Verify the code
       const user = await authService.verifyEmailCode(email, code);
@@ -371,14 +370,13 @@ authRoutes.post(
  */
 authRoutes.post(
   '/resend-code',
-  // @ts-ignore - zValidator middleware type checking causes infinite recursion with complex Zod schemas
-  zValidator('json', z.object({
-    email: z.string().email('Invalid email format'),
-  })),
   async (c: any) => {
     try {
-      const validatedData = (c.req.valid as any)('json');
-      const { email } = validatedData;
+      const body = await c.req.json();
+      const validated = z.object({
+        email: z.string().email('Invalid email format'),
+      }).parse(body);
+      const { email } = validated;
 
       const result = await authService.resendVerificationCode(email);
 

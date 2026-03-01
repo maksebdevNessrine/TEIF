@@ -55,13 +55,14 @@ signatureRoutes.post(
   '/upload',
   certificateUploadLimiter,
   requireAuth,
-  // @ts-ignore - zValidator middleware type checking causes infinite recursion with complex Zod schemas
-  zValidator('form', uploadCertificateSchema),
   async (c: any) => {
     try {
       const user = c.get('user') as AuthUser;
       const formData = await c.req.formData();
-      const pin = (c.req.valid as any)('form')?.pin;
+      const pin = formData.get('pin') as string;
+      
+      // Validate pin
+      uploadCertificateSchema.parse({ pin });
 
       // Get certificate file
       const certificateFile = formData.get('certificate') as File | null;
@@ -178,13 +179,15 @@ signatureRoutes.post(
   '/invoices/:invoiceId/sign',
   signingLimiter,
   requireAuth,
-  // @ts-ignore - zValidator middleware type checking causes infinite recursion with complex Zod schemas
-  zValidator('json', signInvoiceSchema),
   async (c: any) => {
     try {
       const user = c.get('user') as AuthUser;
       const { invoiceId } = c.req.param();
-      const { pin } = (c.req.valid as any)('json');
+      const body = await c.req.json();
+      
+      // Validate pin
+      const validated = signInvoiceSchema.parse(body);
+      const { pin } = validated;
 
       // Verify invoice exists and belongs to user
       const invoice = await prisma.invoice.findFirst({

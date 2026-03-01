@@ -36,11 +36,10 @@ invoiceRoutes.use('*', authMiddleware);
  */
 invoiceRoutes.post(
   '/',
-  // @ts-ignore - zValidator middleware type checking causes infinite recursion with complex Zod schemas
-  zValidator('json', InvoiceCreateApiSchema),
   async (c: any) => {
     const user = c.get('user') as any;
-    const validatedData = (c.req.valid as any)('json');
+    const body = await c.req.json();
+    const validatedData = InvoiceCreateApiSchema.parse(body);
 
     // Service handles conversion to Prisma format
     const invoice = await invoiceService.createInvoice(user.userId, validatedData);
@@ -75,12 +74,11 @@ invoiceRoutes.get('/:id', async (c: Context) => {
  */
 invoiceRoutes.put(
   '/:id',
-  // @ts-ignore - zValidator middleware type checking causes infinite recursion with complex Zod schemas
-  zValidator('json', InvoiceUpdateApiSchema),
   async (c: any) => {
     const user = c.get('user') as any;
     const invoiceId = c.req.param('id');
-    const validatedData = (c.req.valid as any)('json');
+    const body = await c.req.json();
+    const validatedData = InvoiceUpdateApiSchema.parse(body);
 
     const invoice = await invoiceService.updateInvoice(user.userId, invoiceId, validatedData);
 
