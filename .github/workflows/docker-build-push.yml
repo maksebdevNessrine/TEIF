@@ -12,7 +12,8 @@ on:
 env:
   REGISTRY: docker.io
   IMAGE_NAME: ${{ secrets.DOCKER_HUB_USERNAME }}/teif
-  NODE_OPTIONS: "--max-old-space-size=6144"
+  NODE_OPTIONS: "--max-old-space-size=8192"
+  TURBO_SKIP_PRUNE: "true"
 
 jobs:
   build-and-push:
@@ -50,10 +51,14 @@ jobs:
         run: pnpm install
 
       - name: Build application with Turbo
-        run: pnpm build
+        run: |
+          echo "NODE_OPTIONS: $NODE_OPTIONS"
+          pnpm build --verbose
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          TURBO_REMOTE_ONLY: "false"
+          TURBO_NO_UPDATE_NOTIFIER: "true"
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
