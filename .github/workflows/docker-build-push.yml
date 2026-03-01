@@ -51,14 +51,10 @@ jobs:
         run: pnpm install
 
       - name: Build application with Turbo
-        run: |
-          echo "NODE_OPTIONS: $NODE_OPTIONS"
-          pnpm build --verbose
+        run: pnpm build
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-          TURBO_REMOTE_ONLY: "false"
-          TURBO_NO_UPDATE_NOTIFIER: "true"
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
