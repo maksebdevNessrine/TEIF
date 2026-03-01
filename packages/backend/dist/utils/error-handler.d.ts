@@ -7,7 +7,6 @@
  * - Application errors
  */
 import { ZodError } from 'zod';
-import { Prisma } from '@prisma/client';
 import type { Context } from 'hono';
 interface ApiError {
     success: false;
@@ -24,11 +23,11 @@ export declare function handleZodError(error: ZodError): ApiError;
 /**
  * Handle Prisma database errors
  */
-export declare function handlePrismaError(error: Prisma.PrismaClientKnownRequestError): ApiError;
+export declare function handlePrismaError(error: any): ApiError;
 /**
  * Handle Prisma client initialization errors
  */
-export declare function handlePrismaClientError(error: Prisma.PrismaClientInitializationError): ApiError;
+export declare function handlePrismaClientError(error: any): ApiError;
 /**
  * Handle runtime validation errors (custom)
  */

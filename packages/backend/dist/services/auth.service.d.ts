@@ -37,26 +37,12 @@ export declare function rotateRefreshToken(userId: string, oldToken: string): Pr
 /**
  * Supabase Auth: Sign up new user
  */
-export declare function signUpWithSupabase(email: string, password: string, name: string): Promise<{
-    id: string;
-    createdAt: Date;
-    name: string;
-    email: string;
-    passwordHash: string;
-    emailVerified: boolean;
-    verificationCode: string | null;
-    verificationCodeExpires: Date | null;
-    updatedAt: Date;
-}>;
+export declare function signUpWithSupabase(email: string, password: string, name: string): Promise<any>;
 /**
  * Supabase Auth: Sign in with email and password
  */
 export declare function signInWithSupabase(email: string, password: string): Promise<{
-    user: {
-        id: string;
-        name: string;
-        email: string;
-    } | null;
+    user: any;
     accessToken: any;
     refreshToken: any;
     expiresIn: any;
@@ -68,35 +54,22 @@ export declare function signOutWithSupabase(accessToken: string): Promise<void>;
 /**
  * Create a new user in the database (Custom JWT fallback)
  */
-export declare function createUser(name: string, email: string, password: string): Promise<{
-    id: string;
-    name: string;
-    email: string;
-}>;
+export declare function createUser(name: string, email: string, password: string): Promise<any>;
 /**
  * Find a user by email (includes passwordHash for login verification)
  */
-export declare function findUserByEmail(email: string): Promise<{
-    id: string;
-    name: string;
-    email: string;
-    passwordHash: string;
-}>;
+export declare function findUserByEmail(email: string): Promise<any>;
 /**
  * Find a user by ID (excludes passwordHash)
  */
-export declare function findUserById(id: string): Promise<{
-    id: string;
-    name: string;
-    email: string;
-}>;
+export declare function findUserById(id: string): Promise<any>;
 /**
  * Login user with email and password (local authentication)
  */
 export declare function loginUser(email: string, password: string): Promise<{
-    id: string;
-    email: string;
-    name: string;
+    id: any;
+    email: any;
+    name: any;
 }>;
 /**
  * Generate a 6-digit verification code
@@ -109,25 +82,11 @@ export declare function sendVerificationEmail(email: string, code: string, name:
 /**
  * Create user with verification code and send email
  */
-export declare function createUserWithVerification(name: string, email: string, password: string): Promise<{
-    id: string;
-    name: string;
-    email: string;
-    emailVerified: boolean;
-    verificationCode: string | null;
-    verificationCodeExpires: Date | null;
-}>;
+export declare function createUserWithVerification(name: string, email: string, password: string): Promise<any>;
 /**
  * Verify email with code
  */
-export declare function verifyEmailCode(email: string, code: string): Promise<{
-    id: string;
-    name: string;
-    email: string;
-    emailVerified: boolean;
-    verificationCode: string | null;
-    verificationCodeExpires: Date | null;
-}>;
+export declare function verifyEmailCode(email: string, code: string): Promise<any>;
 /**
  * Resend verification code
  */

@@ -7,7 +7,6 @@
  * - Application errors
  */
 import { ZodError } from 'zod';
-import { Prisma } from '@prisma/client';
 /**
  * Handle Zod validation errors
  */
@@ -135,14 +134,14 @@ export function handleUnknownError(error) {
     if (error instanceof ZodError) {
         return handleZodError(error);
     }
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        return handlePrismaError(error);
-    }
-    if (error instanceof Prisma.PrismaClientInitializationError) {
-        return handlePrismaClientError(error);
-    }
+    // Check for Prisma errors by error name rather than instanceof
     if (error instanceof Error) {
-        // Extract custom status code from error object if set by service layer
+        if (error.name === 'PrismaClientKnownRequestError') {
+            return handlePrismaError(error);
+        }
+        if (error.name === 'PrismaClientInitializationError') {
+            return handlePrismaClientError(error);
+        }
         const customStatusCode = error.statusCode;
         const statusCode = customStatusCode && customStatusCode >= 400 && customStatusCode < 600
             ? customStatusCode

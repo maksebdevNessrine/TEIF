@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../lib/prisma.js';
+import { prisma } from '../lib/prisma';
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';

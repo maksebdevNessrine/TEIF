@@ -11,9 +11,9 @@ import { setCookie, getCookie } from 'hono/cookie';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { registerSchema, loginSchema } from '@teif/shared';
-import * as authService from '../services/auth.service.js';
-import { requireAuth } from '../middleware/auth.js';
-import { AuthError, authErrors } from '../utils/auth-errors.js';
+import * as authService from '../services/auth.service';
+import { requireAuth } from '../middleware/auth';
+import { AuthError, authErrors } from '../utils/auth-errors';
 const authRoutes = new Hono();
 /**
  * POST /api/auth/register

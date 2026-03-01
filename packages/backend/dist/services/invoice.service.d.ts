@@ -1,4 +1,4 @@
-import { type InvoiceCreateApiDto, type InvoiceUpdateApiDto } from '../schemas/invoice-dto.js';
+import { type InvoiceCreateApiDto, type InvoiceUpdateApiDto } from '../schemas/invoice-dto';
 /**
  * Create a new invoice with related entities
  *

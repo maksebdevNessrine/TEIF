@@ -1,8 +1,9 @@
-import { prisma, Prisma } from '../lib/prisma.js';
-import { partnerService } from './partner.service.js';
-import { invoiceCalculationsService } from './invoice-calculations.service.js';
-import { xmlGeneratorService } from './xmlGenerator.service.js';
-import { invalidatePdfCache } from './pdf.service.js';
+import { prisma } from '../lib/prisma';
+import { sql } from '@prisma/client/runtime/library';
+import { partnerService } from './partner.service';
+import { invoiceCalculationsService } from './invoice-calculations.service';
+import { xmlGeneratorService } from './xmlGenerator.service';
+import { invalidatePdfCache } from './pdf.service';
 class AppError extends Error {
     statusCode;
     constructor(statusCode, message) {
@@ -412,9 +413,9 @@ async function searchInvoices(userId, search, filters) {
     try {
         // Build dynamic WHERE conditions for filters
         let whereConditions = [
-            Prisma.sql `i."userId" = ${userId}`,
-            Prisma.sql `i."deletedAt" IS NULL`,
-            Prisma.sql `(
+            sql `i."userId" = ${userId}`,
+            sql `i."deletedAt" IS NULL`,
+            sql `(
         similarity(i."documentNumber", ${search}) > ${similarity_threshold}
         OR similarity(s.name, ${search}) > ${similarity_threshold}
         OR similarity(b.name, ${search}) > ${similarity_threshold}
@@ -423,28 +424,28 @@ async function searchInvoices(userId, search, filters) {
         ];
         // Add status filter
         if (filters.status) {
-            whereConditions.push(Prisma.sql `i."status" = ${filters.status}`);
+            whereConditions.push(sql `i."status" = ${filters.status}`);
         }
         // Add document type filter
         if (filters.documentType) {
-            whereConditions.push(Prisma.sql `i."documentType" = ${filters.documentType}`);
+            whereConditions.push(sql `i."documentType" = ${filters.documentType}`);
         }
         // Add invoice date range filter
         if (filters.invoiceDate?.gte) {
-            whereConditions.push(Prisma.sql `i."invoiceDate" >= ${filters.invoiceDate.gte}`);
+            whereConditions.push(sql `i."invoiceDate" >= ${filters.invoiceDate.gte}`);
         }
         if (filters.invoiceDate?.lte) {
-            whereConditions.push(Prisma.sql `i."invoiceDate" <= ${filters.invoiceDate.lte}`);
+            whereConditions.push(sql `i."invoiceDate" <= ${filters.invoiceDate.lte}`);
         }
         // Add total amount range filter
         if (filters.totalTTC?.gte !== undefined) {
-            whereConditions.push(Prisma.sql `i."totalTTC" >= ${filters.totalTTC.gte}`);
+            whereConditions.push(sql `i."totalTTC" >= ${filters.totalTTC.gte}`);
         }
         if (filters.totalTTC?.lte !== undefined) {
-            whereConditions.push(Prisma.sql `i."totalTTC" <= ${filters.totalTTC.lte}`);
+            whereConditions.push(sql `i."totalTTC" <= ${filters.totalTTC.lte}`);
         }
         // Combine WHERE conditions
-        const whereClause = Prisma.sql `WHERE ${Prisma.join(whereConditions, ' AND ')}`;
+        const whereClause = sql `WHERE ${sql.join(whereConditions, sql ` AND `)}`;
         const searchResults = await prisma.$queryRaw `
       SELECT DISTINCT i.id,
         GREATEST(

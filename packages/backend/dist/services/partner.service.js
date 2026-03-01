@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma.js';
+import { prisma } from '../lib/prisma';
 /**
  * Map Prisma Partner result to shared Partner type
  */
