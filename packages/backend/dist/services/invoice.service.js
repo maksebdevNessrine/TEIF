@@ -1,8 +1,8 @@
-import { prisma, Prisma } from '../lib/prisma';
-import { partnerService } from './partner.service';
-import { invoiceCalculationsService } from './invoice-calculations.service';
-import { xmlGeneratorService } from './xmlGenerator.service';
-import { invalidatePdfCache } from './pdf.service';
+import { prisma, Prisma } from '../lib/prisma.js';
+import { partnerService } from './partner.service.js';
+import { invoiceCalculationsService } from './invoice-calculations.service.js';
+import { xmlGeneratorService } from './xmlGenerator.service.js';
+import { invalidatePdfCache } from './pdf.service.js';
 class AppError extends Error {
     statusCode;
     constructor(statusCode, message) {

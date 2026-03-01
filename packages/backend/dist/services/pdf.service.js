@@ -3,10 +3,10 @@
  * Handles Puppeteer rendering, QR code generation, and Supabase storage
  */
 import QRCode from 'qrcode';
-import { puppeteerManager } from '../lib/puppeteer';
-import { storageService } from '../lib/storage';
-import { generateInvoiceHtml } from '../templates/invoice.template';
-import { getInvoiceById } from './invoice.service';
+import { puppeteerManager } from '../lib/puppeteer.js';
+import { storageService } from '../lib/storage.js';
+import { generateInvoiceHtml } from '../templates/invoice.template.js';
+import { getInvoiceById } from './invoice.service.js';
 /**
  * Generate QR code data URL for invoice per TEIF 1.8.8 spec (I-88 ReferenceCEV)
  * QR content format: SupplierTaxID|InvoiceNumber|InvoiceDate|SupplierName|BuyerTaxID|TotalTTC|TotalTVA|TTNReference

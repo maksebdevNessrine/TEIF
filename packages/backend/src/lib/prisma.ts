@@ -1,4 +1,6 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+// Import Prisma namespace for type definitions - removed 'type' to make it available at runtime
+import { Prisma } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -11,6 +13,8 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
+
+export { Prisma };
 
 // Test database connection
 export async function connectDatabase() {
@@ -28,4 +32,3 @@ export async function disconnectDatabase() {
   await prisma.$disconnect();
 }
 
-export { Prisma };

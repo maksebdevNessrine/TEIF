@@ -8,7 +8,6 @@
  */
 
 import { ZodError } from 'zod';
-import { Prisma } from '@prisma/client';
 import type { Context } from 'hono';
 
 interface ApiError {
@@ -44,7 +43,7 @@ export function handleZodError(error: ZodError): ApiError {
 /**
  * Handle Prisma database errors
  */
-export function handlePrismaError(error: Prisma.PrismaClientKnownRequestError): ApiError {
+export function handlePrismaError(error: any): ApiError {
   switch (error.code) {
     case 'P2002':
       // Unique constraint violation
@@ -101,7 +100,7 @@ export function handlePrismaError(error: Prisma.PrismaClientKnownRequestError): 
 /**
  * Handle Prisma client initialization errors
  */
-export function handlePrismaClientError(error: Prisma.PrismaClientInitializationError): ApiError {
+export function handlePrismaClientError(error: any): ApiError {
   return {
     success: false,
     error: 'Service Unavailable',
@@ -159,16 +158,15 @@ export function handleUnknownError(error: unknown): ApiError {
     return handleZodError(error);
   }
 
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    return handlePrismaError(error);
-  }
-
-  if (error instanceof Prisma.PrismaClientInitializationError) {
-    return handlePrismaClientError(error);
-  }
-
+  // Check for Prisma errors by error name rather than instanceof
   if (error instanceof Error) {
-    // Extract custom status code from error object if set by service layer
+    if (error.name === 'PrismaClientKnownRequestError') {
+      return handlePrismaError(error as any);
+    }
+
+    if (error.name === 'PrismaClientInitializationError') {
+      return handlePrismaClientError(error as any);
+    }
     const customStatusCode = (error as any).statusCode;
     const statusCode = customStatusCode && customStatusCode >= 400 && customStatusCode < 600 
       ? customStatusCode 

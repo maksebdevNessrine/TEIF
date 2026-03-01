@@ -43,7 +43,10 @@ services:
       - postgres_backups:/backups
       # Optional: restore from backup on startup
       # - ./backups/latest.sql:/docker-entrypoint-initdb.d/init.sql
-    # Resource limits for production (internal-only, no ports exposed to host)
+    # Port mapping for local development on Windows
+    ports:
+      - "5432:5432"
+    # Resource limits for production
     mem_limit: 512M
     mem_reservation: 256M
     cpus: 1.0
@@ -82,10 +85,7 @@ services:
 
   # Backend API Server - Hono.js + Prisma
   backend:
-    build:
-      context: .
-      dockerfile: packages/backend/Dockerfile
-    image: teif-backend:latest
+    image: maksebdev3/teif-backend:latest
     container_name: teif-backend
     hostname: backend
     <<: *dns-config
@@ -161,12 +161,7 @@ services:
 
   # Frontend Web Server - React + Nginx
   frontend:
-    build:
-      context: .
-      dockerfile: packages/frontend/Dockerfile
-      args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
-    image: teif-frontend:latest
+    image: maksebdev3/teif-frontend:latest
     container_name: teif-frontend
     hostname: frontend
     <<: *dns-config

@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma';
+import { prisma } from '../lib/prisma.js';
 
 /**
  * Check and fix invoices that might be missing proper supplier/buyer relations

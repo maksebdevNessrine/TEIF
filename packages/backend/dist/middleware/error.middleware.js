@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { validationErrorResponse, errorResponse } from '../utils/response';
+import { validationErrorResponse, errorResponse } from '../utils/response.js';
 /**
  * Global error handler middleware
  * Catches and formats errors from route handlers
