@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 // Import Prisma namespace for type definitions - removed 'type' to make it available at runtime
 import { Prisma } from '@prisma/client';
+import { sql } from '@prisma/client/runtime/library';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;

@@ -1,4 +1,5 @@
 import { prisma, Prisma } from '../lib/prisma';
+import { sql } from '@prisma/client/runtime/library';
 import { partnerService } from './partner.service';
 import { invoiceCalculationsService } from './invoice-calculations.service';
 import { xmlGeneratorService } from './xmlGenerator.service';
@@ -34,7 +35,7 @@ export async function createInvoice(
   const validatedData = invoiceData;
 
   // Use transaction for atomicity
-  const invoice = await prisma.$transaction(async (tx) => {
+  const invoice = await prisma.$transaction(async (tx: any) => {
     // Find or create supplier partner (cast string idType to IdType)
     const supplierData = {
       ...validatedData.supplier,
@@ -248,7 +249,7 @@ export async function updateInvoice(
   }
 
   // Use transaction for atomicity
-  const updatedInvoice = await prisma.$transaction(async (tx) => {
+  const updatedInvoice = await prisma.$transaction(async (tx: any) => {
     // Find or create supplier partner (cast string idType to IdType) - only if provided
     let supplierId: string | undefined;
     if (validatedData.supplier) {
@@ -493,9 +494,9 @@ async function searchInvoices(
   try {
     // Build dynamic WHERE conditions for filters
     let whereConditions = [
-      Prisma.sql`i."userId" = ${userId}`,
-      Prisma.sql`i."deletedAt" IS NULL`,
-      Prisma.sql`(
+      sql`i."userId" = ${userId}`,
+      sql`i."deletedAt" IS NULL`,
+      sql`(
         similarity(i."documentNumber", ${search}) > ${similarity_threshold}
         OR similarity(s.name, ${search}) > ${similarity_threshold}
         OR similarity(b.name, ${search}) > ${similarity_threshold}
@@ -505,42 +506,42 @@ async function searchInvoices(
 
     // Add status filter
     if (filters.status) {
-      whereConditions.push(Prisma.sql`i."status" = ${filters.status}`);
+      whereConditions.push(sql`i."status" = ${filters.status}`);
     }
 
     // Add document type filter
     if (filters.documentType) {
-      whereConditions.push(Prisma.sql`i."documentType" = ${filters.documentType}`);
+      whereConditions.push(sql`i."documentType" = ${filters.documentType}`);
     }
 
     // Add invoice date range filter
     if (filters.invoiceDate?.gte) {
       whereConditions.push(
-        Prisma.sql`i."invoiceDate" >= ${filters.invoiceDate.gte}`
+        sql`i."invoiceDate" >= ${filters.invoiceDate.gte}`
       );
     }
     if (filters.invoiceDate?.lte) {
       whereConditions.push(
-        Prisma.sql`i."invoiceDate" <= ${filters.invoiceDate.lte}`
+        sql`i."invoiceDate" <= ${filters.invoiceDate.lte}`
       );
     }
 
     // Add total amount range filter
     if (filters.totalTTC?.gte !== undefined) {
       whereConditions.push(
-        Prisma.sql`i."totalTTC" >= ${filters.totalTTC.gte}`
+        sql`i."totalTTC" >= ${filters.totalTTC.gte}`
       );
     }
     if (filters.totalTTC?.lte !== undefined) {
       whereConditions.push(
-        Prisma.sql`i."totalTTC" <= ${filters.totalTTC.lte}`
+        sql`i."totalTTC" <= ${filters.totalTTC.lte}`
       );
     }
 
     // Combine WHERE conditions
-    const whereClause = Prisma.sql`WHERE ${Prisma.join(
+    const whereClause = sql`WHERE ${sql.join(
       whereConditions,
-      ' AND '
+      sql` AND `
     )}`;
 
     const searchResults = await prisma.$queryRaw`

@@ -4,7 +4,7 @@
     "target": "ES2022",
     "module": "ES2022",
     "lib": ["ES2022"],
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "outDir": "./dist",
     "rootDir": "./src",
     "skipLibCheck": true,
@@ -17,7 +17,7 @@
     "noImplicitAny": true,
     "strict": true,
     "paths": {
-      "@teif/shared": ["../shared/src"],
+      "@teif/shared": ["../shared/src/index.ts"],
       "@teif/shared/*": ["../shared/src/*"],
       "@teif/generated/zod": ["../prisma/generated/zod/index.ts"]
     },
