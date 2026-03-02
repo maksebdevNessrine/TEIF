@@ -150,5 +150,5 @@ export function deepClone<T>(obj: T): T {
 }
 
 // Export TEIF-specific invoice utilities
-export * from './invoice';
-export { generateTeifXml } from './invoice';
+export * from './invoice.js';
+export { generateTeifXml } from './invoice.js';

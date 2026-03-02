@@ -13,7 +13,7 @@ export interface ValidationResult {
 export {
   invoiceListQuerySchema,
   type InvoiceListQueryType,
-} from './schemas';
+} from './schemas.js';
 
 // Export auth schemas
 export {
@@ -31,7 +31,7 @@ export {
   type AuthResponse,
   logoutResponseSchema,
   type LogoutResponse,
-} from './auth.schemas';
+} from './auth.schemas.js';
 
 /** Validate RIB (Tunisian Bank Account Number) - MOD 97 checksum */
 export function validateRib(rib: string): ValidationResult {
@@ -289,5 +289,5 @@ export function validatePartner(partner: any): ValidationResult[] {
 // ============================================================================
 // RE-EXPORT ZOD SCHEMAS & AUTH SCHEMAS
 // ============================================================================
-export * from './schemas';
-export * from './auth.schemas';
+export * from './schemas.js';
+export * from './auth.schemas.js';
