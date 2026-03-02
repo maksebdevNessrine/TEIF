@@ -19,8 +19,12 @@ COPY packages/backend/package.json ./packages/backend/
 # Install ONLY production dependencies (fast, no rebuild)
 RUN pnpm install --prod --no-frozen-lockfile
 
-# Copy Prisma schema (no url property in Prisma 7+)
+# Copy Prisma schema (contains url for CLI validation)
 COPY packages/backend/prisma ./packages/backend/prisma
+
+# Generate Prisma client (required at runtime)
+# must run after dependencies installed
+RUN cd packages/backend && npx prisma generate
 
 # Copy pre-built artifacts from local build
 COPY packages/shared/dist ./packages/shared/dist
