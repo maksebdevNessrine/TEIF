@@ -7,8 +7,8 @@
 import crypto from 'crypto';
 import forge from 'node-forge';
 import bcrypt from 'bcrypt';
-import { prisma } from '../lib/prisma';
-import { getSignatureEncryptionKey } from '../config/env';
+import { prisma } from '../lib/prisma.js';
+import { getSignatureEncryptionKey } from '../config/env.js';
 
 interface CertificateValidationResult {
   isValid: boolean;

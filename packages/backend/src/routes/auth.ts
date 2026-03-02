@@ -18,9 +18,9 @@ import {
   AuthResponse,
   LogoutResponse 
 } from '@teif/shared';
-import * as authService from '../services/auth.service';
-import { requireAuth, AuthUser } from '../middleware/auth';
-import { AuthError, authErrors } from '../utils/auth-errors';
+import * as authService from '../services/auth.service.js';
+import { requireAuth, AuthUser } from '../middleware/auth.js';
+import { AuthError, authErrors } from '../utils/auth-errors.js';
 
 type AuthContext = {
   Variables: {

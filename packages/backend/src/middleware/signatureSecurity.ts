@@ -1,5 +1,5 @@
 import { Context, Next } from 'hono';
-import { isProduction, isSignatureHttpsRequired } from '../config/env';
+import { isProduction, isSignatureHttpsRequired } from '../config/env.js';
 
 /**
  * Security headers middleware for signature endpoints

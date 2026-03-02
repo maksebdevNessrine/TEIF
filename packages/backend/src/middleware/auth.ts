@@ -1,6 +1,6 @@
 import { Context, Next } from 'hono';
 import { getCookie } from 'hono/cookie';
-import { verifyToken } from '../services/auth.service';
+import { verifyToken } from '../services/auth.service.js';
 
 export interface AuthUser {
   userId: string;

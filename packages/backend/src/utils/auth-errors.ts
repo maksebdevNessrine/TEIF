@@ -6,10 +6,10 @@
 export {
   AuthErrorCode,
   AuthError,
-} from './auth-error-types';
+} from './auth-error-types.js';
 
-export type { AuthErrorResponse } from './auth-error-types';
+export type { AuthErrorResponse } from './auth-error-types.js';
 
 export {
   authErrors,
-} from './auth-errors-factory';
+} from './auth-errors-factory.js';

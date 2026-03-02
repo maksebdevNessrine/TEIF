@@ -1,9 +1,9 @@
-import { prisma, Prisma } from '../lib/prisma';
-import { partnerService } from './partner.service';
-import { invoiceCalculationsService } from './invoice-calculations.service';
-import { xmlGeneratorService } from './xmlGenerator.service';
-import { invalidatePdfCache } from './pdf.service';
-import { InvoiceCreateApiSchema, InvoiceUpdateApiSchema, type InvoiceCreateApiDto, type InvoiceUpdateApiDto } from '../schemas/invoice-dto';
+import { prisma, Prisma } from '../lib/prisma.js';
+import { partnerService } from './partner.service.js';
+import { invoiceCalculationsService } from './invoice-calculations.service.js';
+import { xmlGeneratorService } from './xmlGenerator.service.js';
+import { invalidatePdfCache } from './pdf.service.js';
+import { InvoiceCreateApiSchema, InvoiceUpdateApiSchema, type InvoiceCreateApiDto, type InvoiceUpdateApiDto } from '../schemas/invoice-dto.js';
 
 class AppError extends Error {
   constructor(public statusCode: number, message: string) {

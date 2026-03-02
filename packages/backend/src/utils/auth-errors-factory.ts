@@ -3,7 +3,7 @@
  * Exported as authErrors object for easy access
  */
 
-import { AuthError, AuthErrorCode } from './auth-error-types';
+import { AuthError, AuthErrorCode } from './auth-error-types.js';
 
 export const authErrors = {
   // Validation

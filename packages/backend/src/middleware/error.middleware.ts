@@ -1,6 +1,6 @@
 import { Context, Next } from 'hono';
 import { z } from 'zod';
-import { validationErrorResponse, errorResponse } from '../utils/response';
+import { validationErrorResponse, errorResponse } from '../utils/response.js';
 
 /**
  * Global error handler middleware

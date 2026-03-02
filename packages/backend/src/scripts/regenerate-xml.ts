@@ -4,9 +4,9 @@
  * Run with: npx ts-node src/scripts/regenerate-xml.ts
  */
 
-import { prisma } from '../lib/prisma';
-import { xmlGeneratorService } from '../services/xmlGenerator.service';
-import { invoiceCalculationsService } from '../services/invoice-calculations.service';
+import { prisma } from '../lib/prisma.js';
+import { xmlGeneratorService } from '../services/xmlGenerator.service.js';
+import { invoiceCalculationsService } from '../services/invoice-calculations.service.js';
 
 async function regenerateXml() {
   try {

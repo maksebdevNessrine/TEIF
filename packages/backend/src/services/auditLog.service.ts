@@ -3,7 +3,7 @@
  * Tracks all signature operations for compliance and security auditing
  */
 
-import { prisma } from '../lib/prisma';
+import { prisma } from '../lib/prisma.js';
 
 interface LogSignatureActionParams {
   userId: string;

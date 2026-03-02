@@ -4,10 +4,10 @@
  */
 
 import QRCode from 'qrcode';
-import { puppeteerManager } from '../lib/puppeteer';
-import { storageService } from '../lib/storage';
-import { generateInvoiceHtml } from '../templates/invoice.template';
-import { getInvoiceById } from './invoice.service';
+import { puppeteerManager } from '../lib/puppeteer.js';
+import { storageService } from '../lib/storage.js';
+import { generateInvoiceHtml } from '../templates/invoice.template.js';
+import { getInvoiceById } from './invoice.service.js';
 import type { InvoiceResponse } from '@teif/shared/types';
 
 type Language = 'ar' | 'fr' | 'en';

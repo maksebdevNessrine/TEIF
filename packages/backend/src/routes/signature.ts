@@ -13,12 +13,12 @@ import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { requireAuth, type AuthUser } from '../middleware/auth';
-import { createSigningLimiter, createCertificateUploadLimiter } from '../middleware/rateLimiter';
-import SignatureService from '../services/signature.service';
-import InvoiceSigningService from '../services/invoiceSigning.service';
-import AuditLogService from '../services/auditLog.service';
-import { prisma } from '../lib/prisma';
+import { requireAuth, type AuthUser } from '../middleware/auth.js';
+import { createSigningLimiter, createCertificateUploadLimiter } from '../middleware/rateLimiter.js';
+import SignatureService from '../services/signature.service.js';
+import InvoiceSigningService from '../services/invoiceSigning.service.js';
+import AuditLogService from '../services/auditLog.service.js';
+import { prisma } from '../lib/prisma.js';
 
 type SignatureContext = {
   Variables: {

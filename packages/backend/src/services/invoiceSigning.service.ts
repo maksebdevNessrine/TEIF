@@ -7,8 +7,8 @@
 import crypto from 'crypto';
 import forge from 'node-forge';
 import { randomUUID } from 'crypto';
-import SignatureService from './signature.service';
-import { prisma } from '../lib/prisma';
+import SignatureService from './signature.service.js';
+import { prisma } from '../lib/prisma.js';
 
 interface SignInvoiceParams {
   userId: string;
