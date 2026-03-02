@@ -24,7 +24,7 @@ COPY packages/backend/prisma ./packages/backend/prisma
 
 # Generate Prisma client (required at runtime)
 # Must happen after pnpm install installs @prisma/client
-RUN cd packages/backend && prisma generate
+RUN cd packages/backend && npx prisma generate
 
 # Copy pre-built artifacts from local build
 COPY packages/shared/dist ./packages/shared/dist
