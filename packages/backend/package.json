@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.12.0",
+    "@hono/zod-validator": "^0.7.6",
     "@prisma/client": "^5.14.0",
     "@supabase/supabase-js": "^2.43.0",
     "@teif/shared": "workspace:*",
@@ -34,7 +35,6 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@hono/zod-validator": "^0.7.6",
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^22.14.0",
