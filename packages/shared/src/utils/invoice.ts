@@ -4,8 +4,8 @@
  * Used by both frontend and backend for consistent behavior
  */
 
-import type { InvoiceData, Partner } from '../types/index';
-import { DOCUMENT_TYPES, PAYMENT_MEANS } from '../types/index';
+import type { InvoiceData, Partner } from '../types/index.js';
+import { DOCUMENT_TYPES, PAYMENT_MEANS } from '../types/index.js';
 
 /**
  * Formats a date string from YYYY-MM-DD format to ddMMyy format
