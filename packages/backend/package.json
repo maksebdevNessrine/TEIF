@@ -6,7 +6,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "dev": "pnpm exec prisma generate && tsx src/index.ts",
     "build": "prisma generate && tsc",
     "start": "tsx dist/index.js",
     "db:generate": "prisma generate",
