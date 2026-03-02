@@ -706,7 +706,7 @@ export async function listInvoices(
 
   // Restore search relevance order if search was active
   if (idOrderMap) {
-    invoices = invoices.sort((a, b) => 
+    invoices = invoices.sort((a: any, b: any) => 
       (idOrderMap.get(a.id) ?? Infinity) - (idOrderMap.get(b.id) ?? Infinity)
     );
   }
