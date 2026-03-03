@@ -26,6 +26,10 @@ COPY packages/backend/prisma ./packages/backend/prisma
 
 WORKDIR /app/packages/backend
 
+# Generate Prisma client for Linux platform (query engines are platform-specific).
+# Use a dummy DATABASE_URL for schema validation - Prisma only needs it to validate schema syntax.
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
+
 # Expose port
 EXPOSE 3000
 
@@ -34,5 +38,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
 
 # Start server directly (skip migrations for now - database assumed ready)
-# Prisma client should be available from pnpm install --prod which handles @prisma/* dependencies
 CMD ["node", "dist/index.js"]

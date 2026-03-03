@@ -9,9 +9,6 @@ build/
 .turbo/
 dist-ssr
 
-# Allow Prisma client (generated but committed for reliability)
-!node_modules/.prisma/client/
-
 # Environment
 .env
 .env.local
