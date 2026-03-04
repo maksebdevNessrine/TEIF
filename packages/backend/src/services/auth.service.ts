@@ -370,7 +370,7 @@ export async function sendVerificationEmail(email: string, code: string, name: s
       requireTLS: true, // OVH requires TLS for port 587
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        pass: process.env.SMTP_PASSWORD || process.env.SMTP_PASS,
       },
     });
 
