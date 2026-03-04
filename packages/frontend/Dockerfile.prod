@@ -15,7 +15,10 @@ COPY packages/shared ./packages/shared
 COPY packages/frontend ./packages/frontend
 
 # Install dependencies
-RUN npm install -g pnpm && pnpm install --no-frozen-lockfile
+RUN npm install -g pnpm \
+ && for i in 1 2 3 4 5; do \
+    pnpm install --no-frozen-lockfile && break || (echo "pnpm install failed, retry #$i"; sleep $((i * 5))); \
+  done
 
 # Build frontend with Vite
 WORKDIR /app/packages/frontend
