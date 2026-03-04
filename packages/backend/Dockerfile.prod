@@ -16,8 +16,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/backend/package.json ./packages/backend/
 
-# Install ONLY production dependencies (fast, no rebuild)
-RUN pnpm install --prod --no-frozen-lockfile
+# Install ONLY production dependencies for backend package (includes shared via transitive filter)
+RUN pnpm install --prod --filter "./packages/backend..." --no-frozen-lockfile
 
 # Copy pre-built artifacts from local build
 COPY packages/shared/dist ./packages/shared/dist
@@ -26,9 +26,29 @@ COPY packages/backend/prisma ./packages/backend/prisma
 
 WORKDIR /app/packages/backend
 
-# Generate Prisma client on Linux using npx and stripped schema (remove zod generator)
-RUN sed '/generator zod/,/}/d' prisma/schema.prisma > prisma/schema.temp.prisma \
-    && DATABASE_URL="postgresql://user:password@localhost/database" npx prisma@5.22.0 --schema=prisma/schema.temp.prisma generate
+# Generate Prisma client on Linux using npx from repo root so output lands
+# in the workspace's node_modules (as pnpm would do locally).
+# We apply the same schema stripping technique to avoid the zod generator.
+WORKDIR /app
+# Generate Prisma client inside isolated temporary project so we don't
+# pollute the workspace root or hit workspace protocol errors.
+RUN mkdir -p /tmp/prisma-gen \
+  && cd /tmp/prisma-gen \
+  && npm init -y \
+  && npm install prisma@5.22.0 --silent \
+  && sed '/generator zod/,/}/d' /app/packages/backend/prisma/schema.prisma > schema.prisma \
+  && DATABASE_URL="postgresql://user:password@localhost/database" \
+     ./node_modules/.bin/prisma generate --schema=schema.prisma \
+  # copy generated client into pnpm store path used at runtime (wildcard matches actual version folder)
+  && for d in /app/node_modules/.pnpm/@prisma+client@*; do \
+       if [ -d "$d/node_modules/.prisma" ]; then \
+         cp -R node_modules/.prisma/* "$d/node_modules/.prisma/"; \
+       fi; \
+     done \
+  && rm -rf /tmp/prisma-gen
+
+# return to backend dir for start
+WORKDIR /app/packages/backend
 
 # Expose port
 EXPOSE 3000

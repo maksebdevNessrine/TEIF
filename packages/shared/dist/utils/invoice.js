@@ -3,7 +3,7 @@
  * Shared utility functions for invoice processing, formatting, and validation
  * Used by both frontend and backend for consistent behavior
  */
-import { DOCUMENT_TYPES, PAYMENT_MEANS } from '../types/index';
+import { DOCUMENT_TYPES, PAYMENT_MEANS } from '../types/index.js';
 /**
  * Formats a date string from YYYY-MM-DD format to ddMMyy format
  * Used for TEIF XML generation where dates must follow Tunisian invoice format

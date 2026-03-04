@@ -3,9 +3,9 @@
  * Real-time validation for invoice fields per TEIF 1.8.8 specification
  */
 // Export schemas
-export { invoiceListQuerySchema, } from './schemas';
+export { invoiceListQuerySchema, } from './schemas.js';
 // Export auth schemas
-export { registerSchema, loginSchema, verifyEmailSchema, resendCodeSchema, userResponseSchema, authResponseSchema, logoutResponseSchema, } from './auth.schemas';
+export { registerSchema, loginSchema, verifyEmailSchema, resendCodeSchema, userResponseSchema, authResponseSchema, logoutResponseSchema, } from './auth.schemas.js';
 /** Validate RIB (Tunisian Bank Account Number) - MOD 97 checksum */
 export function validateRib(rib) {
     if (!rib)
@@ -254,5 +254,5 @@ export function validatePartner(partner) {
 // ============================================================================
 // RE-EXPORT ZOD SCHEMAS & AUTH SCHEMAS
 // ============================================================================
-export * from './schemas';
-export * from './auth.schemas';
+export * from './schemas.js';
+export * from './auth.schemas.js';

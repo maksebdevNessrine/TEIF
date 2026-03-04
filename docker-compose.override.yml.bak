@@ -1,0 +1,16 @@
+# docker-compose.override.yml - Local development overrides (git-ignored)
+# Exposes ports for local testing only
+version: '3.8'
+
+services:
+  postgres:
+    ports:
+      - "5433:5432"
+  
+  backend:
+    ports:
+      - "3001:3000"
+  
+  frontend:
+    ports:
+      - "80:80"

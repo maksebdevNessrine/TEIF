@@ -126,5 +126,5 @@ export function deepClone(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
 // Export TEIF-specific invoice utilities
-export * from './invoice';
-export { generateTeifXml } from './invoice';
+export * from './invoice.js';
+export { generateTeifXml } from './invoice.js';

@@ -8,10 +8,10 @@
  * 4. Fully typed RPC for frontend
  */
 import { Hono } from 'hono';
-import { invoiceService } from '../services/invoice.service';
-import { pdfService } from '../services/pdf.service';
-import { authMiddleware } from '../middleware/auth';
-import { InvoiceCreateApiSchema, InvoiceUpdateApiSchema } from '../schemas/invoice-dto';
+import { invoiceService } from '../services/invoice.service.js';
+import { pdfService } from '../services/pdf.service.js';
+import { authMiddleware } from '../middleware/auth.js';
+import { InvoiceCreateApiSchema, InvoiceUpdateApiSchema } from '../schemas/invoice-dto.js';
 // Auto-generated schemas from Prisma (zod-prisma-types generator)
 // Actual validation happens at runtime via zValidator middleware
 const invoiceRoutes = new Hono();

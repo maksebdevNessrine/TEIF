@@ -45,5 +45,5 @@ export declare function isEqual(value1: string | number, value2: string | number
 export declare function generateId(): string;
 /** Deep clone object */
 export declare function deepClone<T>(obj: T): T;
-export * from './invoice';
-export { generateTeifXml } from './invoice';
+export * from './invoice.js';
+export { generateTeifXml } from './invoice.js';

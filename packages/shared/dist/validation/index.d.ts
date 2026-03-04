@@ -7,8 +7,8 @@ export interface ValidationResult {
     error?: string;
     warning?: string;
 }
-export { invoiceListQuerySchema, type InvoiceListQueryType, } from './schemas';
-export { registerSchema, type RegisterInput, loginSchema, type LoginInput, verifyEmailSchema, type VerifyEmailInput, resendCodeSchema, type ResendCodeInput, userResponseSchema, type UserResponse, authResponseSchema, type AuthResponse, logoutResponseSchema, type LogoutResponse, } from './auth.schemas';
+export { invoiceListQuerySchema, type InvoiceListQueryType, } from './schemas.js';
+export { registerSchema, type RegisterInput, loginSchema, type LoginInput, verifyEmailSchema, type VerifyEmailInput, resendCodeSchema, type ResendCodeInput, userResponseSchema, type UserResponse, authResponseSchema, type AuthResponse, logoutResponseSchema, type LogoutResponse, } from './auth.schemas.js';
 /** Validate RIB (Tunisian Bank Account Number) - MOD 97 checksum */
 export declare function validateRib(rib: string): ValidationResult;
 /** Validate SIREN (French Business Identifier - 9 digits) */
@@ -45,5 +45,5 @@ export declare function validateCity(city: string): ValidationResult;
 export declare function validatePostalCode(code: string): ValidationResult;
 /** Bulk Validation for Partner */
 export declare function validatePartner(partner: any): ValidationResult[];
-export * from './schemas';
-export * from './auth.schemas';
+export * from './schemas.js';
+export * from './auth.schemas.js';

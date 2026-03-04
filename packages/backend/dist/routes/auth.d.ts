@@ -7,7 +7,7 @@
  * 3. Fully typed RPC for frontend
  */
 import { Hono } from 'hono';
-import { AuthUser } from '../middleware/auth';
+import { AuthUser } from '../middleware/auth.js';
 type AuthContext = {
     Variables: {
         user: AuthUser;

@@ -30,5 +30,10 @@
   },
   "dependencies": {
     "zod": "^4.3.5"
-  }
+  },
+  "main": "ecosystem.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }

@@ -1,5 +1,5 @@
 import { getCookie } from 'hono/cookie';
-import { verifyToken } from '../services/auth.service';
+import { verifyToken } from '../services/auth.service.js';
 /**
  * JWT authentication middleware
  * Extracts token from Authorization header or httpOnly cookie and validates it

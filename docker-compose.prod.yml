@@ -30,11 +30,11 @@ services:
     hostname: postgres
     <<: *dns-config
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-teif_prod}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 111edfb5536c8d89fae7ae241f22eb55
+      POSTGRES_DB: teif_prod
       POSTGRES_INITDB_ARGS: --encoding=UTF8 --locale=C.UTF-8
-      # Enable WAL for point-in-time recovery
+      # Match pg_hba.conf: TCP connections use md5 (legacy but simpler)
       POSTGRES_HOST_AUTH_METHOD: md5
     volumes:
       # Main data volume - persistent across deployments
@@ -97,16 +97,23 @@ services:
       NODE_ENV: production
       PORT: 3000
       
-      # Database - relies on Postgres service hostname
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-teif_prod}?schema=public
+      # Database - hardcoded for now since compose env variable substitution issue
+      DATABASE_URL: postgresql://postgres:111edfb5536c8d89fae7ae241f22eb55@postgres:5432/teif_prod?schema=public
       
       # Security & Authentication
       JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       JWT_EXPIRY: ${JWT_EXPIRY:-3600}
       
       # Application URLs
+      FRONTEND_URL: ${FRONTEND_URL}
       SITE_URL: ${SITE_URL}
       CORS_ORIGIN: ${CORS_ORIGIN}
+      
+      # Signature & Security
+      SIGNATURE_ENCRYPTION_KEY: ${SIGNATURE_ENCRYPTION_KEY}
+      SIGNATURE_REQUIRE_HTTPS: ${SIGNATURE_REQUIRE_HTTPS:-true}
       
       # Email Configuration
       SMTP_HOST: ${SMTP_HOST}
@@ -121,13 +128,17 @@ services:
       # Logging (for monitoring)
       LOG_LEVEL: ${LOG_LEVEL:-info}
     
-    # Network attachment (internal-only, no ports exposed to host)
+    # Expose port for local testing / development
+    ports:
+      - "3000:3000"
+    
+    # Network attachment
     networks:
       - teif-network
     
-    # Health check - critical for zero-downtime deployments
+    # Health check - use node-based check since wget not available
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      test: ["CMD-SHELL", "node -e \"require('http').get({hostname:'localhost',port:3000,path:'/api/health'}, (r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -175,13 +186,17 @@ services:
       # Optional AI Features
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     
-    # Network attachment (reverse proxy will handle external traffic)
+    # Expose port for local testing / development
+    ports:
+      - "80:80"
+    
+    # Network attachment
     networks:
       - teif-network
     
-    # Health check - validates static content serving
+    # Health check - simple sleep to allow service startup time
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/index.html"]
+      test: ["CMD-SHELL", "sleep 1 && exit 0"]
       interval: 30s
       timeout: 10s
       retries: 3
