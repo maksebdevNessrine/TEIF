@@ -190,7 +190,7 @@ services:
     
     # Expose port for local testing / development
     ports:
-      - "80:80"
+      - "8080:80"
     
     # Network attachment
     networks:
