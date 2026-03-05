@@ -54,7 +54,7 @@ invoiceRoutes.post(
  */
 invoiceRoutes.get('/:id', async (c: Context) => {
   const user = c.get('user') as any;
-  const invoiceId = c.req.param('id');
+  const invoiceId = c.req.param('id')!;
 
   const invoice = await invoiceService.getInvoiceById(user.userId, invoiceId);
 
@@ -76,7 +76,7 @@ invoiceRoutes.put(
   '/:id',
   async (c: any) => {
     const user = c.get('user') as any;
-    const invoiceId = c.req.param('id');
+    const invoiceId = c.req.param('id')!;
     const body = await c.req.json();
     const validatedData = InvoiceUpdateApiSchema.parse(body);
 
@@ -92,7 +92,7 @@ invoiceRoutes.put(
  */
 invoiceRoutes.delete('/:id', async (c: Context) => {
   const user = c.get('user') as any;
-  const invoiceId = c.req.param('id');
+  const invoiceId = c.req.param('id')!;
 
   await invoiceService.deleteInvoice(user.userId, invoiceId);
 
@@ -130,7 +130,7 @@ invoiceRoutes.get('/', async (c: Context) => {
  */
 invoiceRoutes.get('/:id/pdf', async (c: Context) => {
   const user = c.get('user') as any;
-  const invoiceId = c.req.param('id');
+  const invoiceId = c.req.param('id')!;
   const language = (c.req.query('language') || 'fr') as 'ar' | 'fr' | 'en';
 
   // Validate language parameter
@@ -159,7 +159,7 @@ invoiceRoutes.get('/:id/pdf', async (c: Context) => {
  */
 invoiceRoutes.get('/:id/xml', async (c: Context) => {
   const user = c.get('user') as any;
-  const invoiceId = c.req.param('id');
+  const invoiceId = c.req.param('id')!;
 
   const invoice = await invoiceService.getInvoiceById(user.userId, invoiceId);
 
