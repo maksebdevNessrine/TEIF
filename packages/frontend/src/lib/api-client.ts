@@ -99,6 +99,7 @@ export async function listInvoices(params?: {
   dateFrom?: string;
   dateTo?: string;
   documentType?: string;
+  documentCategory?: 'invoice' | 'quote' | 'all';
   minAmount?: number;
   maxAmount?: number;
   status?: string;
@@ -110,7 +111,8 @@ export async function listInvoices(params?: {
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        query.append(key, String(value));
+        const queryKey = key === 'documentCategory' ? 'category' : key;
+        query.append(queryKey, String(value));
       }
     });
   }
@@ -151,6 +153,20 @@ export async function getInvoiceXml(id: string) {
   }
   
   return await res.blob();
+}
+
+export async function convertQuoteToInvoice(id: string) {
+  const res = await typedClient.api.quotes[':id'].convert.$post({
+    param: { id },
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to convert quote');
+  }
+
+  const result = await res.json();
+  return result.data;
 }
 
 /**

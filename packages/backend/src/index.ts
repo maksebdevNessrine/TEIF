@@ -11,6 +11,7 @@ import { validateEnv, checkSignatureSecurityRequirements } from './config/env.js
 import { handleZodError, handlePrismaError, handlePrismaClientError, handleUnknownError, sendErrorResponse } from './utils/error-handler.js';
 import authRoutes from './routes/auth.js';
 import invoiceRoutes from './routes/invoices.js';
+import quoteRoutes from './routes/quotes.js';
 import signatureRoutes from './routes/signature.js';
 
 // Validate environment variables at startup
@@ -80,6 +81,9 @@ app.route('/api/auth', authRoutes);
 
 // Mount invoice routes
 app.route('/api/invoices', invoiceRoutes);
+
+// Mount quote routes
+app.route('/api/quotes', quoteRoutes);
 
 // Mount signature routes with security headers and audit logging
 app.use('/api/signature/*', signatureSecurityHeaders);

@@ -3,6 +3,7 @@ export type Language = 'ar' | 'fr' | 'en';
 export type IdType = 'I-01' | 'I-02' | 'I-03' | 'I-04';
 export type DocTypeCode = 'I-11' | 'I-12' | 'I-13' | 'I-14' | 'I-15' | 'I-16' | 'I-30' | 'I-31' | 'I-32' | 'I-33' | 'I-34' | 'I-50' | 'I-51';
 export type PaymentMeansCode = 'I-114' | 'I-115' | 'I-116' | 'I-117' | 'I-118' | 'I-119' | 'I-120' | 'I-131';
+export type DocumentCategory = 'invoice' | 'quote';
 export type OperationNature = 'OP-SUPPLY' | 'OP-DELIVERY' | 'OP-IMPORT' | 'OP-EXPORT' | 'OP-CASH' | 'OP-RECEIPT';
 export type PartnerFunction = 'I-61' | 'I-62' | 'I-63' | 'I-64' | 'I-65' | 'I-66' | 'I-67' | 'I-68' | 'I-69';
 export type AllowanceChargeCode = 'I-151' | 'I-152' | 'I-153' | 'I-154' | 'I-155';
@@ -90,6 +91,7 @@ export interface InvoiceLine {
 
 export interface InvoiceData {
   id?: string; // Optional ID for existing invoices
+  documentCategory?: DocumentCategory;
   documentType: DocTypeCode;
   documentNumber: string;
   invoiceDate: string;
@@ -151,6 +153,7 @@ export interface InvoiceData {
 export interface InvoiceResponse {
   id: string;
   userId: string;
+  documentCategory: DocumentCategory;
   documentType: DocTypeCode;
   documentNumber: string;
   invoiceDate: string;

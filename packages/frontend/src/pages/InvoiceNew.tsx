@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import InvoiceForm from '@/components/InvoiceForm';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTranslation } from '@/services/i18n';
@@ -9,6 +9,7 @@ import { validateInvoiceData, type FieldError } from '@/services/invoiceFormVali
 import type { InvoiceData, DocTypeCode, PaymentMeansCode, OperationNature, IdType } from '@teif/shared/types';
 
 const initialInvoiceData: InvoiceData = {
+  documentCategory: 'invoice',
   documentType: 'I-11' as DocTypeCode,
   documentNumber: '',
   invoiceDate: new Date().toISOString().split('T')[0],
@@ -55,7 +56,13 @@ const initialInvoiceData: InvoiceData = {
 };
 
 export function InvoiceNew() {
-  const [data, setData] = useState<InvoiceData>(initialInvoiceData);
+  const [searchParams] = useSearchParams();
+  const defaultCategory = (searchParams.get('documentCategory') as 'invoice' | 'quote' | 'all') || 'invoice';
+  const documentCategory: 'invoice' | 'quote' = defaultCategory === 'all' ? 'invoice' : defaultCategory;
+  const [data, setData] = useState<InvoiceData>({
+    ...initialInvoiceData,
+    documentCategory,
+  });
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<FieldError[]>([]);
   const [validationWarnings, setValidationWarnings] = useState<FieldError[]>([]);
@@ -113,7 +120,9 @@ export function InvoiceNew() {
           >
             ← {t('back')}
           </Link>
-          <h1 className="text-2xl font-bold text-white">{t('createNewInvoice')}</h1>
+          <h1 className="text-2xl font-bold text-white">
+            {data.documentCategory === 'quote' ? t('newQuote') : t('createNewInvoice')}
+          </h1>
         </div>
         <button
           onClick={handleSave}

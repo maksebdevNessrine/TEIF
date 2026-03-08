@@ -232,20 +232,23 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
   };
 
   const totals = useMemo(() => {
-    const lineTotals = data.lines.reduce((acc, l) => {
-      const lineGross = l.quantity * l.unitPrice;
-      const lineDiscount = lineGross * (l.discountRate / 100);
-      const lineNetHt = lineGross - lineDiscount;
-      const lineFodec = l.fodec ? lineNetHt * 0.01 : 0;
-      const tvaBase = lineNetHt + lineFodec;
-      const lineTva = tvaBase * l.taxRate;
-      
-      acc.ht += lineNetHt;
-      acc.discount += lineDiscount;
-      acc.fodec += lineFodec;
-      acc.tva += lineTva;
-      return acc;
-    }, { ht: 0, discount: 0, fodec: 0, tva: 0 });
+      const lineTotals = data.lines.reduce(
+        (acc: { ht: number; discount: number; fodec: number; tva: number }, l: InvoiceLine) => {
+          const lineGross = l.quantity * l.unitPrice;
+          const lineDiscount = lineGross * (l.discountRate / 100);
+          const lineNetHt = lineGross - lineDiscount;
+          const lineFodec = l.fodec ? lineNetHt * 0.01 : 0;
+          const tvaBase = lineNetHt + lineFodec;
+          const lineTva = tvaBase * l.taxRate;
+
+          acc.ht += lineNetHt;
+          acc.discount += lineDiscount;
+          acc.fodec += lineFodec;
+          acc.tva += lineTva;
+          return acc;
+        },
+        { ht: 0, discount: 0, fodec: 0, tva: 0 }
+      );
 
     const netTotalHt = lineTotals.ht - (data.globalDiscount || 0);
     const totalTtc = netTotalHt + lineTotals.fodec + lineTotals.tva + data.stampDuty;
@@ -293,7 +296,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
             label={t('docType')}
             value={data.documentType}
             onValueChange={(value) => updateField('documentType', value as DocTypeCode)}
-            options={Object.entries(DOCUMENT_TYPES).map(([code, label]) => ({
+            options={(Object.entries(DOCUMENT_TYPES) as [DocTypeCode, string][]).map(([code, label]) => ({
               value: code,
               label: `${code} — ${label.toUpperCase()}`
             }))}
@@ -514,48 +517,48 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
-              {data.lines.map((line) => (
+              {data.lines.map((line: any) => (
                 <React.Fragment key={line.id}>
                   <tr className="group hover:bg-slate-800/50 transition-all duration-200">
                     <td className="py-4 pr-3"><input type="text" value={line.itemCode} onChange={(e) => {
-                      const lines = data.lines.map(l => l.id === line.id ? {...l, itemCode: e.target.value} : l);
+                      const lines = data.lines.map((l: any) => l.id === line.id ? {...l, itemCode: e.target.value} : l);
                       onChange({...data, lines});
                     }} className="w-full p-2 border border-slate-700 rounded bg-slate-900 text-xs font-mono text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" /></td>
                     <td className="py-4 px-3"><input type="text" value={line.description} onChange={(e) => {
-                      const lines = data.lines.map(l => l.id === line.id ? {...l, description: e.target.value} : l);
+                      const lines = data.lines.map((l: any) => l.id === line.id ? {...l, description: e.target.value} : l);
                       onChange({...data, lines});
                     }} className="w-full p-2 border border-slate-700 rounded bg-slate-900 text-sm font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" /></td>
                     <td className="py-4 px-3">
                       <select value={line.unit} onChange={(e) => {
-                        const lines = data.lines.map(l => l.id === line.id ? {...l, unit: e.target.value} : l);
+                        const lines = data.lines.map((l: any) => l.id === line.id ? {...l, unit: e.target.value} : l);
                         onChange({...data, lines});
                       }} className="w-full p-2 border border-slate-700 rounded bg-slate-900 text-xs font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors cursor-pointer">
-                        {UNIT_CODES.map(u => <option key={u.code} value={u.code}>{u.code}</option>)}
+                        {UNIT_CODES.map((u) => <option key={u.code} value={u.code}>{u.code}</option>)}
                       </select>
                     </td>
                     <td className="py-4 px-3"><input type="number" step="0.001" value={line.quantity} onChange={(e) => {
-                      const lines = data.lines.map(l => l.id === line.id ? {...l, quantity: parseFloat(e.target.value) || 0} : l);
+                      const lines = data.lines.map((l: any) => l.id === line.id ? {...l, quantity: parseFloat(e.target.value) || 0} : l);
                       onChange({...data, lines});
                     }} className="w-full p-2 border border-slate-700 rounded bg-slate-900 text-sm text-center font-mono text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" /></td>
                     <td className="py-4 px-3"><input type="number" step="0.001" value={line.unitPrice} onChange={(e) => {
-                      const lines = data.lines.map(l => l.id === line.id ? {...l, unitPrice: parseFloat(e.target.value) || 0} : l);
+                      const lines = data.lines.map((l: any) => l.id === line.id ? {...l, unitPrice: parseFloat(e.target.value) || 0} : l);
                       onChange({...data, lines});
                     }} className="w-full p-2 border border-slate-700 rounded bg-slate-900 text-sm text-right font-mono text-slate-100 focus:outline-none focus:border-slate-600 transition-colors" /></td>
                     <td className="py-4 px-3 text-center">
                       <input type="checkbox" checked={line.fodec} onChange={(e) => {
-                        const lines = data.lines.map(l => l.id === line.id ? {...l, fodec: e.target.checked} : l);
+                        const lines = data.lines.map((l: any) => l.id === line.id ? {...l, fodec: e.target.checked} : l);
                         onChange({...data, lines});
                       }} className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-slate-200 focus:border-slate-600 transition-all cursor-pointer" />
                     </td>
                     <td className="py-4 px-3">
                       <select value={line.taxRate} onChange={(e) => {
-                        const lines = data.lines.map(l => l.id === line.id ? {...l, taxRate: parseFloat(e.target.value)} : l);
+                        const lines = data.lines.map((l: any) => l.id === line.id ? {...l, taxRate: parseFloat(e.target.value)} : l);
                         onChange({...data, lines});
                       }} className="w-full p-2 border border-slate-700 rounded bg-slate-900 text-xs font-medium text-slate-100 focus:outline-none focus:border-slate-600 transition-colors cursor-pointer">
                         <option value="0.19">19%</option><option value="0.13">13%</option><option value="0.07">7%</option><option value="0">0%</option>
                       </select>
                     </td>
-                    <td className="py-4 pl-3"><button onClick={() => onChange({...data, lines: data.lines.filter(l => l.id !== line.id)})} className="text-slate-500 hover:text-red-400 transition-colors text-lg">×</button></td>
+                    <td className="py-4 pl-3"><button onClick={() => onChange({ ...data, lines: data.lines.filter((l: InvoiceLine) => l.id !== line.id) })} className="text-slate-500 hover:text-red-400 transition-colors text-lg">×</button></td>
                   </tr>
                   
                   {/* CONDITIONAL VISIBILITY: Exemption Justification */}
@@ -571,7 +574,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
                               placeholder="..." 
                               value={line.exemptionReason || ''} 
                               onChange={(e) => {
-                                const lines = data.lines.map(l => l.id === line.id ? {...l, exemptionReason: e.target.value} : l);
+                                const lines = data.lines.map((l: any) => l.id === line.id ? {...l, exemptionReason: e.target.value} : l);
                                 onChange({...data, lines});
                               }} 
                               className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 focus:outline-none focus:border-slate-600 transition-colors text-sm font-medium text-slate-100 placeholder-slate-600" 
@@ -629,12 +632,12 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
 
               {data.allowances && data.allowances.length > 0 ? (
                 <div className="space-y-3">
-                  {data.allowances.map((alc) => (
+                  {data.allowances?.map((alc: any) => (
                     <div key={alc.id} className="grid grid-cols-1 md:grid-cols-4 gap-2 p-3 bg-slate-900 border border-slate-700 rounded-lg hover:border-slate-600 transition-colors">
                       <select 
                         value={alc.type} 
                         onChange={(e) => {
-                          const updated = data.allowances!.map(a => a.id === alc.id ? {...a, type: e.target.value as any} : a);
+                          const updated = data.allowances!.map((a: any) => a.id === alc.id ? { ...a, type: e.target.value as any } : a);
                           onChange({...data, allowances: updated});
                         }}
                         className="px-3 py-2 border border-slate-700 rounded bg-slate-800 text-sm text-slate-100 focus:outline-none focus:border-slate-600 transition-colors cursor-pointer"
@@ -646,7 +649,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
                         type="text" 
                         value={alc.description} 
                         onChange={(e) => {
-                          const updated = data.allowances!.map(a => a.id === alc.id ? {...a, description: e.target.value} : a);
+                          const updated = data.allowances!.map((a: any) => a.id === alc.id ? { ...a, description: e.target.value } : a);
                           onChange({...data, allowances: updated});
                         }}
                         placeholder="Description"
@@ -657,7 +660,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
                         step="0.001" 
                         value={alc.amount} 
                         onChange={(e) => {
-                          const updated = data.allowances!.map(a => a.id === alc.id ? {...a, amount: parseFloat(e.target.value) || 0} : a);
+                          const updated = data.allowances!.map((a: any) => a.id === alc.id ? { ...a, amount: parseFloat(e.target.value) || 0 } : a);
                           onChange({...data, allowances: updated});
                         }}
                         placeholder="0.00"
@@ -665,7 +668,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
                       />
                       <button
                         onClick={() => {
-                          const updated = data.allowances!.filter(a => a.id !== alc.id);
+                          const updated = data.allowances!.filter((a: any) => a.id !== alc.id);
                           onChange({...data, allowances: updated});
                         }}
                         className="px-3 py-2 bg-slate-700 hover:bg-red-600/20 text-slate-300 hover:text-red-400 rounded text-sm font-medium transition-colors"
@@ -693,7 +696,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
           label={t('paymentMeans')}
           value={data.paymentMeans}
           onValueChange={(value) => updateField('paymentMeans', value)}
-          options={Object.entries(PAYMENT_MEANS).map(([code, label]) => ({
+          options={(Object.entries(PAYMENT_MEANS) as [keyof typeof PAYMENT_MEANS, string][]).map(([code, label]) => ({
             value: code,
             label: `${code} - ${label.toUpperCase()}`
           }))}
@@ -1007,7 +1010,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
                 </thead>
                 <tbody>
                   {data.lines
-                    .reduce((acc, line) => {
+                    .reduce((acc: Array<{rate: string; base: number; amount: number}>, line: any) => {
                       const rate = (line.taxRate * 100).toFixed(0) + '%';
                       const existing = acc.find(r => r.rate === rate);
                       const base = line.quantity * line.unitPrice * (1 - line.discountRate / 100);
@@ -1020,7 +1023,7 @@ const InvoiceForm: React.FC<Props> = ({ data, onChange, lang, onSave, validation
                       }
                       return acc;
                     }, [] as Array<{rate: string, base: number, amount: number}>)
-                    .map((row) => (
+                    .map((row: { rate: string; base: number; amount: number }) => (
                       <tr key={row.rate} className="border-b border-slate-700 hover:bg-slate-800/30">
                         <td className="py-2 px-3 font-medium text-slate-300">{row.rate}</td>
                         <td className="py-2 px-3 text-right text-slate-400">{row.base.toFixed(3)}</td>

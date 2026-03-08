@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import {
-  loginUser,
-  registerUser,
-  logoutUser,
-  refreshTokenUser,
-  getCurrentUser,
-  verifyEmailCode,
-  resendVerificationCode,
-} from '@/lib/api-client';
+  useCurrentUser,
+  useLogin,
+  useRegister,
+  useLogout,
+  useRefreshToken,
+  useVerifyEmail,
+  useResendCode,
+} from '@/hooks/useAuthQueries';
 import { queryClient } from '@/lib/queryClient';
 import toast from 'react-hot-toast';
 
@@ -29,8 +29,6 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   verifyEmail: (email: string, code: string) => Promise<void>;
   resendCode: (email: string) => Promise<void>;
-  checkAuth: () => Promise<void>;
-  refreshToken: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,10 +47,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isRefreshingRef = useRef<boolean>(false);
 
-  // Check auth on mount and set up refresh interval
+  // TanStack Query hooks
+  const { data: currentUser, isLoading: userLoading, error: userError } = useCurrentUser();
+  const loginMutation = useLogin();
+  const registerMutation = useRegister();
+  const logoutMutation = useLogout();
+  const refreshMutation = useRefreshToken();
+  const verifyMutation = useVerifyEmail();
+  const resendMutation = useResendCode();
+
+  // Sync user data from query to local state
   useEffect(() => {
-    checkAuth();
-  }, []);
+    if (currentUser) {
+      setUser(currentUser);
+      setIsAuthenticated(true);
+      setNeedsEmailVerification(false);
+      setPendingEmail(null);
+    } else if (userError) {
+      // Query failed, user not authenticated
+      setUser(null);
+      setIsAuthenticated(false);
+    }
+    setIsLoading(userLoading);
+  }, [currentUser, userError, userLoading]);
 
   // Set up token refresh interval
   useEffect(() => {
@@ -62,13 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const token = localStorage.getItem('teif_access_token');
         if (token && shouldRefreshToken(token) && !isRefreshingRef.current) {
           isRefreshingRef.current = true;
-          refreshToken()
-            .catch(error => {
-              console.error('Token auto-refresh failed:', error);
-            })
-            .finally(() => {
+          refreshMutation.mutate(undefined, {
+            onSettled: () => {
               isRefreshingRef.current = false;
-            });
+            },
+          });
         }
       }, TOKEN_REFRESH_INTERVAL);
 
@@ -78,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       };
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, refreshMutation]);
 
   /**
    * Check if token should be refreshed based on expiry time
@@ -101,87 +116,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   /**
-   * Verify token with backend and restore user session
-   */
-  const checkAuth = async () => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem('teif_access_token');
-      
-      if (!token) {
-        setUser(null);
-        setIsAuthenticated(false);
-        return;
-      }
-
-      // Try to refresh if token is about to expire
-      if (shouldRefreshToken(token)) {
-        await refreshToken();
-        return;
-      }
-
-      // Verify token with backend
-      const userData = await getCurrentUser();
-      
-      setUser(userData);
-      setIsAuthenticated(true);
-    } catch (error) {
-      // Token invalid or expired - try to refresh
-      try {
-        await refreshToken();
-      } catch {
-        // Refresh also failed
-        console.error('Auth check failed:', error);
-        localStorage.removeItem('teif_auth_token');
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * Refresh the access token using refresh token from httpOnly cookie
-   */
-  const refreshToken = async () => {
-    try {
-      // Call refresh endpoint
-      // Refresh token is automatically sent via httpOnly cookie
-      const data = await refreshTokenUser();
-      
-      // New access token is returned and stored in localStorage by refreshTokenUser()
-      // New refresh token is set as httpOnly cookie by backend
-      
-      console.log('Token refreshed successfully');
-    } catch (error) {
-      // Refresh failed, need to re-login
-      console.error('Token refresh failed:', error);
-      localStorage.removeItem('teif_access_token');
-      setUser(null);
-      setIsAuthenticated(false);
-      throw error;
-    }
-  };
-
-  /**
    * Login with email and password
    * Comprehensive error handling
    */
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const userData = await loginUser(email, password);
-
-      setUser(userData);
-      setIsAuthenticated(true);
-      setNeedsEmailVerification(false);
-      setPendingEmail(null);
-      
-      toast.success(`Welcome back, ${userData.name}!`);
+      await loginMutation.mutateAsync({ email, password });
+      // Mutation success is handled in the hook
     } catch (error) {
-      const errorMessage = (error as any)?.message || 'Login failed';
-      // Don't show toast here - let the component handle it for better error display
       setUser(null);
       setIsAuthenticated(false);
       // Re-throw so component can handle with detailed error parsing
@@ -198,15 +141,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     try {
-      const userData = await registerUser(name, email, password);
+      await registerMutation.mutateAsync({ name, email, password });
 
       // Email verification needed
       setNeedsEmailVerification(true);
       setPendingEmail(email);
       setUser(null);
       setIsAuthenticated(false);
-      
-      toast.success('Check your email for verification code!');
     } catch (error) {
       const errorMessage = (error as any)?.message || 'Registration failed';
       toast.error(errorMessage);
@@ -226,14 +167,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyEmail = async (email: string, code: string) => {
     setIsLoading(true);
     try {
-      const userData = await verifyEmailCode(email, code);
+      await verifyMutation.mutateAsync({ email, code });
 
-      setUser(userData);
-      setIsAuthenticated(true);
       setNeedsEmailVerification(false);
       setPendingEmail(null);
-      
-      toast.success('Email verified! Welcome!');
     } catch (error) {
       const errorMessage = (error as any)?.message || 'Email verification failed';
       toast.error(errorMessage);
@@ -248,8 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const resendCode = async (email: string) => {
     try {
-      await resendVerificationCode(email);
-      toast.success('Verification code resent!');
+      await resendMutation.mutateAsync(email);
     } catch (error) {
       const errorMessage = (error as any)?.message || 'Failed to resend code';
       toast.error(errorMessage);
@@ -265,7 +201,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await logoutUser();
+      await logoutMutation.mutateAsync();
+
       localStorage.removeItem('teif_access_token');
       setUser(null);
       setIsAuthenticated(false);
@@ -274,10 +211,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (refreshIntervalRef.current) {
         clearInterval(refreshIntervalRef.current);
       }
-      
-      // Clear all cached queries after logout
-      queryClient.clear();
-      toast.success('Logged out successfully');
     } catch (error) {
       console.error('Logout failed:', error);
       // Still clear local state even if logout fails
@@ -304,8 +237,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         verifyEmail,
         resendCode,
-        checkAuth,
-        refreshToken,
       }}
     >
       {children}

@@ -13,6 +13,7 @@ import {
   deleteInvoice,
   getInvoicePdf,
   getInvoiceXml,
+  convertQuoteToInvoice,
 } from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import type { InvoiceData } from '@teif/shared/types';
@@ -227,6 +228,29 @@ export function useDownloadXml() {
     },
     onError: (error: any) => {
       const message = error.message || 'Failed to download XML';
+      toast.error(message);
+    },
+  });
+}
+
+/**
+ * Hook to convert a quote into an invoice
+ * Automatically refreshes lists on success.
+ */
+export function useConvertQuote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => convertQuoteToInvoice(id),
+    onSuccess: (invoice: any) => {
+      // Invalidate lists so quotes/invoices refresh
+      queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.lists() });
+      // Cache the converted invoice detail
+      queryClient.setQueryData(invoiceQueryKeys.detail(invoice.id), invoice);
+      toast.success('Quote converted to invoice successfully');
+    },
+    onError: (error: any) => {
+      const message = error.message || 'Failed to convert quote';
       toast.error(message);
     },
   });

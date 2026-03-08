@@ -15,6 +15,7 @@ export const InvoiceCreateApiSchema = z.object({
   // Basic invoice fields
   documentType: z.string(),
   documentNumber: z.string().default(''),
+  documentCategory: z.enum(['invoice', 'quote']).default('invoice'),
   invoiceNumber: z.string().optional(),
   orderReference: z.string().nullable().optional(),
   currency: z.string().optional(),

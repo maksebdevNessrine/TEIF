@@ -112,6 +112,7 @@ invoiceRoutes.get('/', async (c: Context) => {
     dateFrom: c.req.query('dateFrom'),
     dateTo: c.req.query('dateTo'),
     documentType: c.req.query('documentType'),
+    documentCategory: c.req.query('documentCategory'),
     minAmount: c.req.query('minAmount') ? Number(c.req.query('minAmount')) : undefined,
     maxAmount: c.req.query('maxAmount') ? Number(c.req.query('maxAmount')) : undefined,
     status: c.req.query('status'),

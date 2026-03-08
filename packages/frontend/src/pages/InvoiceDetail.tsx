@@ -1,18 +1,19 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useInvoice, useUpdateInvoice, useDownloadPdf, useDownloadXml } from '@/hooks/useInvoices';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useInvoice, useUpdateInvoice, useDownloadPdf, useDownloadXml, useConvertQuote } from '@/hooks/useInvoices';
 import InvoiceForm from '@/components/InvoiceForm';
 import { InvoiceDetailSkeleton } from '@/components/SkeletonLoaders';
 import { ErrorMessage, NotFound } from '@/components/ErrorDisplay';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTranslation, getDocumentTypeLabel, getPaymentMeansLabel } from '@/services/i18n';
 import { getTextAlignClass } from '@/utils/rtl';
-import type { InvoiceData, DocTypeCode, PaymentMeansCode } from '@teif/shared/types';
+import type { InvoiceData, InvoiceLine, DocTypeCode, PaymentMeansCode } from '@teif/shared/types';
 
 export function InvoiceDetail() {
   const { id } = useParams<{ id: string }>();
   const { language } = useLanguage();
   const t = useTranslation(language);
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<InvoiceData | null>(null);
 
@@ -20,6 +21,7 @@ export function InvoiceDetail() {
   const { mutate: updateInvoice, isPending: isUpdating } = useUpdateInvoice();
   const { mutate: downloadPdf, isPending: isDownloading } = useDownloadPdf();
   const { mutate: downloadXml, isPending: isDownloadingXml } = useDownloadXml();
+  const { mutate: convertQuote, isPending: isConverting } = useConvertQuote();
 
   const handleEditClick = () => {
     if (invoice) {
@@ -151,7 +153,7 @@ export function InvoiceDetail() {
             <p className="text-sm text-slate-400 mt-1">{invoice.documentType}</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={handleDownloadPdf}
             disabled={isDownloading}
@@ -166,6 +168,22 @@ export function InvoiceDetail() {
           >
             {isDownloadingXml ? t('downloading') : t('downloadXml')}
           </button>
+          {invoice?.documentCategory === 'quote' && (
+            <button
+              onClick={() => {
+                if (!invoice?.id) return;
+                convertQuote(invoice.id, {
+                  onSuccess: (converted) => {
+                    navigate(`/invoices/${converted.id}`);
+                  },
+                });
+              }}
+              disabled={isConverting}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium"
+            >
+              {isConverting ? 'Converting...' : 'Convert to Invoice'}
+            </button>
+          )}
           <button
             onClick={handleEditClick}
             className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
@@ -238,7 +256,7 @@ export function InvoiceDetail() {
               </tr>
             </thead>
             <tbody>
-              {invoice.lines.map((line, idx) => {
+              {invoice.lines.map((line: InvoiceLine, idx: number) => {
                 const lineTotal = line.quantity * line.unitPrice;
                 return (
                   <tr key={idx} className="border-b border-slate-700 hover:bg-slate-700/20">

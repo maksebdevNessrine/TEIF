@@ -1,62 +1,24 @@
-import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useState } from 'react';
 import { useTranslation } from '@/services/i18n';
 import { SignatureUpload } from '@/components/SignatureUpload';
+import { useSignatureStatus, useRevokeSignature } from '@/hooks/useSignature';
 import type { UserSignatureProfile } from '@teif/shared/types';
 
 export function Settings() {
   const { user } = useAuth();
   const { language } = useLanguage();
   const t = useTranslation(language);
-  const [signatureStatus, setSignatureStatus] = useState<UserSignatureProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  // Use TanStack Query hooks for signature management
+  const { data: signatureStatus, isLoading: loading, error: signatureError } = useSignatureStatus();
   const [error, setError] = useState<string | null>(null);
-
-  // Fetch signature status
-  useEffect(() => {
-    const fetchSignatureStatus = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await fetch('/api/signature/status', {
-          credentials: 'include',
-        });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            // Not authenticated, this is expected if user hasn't uploaded
-            setSignatureStatus(null);
-            return;
-          }
-          throw new Error('Failed to fetch signature status');
-        }
-
-        // Some backends may return 204 No Content or an empty body.
-        // Safely handle empty responses before parsing JSON.
-        const text = await response.text();
-        if (!text) {
-          setSignatureStatus(null);
-          return;
-        }
-
-        const data: UserSignatureProfile = JSON.parse(text);
-        setSignatureStatus(data);
-      } catch (err) {
-        console.error('Failed to fetch signature status:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load signature status');
-        setSignatureStatus(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSignatureStatus();
-  }, []);
+  const revokeMutation = useRevokeSignature();
 
   const handleSignatureUploadSuccess = (profile: UserSignatureProfile) => {
-    setSignatureStatus(profile);
-    setError(null);
+    // The hook automatically updates the cache, no manual state update needed
+    console.log('Signature uploaded successfully:', profile);
   };
 
   const handleRevokeCertificate = async () => {
@@ -65,19 +27,10 @@ export function Settings() {
     }
 
     try {
-      const response = await fetch('/api/signature/', {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to revoke certificate');
-      }
-
-      setSignatureStatus(null);
-      setError(null);
+      await revokeMutation.mutateAsync();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to revoke certificate');
+      // Error is handled by the hook
+      console.error('Failed to revoke certificate:', err);
     }
   };
 
@@ -210,9 +163,9 @@ export function Settings() {
       </div>
 
       {/* Error Alert */}
-      {error && (
+      {(error || signatureError) && (
         <div className="bg-red-900/20 border border-red-700 rounded-lg p-4">
-          <p className="text-red-300 text-sm">{error}</p>
+          <p className="text-red-300 text-sm">{error || String(signatureError)}</p>
         </div>
       )}
     </div>

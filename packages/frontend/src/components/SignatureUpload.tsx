@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useUploadSignature } from '@/hooks/useSignature';
 import type { SignatureUploadResponse, UserSignatureProfile } from '@teif/shared/types';
 
 interface SignatureUploadProps {
@@ -14,11 +15,13 @@ interface SignatureUploadProps {
 }
 
 export function SignatureUpload({ onSuccess, onError }: SignatureUploadProps) {
-  const [loading, setLoading] = useState(false);
   const [pin, setPin] = useState('');
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Use TanStack Query mutation hook
+  const uploadMutation = useUploadSignature();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -61,52 +64,16 @@ export function SignatureUpload({ onSuccess, onError }: SignatureUploadProps) {
       return;
     }
 
-    setLoading(true);
-
     try {
-      // Create FormData
-      const formData = new FormData();
-      formData.append('certificate', certificateFile);
-      formData.append('pin', pin);
-
-      // Upload certificate
-      const response = await fetch('/api/signature/upload', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-
-      const data: SignatureUploadResponse = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to upload certificate');
-      }
-
+      const profile = await uploadMutation.mutateAsync({ certificateFile, pin });
       setSuccess('Certificate uploaded successfully!');
       setCertificateFile(null);
       setPin('');
-
-      if (data.data) {
-        onSuccess?.({
-          userId: '',
-          hasCertificate: true,
-          status: data.data.status,
-          certificateSubject: data.data.certificateSubject,
-          certificateIssuer: data.data.certificateIssuer,
-          certificateValidFrom: data.data.validFrom,
-          certificateValidUntil: data.data.validUntil,
-          daysRemaining: Math.ceil(
-            (new Date(data.data.validUntil).getTime() - new Date().getTime()) /
-              (1000 * 60 * 60 * 24)
-          ),
-        });
-      }
+      onSuccess?.(profile);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred';
       setError(errorMessage);
       onError?.(errorMessage);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -139,7 +106,7 @@ export function SignatureUpload({ onSuccess, onError }: SignatureUploadProps) {
             id="certificate"
             accept=".p12,.pfx"
             onChange={handleFileChange}
-            disabled={loading}
+            disabled={uploadMutation.isPending}
             className="block w-full text-sm text-gray-500
               file:mr-4 file:py-2 file:px-4
               file:rounded file:border-0
@@ -168,7 +135,7 @@ export function SignatureUpload({ onSuccess, onError }: SignatureUploadProps) {
             id="pin"
             value={pin}
             onChange={(e) => setPin(e.target.value)}
-            disabled={loading}
+            disabled={uploadMutation.isPending}
             placeholder="Enter your certificate PIN"
             className="w-full px-3 py-2 border border-gray-300 rounded-md
               focus:outline-none focus:ring-2 focus:ring-blue-500
@@ -182,13 +149,13 @@ export function SignatureUpload({ onSuccess, onError }: SignatureUploadProps) {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={loading || !certificateFile || !pin}
+          disabled={uploadMutation.isPending || !certificateFile || !pin}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400
             text-white font-semibold py-2 px-4 rounded-md
             transition-colors duration-200
             disabled:cursor-not-allowed"
         >
-          {loading ? 'Uploading...' : 'Upload Certificate'}
+          {uploadMutation.isPending ? 'Uploading...' : 'Upload Certificate'}
         </button>
       </form>
 

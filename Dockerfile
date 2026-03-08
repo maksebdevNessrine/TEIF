@@ -22,21 +22,18 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init curl
+# Install signal handling and curl for health checks
+RUN apk add --no-cache curl
 
-# Copy from builder
-COPY --from=backend-builder /build/packages/backend/package.json ./
-COPY --from=backend-builder /build/packages/backend/node_modules ./node_modules
-COPY --from=backend-builder /build/packages/backend/src ./src
+# Copy from builder - get all node_modules and packages structure
+COPY --from=backend-builder /build/node_modules ./node_modules
+COPY --from=backend-builder /build/packages/backend/dist ./dist
 COPY --from=backend-builder /build/packages/backend/prisma ./prisma
+COPY --from=backend-builder /build/packages/backend/package.json ./
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Run with dumb-init to handle signals properly
-ENTRYPOINT ["/sbin/dumb-init", "--"]
-
-# Start backend
-CMD ["node", "--require", "tsx", "src/index.ts"]
+# Start compiled backend (no tsx needed - it's pre-compiled JavaScript)
+CMD ["node", "dist/index.js"]

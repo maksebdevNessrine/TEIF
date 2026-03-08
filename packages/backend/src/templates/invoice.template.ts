@@ -15,6 +15,7 @@ interface InvoiceWithRelations extends Omit<InvoiceResponse, 'documentNumber' | 
   allowances: AllowanceCharge[];
   // Override required fields
   documentNumber: string;
+  documentCategory?: 'invoice' | 'quote' | 'INVOICE' | 'QUOTE';
   invoiceDate?: string | Date;
   dueDate?: string | Date;
   // Database fields that might not be in InvoiceResponse
@@ -58,6 +59,7 @@ interface InvoiceWithRelations extends Omit<InvoiceResponse, 'documentNumber' | 
 const translations: Record<Language, Record<string, string>> = {
   fr: {
     invoice: 'Facture',
+    quote: 'Devis',
     invoiceDate: 'Date de la facture',
     dueDate: 'Échéance',
     deliveryDate: 'Date de livraison',
@@ -109,6 +111,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   en: {
     invoice: 'Invoice',
+    quote: 'Quote',
     invoiceDate: 'Invoice Date',
     dueDate: 'Due Date',
     deliveryDate: 'Delivery Date',
@@ -160,6 +163,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   ar: {
     invoice: 'فاتورة',
+    quote: 'عرض',
     invoiceDate: 'تاريخ الفاتورة',
     dueDate: 'تاريخ الاستحقاق',
     deliveryDate: 'تاريخ التسليم',
@@ -627,7 +631,7 @@ export function generateInvoiceHtml(
     <!-- Header -->
     <div class="header">
       <div class="header-left">
-        <div class="document-title">${t('invoice', language)}</div>
+        <div class="document-title">${t(invoice.documentCategory === 'QUOTE' ? 'quote' : 'invoice', language)}</div>
         <div class="document-number">#${invoice.documentNumber}</div>
       </div>
       <div class="header-right">

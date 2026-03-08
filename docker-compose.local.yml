@@ -1,0 +1,51 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./packages/backend/Dockerfile.prod
+    image: maksebdev3/teif-backend:local
+    ports:
+      - "4000:3000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:password@postgres:5432/teif_dev?schema=public"
+      JWT_SECRET: "0000000000000000000000000000000000000000000000000000000000000000"
+      JWT_REFRESH_SECRET: "1111111111111111111111111111111111111111111111111111111111111111"
+      SIGNATURE_ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      FRONTEND_URL: "http://localhost:5173"
+    depends_on:
+      - postgres
+    networks:
+      - teif
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./packages/frontend/Dockerfile.prod
+      args:
+        VITE_API_BASE_URL: "/api"
+    image: maksebdev3/teif-frontend:local
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - teif
+
+  db-init:
+    image: maksebdev3/teif-backend:local
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: "postgresql://postgres:password@postgres:5432/teif_dev?schema=public"
+      JWT_SECRET: "0000000000000000000000000000000000000000000000000000000000000000"
+      JWT_REFRESH_SECRET: "1111111111111111111111111111111111111111111111111111111111111111"
+      SIGNATURE_ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      FRONTEND_URL: "http://localhost:5173"
+    command: sh -c "pnpm exec prisma migrate deploy && pnpm exec prisma db seed"
+    restart: "no"
+    networks:
+      - teif
+
+networks:
+  teif:
+    driver: bridge

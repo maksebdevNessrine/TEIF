@@ -19,6 +19,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Document category distinguishes invoices from quotes (same table)
+enum DocumentCategory {
+  INVOICE
+  QUOTE
+}
+
 // User model for authentication
 model User {
   id                          String    @id @default(cuid())
@@ -124,6 +130,7 @@ model Invoice {
   periodEnd             DateTime? // I-36 - Service period end
   operationNature       String    // GOODS, SERVICES, MIXED
   currency              String    @default("TND")
+  documentCategory      DocumentCategory @default(INVOICE)
   
   // Reference Fields (I-81, I-82, I-83)
   orderReference        String?   // I-81 - Order reference

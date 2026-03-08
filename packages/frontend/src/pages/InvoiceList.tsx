@@ -15,6 +15,11 @@ export function InvoiceList() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const { language } = useLanguage();
   const t = useTranslation(language);
+  const categoryOptions = [
+    { key: 'invoice', label: t('invoices') },
+    { key: 'quote', label: t('quotes') },
+    { key: 'all', label: t('allDocuments') },
+  ] as const;
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Parse filters from URL
@@ -25,6 +30,7 @@ export function InvoiceList() {
     dateFrom: searchParams.get('dateFrom') || '',
     dateTo: searchParams.get('dateTo') || '',
     documentType: searchParams.get('documentType') || '',
+    documentCategory: (searchParams.get('documentCategory') as 'invoice' | 'quote' | 'all') || 'invoice',
     minAmount: searchParams.get('minAmount') ? parseFloat(searchParams.get('minAmount')!) : undefined,
     maxAmount: searchParams.get('maxAmount') ? parseFloat(searchParams.get('maxAmount')!) : undefined,
     status: searchParams.get('status') || '',
@@ -85,6 +91,21 @@ export function InvoiceList() {
     setSearchParams(newFilters);
   };
 
+  const pageTitle =
+    filters.documentCategory === 'quote'
+      ? t('quotes')
+      : filters.documentCategory === 'all'
+      ? 'All Documents'
+      : t('invoices');
+
+  const newButtonLabel =
+    filters.documentCategory === 'quote' ? t('newQuote') : t('newInvoice');
+
+  const newInvoicePath =
+    filters.documentCategory === 'quote'
+      ? '/invoices/new?documentCategory=quote'
+      : '/invoices/new';
+
   const handleClearAllFilters = () => {
     setSearchInput('');
     setSearchParams(new URLSearchParams({
@@ -92,6 +113,7 @@ export function InvoiceList() {
       limit: '20',
       sortBy: 'date',
       sortOrder: 'desc',
+      documentCategory: 'invoice',
     }));
   };
 
@@ -153,7 +175,19 @@ export function InvoiceList() {
         label: `Status: ${statusLabel}`,
       });
     }
-    
+
+    if (filters.documentCategory && filters.documentCategory !== 'invoice') {
+        const categoryLabel =
+          filters.documentCategory === 'quote'
+            ? t('quotes')
+            : filters.documentCategory === 'all'
+            ? t('allDocuments')
+            : filters.documentCategory;
+        active.push({
+          key: 'documentCategory',
+          label: `${t('category')}: ${categoryLabel}`,
+        });
+      }
     return active;
   };
 
@@ -233,22 +267,43 @@ export function InvoiceList() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-            <h1 className="text-3xl font-bold text-white">{t('invoices')}</h1>
-            <p className="text-gray-400 mt-2">{total} {t('totalInvoices')}</p>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white">{pageTitle}</h1>
+            <p className="text-gray-400 mt-2">
+              {total} {filters.documentCategory === 'quote' ? t('totalQuotes') : t('totalInvoices')}
+            </p>
           </div>
           <Link
-            to="/invoices/new"
+            to={newInvoicePath}
             className="px-4 py-2 text-white font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors whitespace-nowrap flex items-center justify-center h-10"
           >
-            + {t('newInvoice')}
+            + {newButtonLabel}
           </Link>
         </div>
 
+        <div className="flex flex-wrap gap-2">
+          {categoryOptions.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => handleFilterChange('documentCategory', key)}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                filters.documentCategory === key
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-700 text-slate-200 hover:bg-slate-600'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 space-y-4">
         {/* Main Filters Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           <div>
             <label htmlFor="search" className="block text-xs font-medium text-slate-400 mb-1">{t('searchInvoices')}</label>
             <input
@@ -287,6 +342,22 @@ export function InvoiceList() {
               className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-white focus:outline-none focus:border-emerald-600 disabled:opacity-50 transition-colors"
               aria-label="Filter by date to"
             />
+          </div>
+
+          <div>
+            <label htmlFor="documentCategory" className="block text-xs font-medium text-slate-400 mb-1">{t('category')}</label>
+            <select
+              id="documentCategory"
+              value={filters.documentCategory}
+              onChange={(e) => handleFilterChange('documentCategory', e.target.value)}
+              disabled={isFetching}
+              className="w-full px-3 py-2 h-10 bg-slate-900 border border-slate-700 rounded text-white focus:outline-none focus:border-emerald-600 cursor-pointer disabled:opacity-50 transition-colors overflow-ellipsis"
+              aria-label="Filter by document category"
+            >
+              <option value="invoice">{t('invoices')}</option>
+              <option value="quote">{t('quotes')}</option>
+              <option value="all">{t('allDocuments')}</option>
+            </select>
           </div>
 
           <div>

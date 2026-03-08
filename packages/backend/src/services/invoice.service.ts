@@ -70,6 +70,7 @@ export async function createInvoice(
     const createdInvoice = await tx.invoice.create({
       data: {
         userId,
+        documentCategory: (validatedData.documentCategory || 'invoice').toUpperCase() as any,
         documentType: validatedData.documentType,
         documentNumber: validatedData.documentNumber || '',
         invoiceDate: new Date(validatedData.invoiceDate || new Date()),
@@ -292,6 +293,7 @@ export async function updateInvoice(
       data: {
         ...(validatedData.documentType && { documentType: validatedData.documentType }),
         ...(validatedData.documentNumber !== undefined && { documentNumber: validatedData.documentNumber || '' }),
+        ...(validatedData.documentCategory && { documentCategory: (validatedData.documentCategory || 'invoice').toUpperCase() as any }),
         ...(validatedData.invoiceDate && { invoiceDate: new Date(validatedData.invoiceDate) }),
         ...(validatedData.dueDate && { dueDate: new Date(validatedData.dueDate) }),
         ...(supplierId && { supplierId }),
@@ -496,12 +498,21 @@ async function searchInvoices(
     
     whereConditions.push(Prisma.sql`i."userId" = ${userId}`);
     whereConditions.push(Prisma.sql`i."deletedAt" IS NULL`);
+
+    // Filter by document category (invoice/quote). If not specified, default to invoice.
+    const rawCategory = filters.documentCategory?.toString().toUpperCase();
+    const categoryFilter = rawCategory || 'INVOICE';
+
+    // If user explicitly requests 'all', do not apply category filtering
+    if (categoryFilter !== 'ALL') {
+      whereConditions.push(
+        Prisma.sql`i."documentCategory" = ${categoryFilter}`
+      );
+    }
+
     whereConditions.push(
       Prisma.sql`(
         similarity(i."documentNumber", ${search}) > ${similarity_threshold}
-        OR similarity(s.name, ${search}) > ${similarity_threshold}
-        OR similarity(b.name, ${search}) > ${similarity_threshold}
-        OR similarity(il.description, ${search}) > ${similarity_threshold}
       )`
     );
 
@@ -572,6 +583,7 @@ export async function listInvoices(
     dateFrom,
     dateTo,
     documentType,
+    documentCategory,
     minAmount,
     maxAmount,
     status,
@@ -612,6 +624,12 @@ export async function listInvoices(
     userId,
     deletedAt: null,
   };
+
+  // Filter by document category (invoice vs quote)
+  const category = (documentCategory || 'invoice').toString().toUpperCase();
+  if (category !== 'ALL') {
+    where.documentCategory = category;
+  }
 
   // Add basic filters
   if (status) {
@@ -722,6 +740,7 @@ export async function listInvoices(
       dateFrom,
       dateTo,
       documentType,
+      documentCategory: category,
       minAmount,
       maxAmount,
       status,
@@ -733,10 +752,112 @@ export async function listInvoices(
   };
 }
 
+export async function convertQuoteToInvoice(
+  userId: string,
+  quoteId: string,
+  overrides: Partial<any> = {}
+): Promise<any> {
+  const quote = await getInvoiceById(userId, quoteId);
+  if (quote.documentCategory !== 'QUOTE') {
+    throw new AppError(400, 'Only quotes can be converted to invoices');
+  }
+  if (quote.metadata?.convertedToInvoiceId) {
+    throw new AppError(400, 'Quote has already been converted to an invoice');
+  }
+
+  const baseDocumentNumber = quote.documentNumber?.startsWith('QUO-')
+    ? quote.documentNumber.replace(/^QUO-/, 'INV-')
+    : `INV-${quote.documentNumber || quote.id}`;
+
+  const invoiceDto: any = {
+    documentCategory: 'invoice',
+    documentType: quote.documentType,
+    documentNumber: overrides.documentNumber || baseDocumentNumber,
+    invoiceDate: quote.invoiceDate,
+    dueDate: quote.dueDate,
+    deliveryDate: quote.deliveryDate,
+    dispatchDate: quote.dispatchDate,
+    paymentDate: quote.paymentDate,
+    signatureDate: quote.signatureDate,
+    otherDate: quote.otherDate,
+    periodStart: quote.periodStart,
+    periodEnd: quote.periodEnd,
+    operationNature: quote.operationNature,
+    currency: quote.currency,
+    userId: userId,
+    supplier: {
+      idType: quote.supplier?.idType,
+      idValue: quote.supplier?.idValue,
+      name: quote.supplier?.name,
+      street: quote.supplier?.street,
+      city: quote.supplier?.city,
+      postalCode: quote.supplier?.postalCode,
+      country: quote.supplier?.country,
+    },
+    buyer: {
+      idType: quote.buyer?.idType,
+      idValue: quote.buyer?.idValue,
+      name: quote.buyer?.name,
+      street: quote.buyer?.street,
+      city: quote.buyer?.city,
+      postalCode: quote.buyer?.postalCode,
+      country: quote.buyer?.country,
+    },
+    paymentMeans: quote.paymentMeans,
+    orderReference: quote.orderReference,
+    contractReference: quote.contractReference,
+    deliveryNoteReference: quote.deliveryNoteReference,
+    ttnReference: quote.ttnReference,
+    globalDiscount: quote.globalDiscount || 0,
+    stampDuty: quote.stampDuty || 0,
+    status: 'draft',
+    amountLanguage: quote.amountLanguage || 'fr',
+    metadata: {
+      ...(quote.metadata || {}),
+      convertedFromQuoteId: quote.id,
+    },
+    lines: (quote.lines || []).map((line: any) => ({
+      description: line.description,
+      quantity: line.quantity,
+      unitPrice: line.unitPrice,
+      discountRate: line.discountRate,
+      taxRate: line.taxRate,
+      fodec: line.fodec,
+      itemCode: line.itemCode,
+      unit: line.unit,
+      exemptionReason: line.exemptionReason,
+      allowances: (line.allowances || []).map((a: any) => ({
+        type: a.type,
+        code: a.code,
+        description: a.description,
+        amount: a.amount,
+      })),
+    })),
+  };
+
+  const invoice = await createInvoice(userId, invoiceDto);
+
+  // Mark quote as converted
+  await prisma.invoice.update({
+    where: { id: quoteId },
+    data: {
+      status: 'finalized',
+      metadata: {
+        ...quote.metadata,
+        convertedToInvoiceId: invoice.id,
+        convertedAt: new Date().toISOString(),
+      },
+    },
+  });
+
+  return invoice;
+}
+
 export const invoiceService = {
   createInvoice,
   getInvoiceById,
   updateInvoice,
   deleteInvoice,
   listInvoices,
+  convertQuoteToInvoice,
 };
